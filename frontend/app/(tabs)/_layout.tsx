@@ -5,15 +5,14 @@ import { images } from '@/constants/images'
 import { icons } from '@/constants/icons'
 
 const TabIcon = ({ focused, icon }: any) => {
-
     if (focused) {
         return (
             <ImageBackground
                 source={images.highlight}
-                className='flex flex-row w-full flex-1 min-w-[70px] min-h-[70px] justify-center items-center rounded-full overflow-hidden'
+                className='flex flex-row w-full flex-1 min-w-[70px] min-h-[70px] mt-2 justify-center items-center rounded-full overflow-hidden'
                 tintColor='#087979'
             >
-                <Image source={icon} tintColor="#151312" className='size-5' />
+                <Image source={icon} tintColor="#ffffff" className='size-8 mb-2' />
             </ImageBackground>
         )
     }
@@ -23,11 +22,21 @@ const TabIcon = ({ focused, icon }: any) => {
                 <Image
                     source={icon}
                     tintColor="#A8B5DB"
-                    className='size-5'
+                    className='size-8 mb-2'
                 />
             </View>
         )
     }
+}
+
+const CustomHeader = ({ title }: { title: string }) => {
+    return (
+        <View className="py-6 px-6 bg-[#95E7E7]">
+            <Text className='text-start font-bold text-[#1A736A] text-2xl' >
+                {title}
+            </Text>
+        </View>
+    );
 }
 
 const _Layout = () => {
@@ -39,14 +48,14 @@ const _Layout = () => {
                     alignItems: 'center',
                 },
                 tabBarStyle: {
-                    backgroundColor: '#0f0D23',
+                    backgroundColor: '#95E7E7',
                     justifyContent: 'flex-start',
                     alignItems: 'flex-start',
-                    minHeight: 70,
+                    minHeight: 60,
                     position: 'absolute',
-                    borderWidth: 1,
-                    borderColor: '0f0d23'
                 },
+                tabBarActiveTintColor: '#fff', // color when tab is active
+                tabBarInactiveTintColor: '#fff',
             }}
         >
             <Tabs.Screen
@@ -60,7 +69,8 @@ const _Layout = () => {
                                 focused={focused}
                                 icon={icons.educate}
                             />
-                        )
+                        ),
+                        header: () => <CustomHeader title='Education' />
                     }
                 }
             />
@@ -75,7 +85,8 @@ const _Layout = () => {
                                 focused={focused}
                                 icon={icons.home}
                             />
-                        )
+                        ),
+                        header: () => <CustomHeader title='Home' />
                     }
                 }
             />
@@ -90,10 +101,12 @@ const _Layout = () => {
                                 focused={focused}
                                 icon={icons.setting}
                             />
-                        )
+                        ),
+                        header: () => <CustomHeader title='Setting' />
                     }
                 }
             />
+
         </Tabs>
     )
 }

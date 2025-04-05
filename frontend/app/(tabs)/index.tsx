@@ -1,9 +1,41 @@
-import { Text, View } from "react-native";
+import TabBox from "@/components/TabBox";
+import { icons } from "@/constants/icons";
+import { useRouter } from "expo-router";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+
+const InfoSection = ({ time, harvest, waterchange }: { time: string, harvest: number, waterchange: number }) => {
+  return (
+    <>
+      <View className="flex justify-between items-start p-5 w-full h-[30%] bg-[#1A736A] rounded-xl">
+        <Text className="text-xl font-semibold text-white text-center">Current Progress</Text>
+        <Text className="text-base text-white text-center">Estimated harvest time: {time}</Text>
+      </View>
+      <View className="flex justify-between items-start p-5 w-full h-[30%] bg-[#1A736A] rounded-xl">
+        <Text className="text-xl font-semibold text-white text-center">Current Progress</Text>
+        <View className="flex-row justify-between items-center w-full">
+          <Text className="text-base text-white text-center">Harvest: {harvest}</Text>
+          <Text className="text-base text-white text-center">Water Change: {waterchange}</Text>
+        </View>
+      </View>
+    </>
+  );
+}
 
 export default function Index() {
+  const router = useRouter();
+
   return (
-    <View className="flex-1 justify-center items-center">
-      <Text className="text-5xl text-primary font-bold">Welcome!</Text>
-    </View>
+    <ScrollView>
+      <View className="flex-1 justify-start items-start p-10 gap-6">
+        <View className="flex-row justify-between items-center gap-3">
+          <TabBox title="Sensor" icon={icons.sensor} onNav={() => router.push('/sensor')} />
+          <TabBox title="Check pond health" icon={icons.camera} onNav={() => router.push('/(tabs)/education')} />
+          <TabBox title="Assistance" icon={icons.assistant} onNav={() => router.push('/(tabs)/education')} />
+        </View>
+        <View className="bg-[#1A736A] w-full h-[0.75%] opacity-20" />
+        <InfoSection time="15 April 2025 (Saturday)" harvest={1} waterchange={2} />
+        <Text className="text-xl text-black font-bold text-start">Summary</Text>
+      </View>
+    </ScrollView>
   );
 }

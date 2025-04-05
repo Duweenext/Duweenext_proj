@@ -5,7 +5,10 @@ import save from "@/assets/icons/save.png";
 import star from "@/assets/icons/star.png";
 import arrow from "@/assets/icons/arrow.png";
 import setting from "@/assets/icons/settings.png";
-import educate from "@/assets/icons/files.png";
+import educate from "@/assets/icons/educate.png";
+import sensor from "@/assets/icons/sensor.png";
+import camera from "@/assets/icons/camera.png";
+import assistant from "@/assets/icons/assistant.png";
 
 export const icons = {
   home,
@@ -16,4 +19,7 @@ export const icons = {
   arrow,
   setting,
   educate,
+  sensor,
+  camera,
+  assistant
 };

@@ -36,3 +36,5 @@ frontend/*.mobileprovision
 
 # Example files
 frontend/app-example
+
+Backend/config.yaml

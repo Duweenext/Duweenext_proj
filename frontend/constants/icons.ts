@@ -9,6 +9,9 @@ import educate from "@/assets/icons/educate.png";
 import sensor from "@/assets/icons/sensor.png";
 import camera from "@/assets/icons/camera.png";
 import assistant from "@/assets/icons/assistant.png";
+import google from "@/assets/icons/google.png";
+import password_visible from "@/assets/icons/password_visible.png";
+import password_invisible from "@/assets/icons/password_invisible.png";
 
 export const icons = {
   home,
@@ -21,5 +24,8 @@ export const icons = {
   educate,
   sensor,
   camera,
-  assistant
+  assistant,
+  google,
+  password_invisible,
+  password_visible
 };

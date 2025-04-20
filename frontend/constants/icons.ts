@@ -12,6 +12,7 @@ import assistant from "@/assets/icons/assistant.png";
 import google from "@/assets/icons/google.png";
 import password_visible from "@/assets/icons/password_visible.png";
 import password_invisible from "@/assets/icons/password_invisible.png";
+import question_mark from "@/assets/icons/question mark.png";
 
 export const icons = {
   home,
@@ -27,5 +28,6 @@ export const icons = {
   assistant,
   google,
   password_invisible,
-  password_visible
+  password_visible,
+  question_mark
 };

@@ -4,11 +4,25 @@ import { images } from '@/constants/images';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { icons } from '@/constants/icons';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LoginSchemaType, loginSchema } from './validation';
 
 const Login = () => {
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginSchemaType>({
+        resolver: zodResolver(loginSchema),
+    });
     const [text, setText] = useState('');
     const [isPasswordVisbile, setIsPasswordVisible] = useState(true);
     const navigation = useRouter();
+
+    const onSubmit = (data: LoginSchemaType) => {
+        console.log('Form Data:', data);
+    };
 
     return (
         <KeyboardAvoidingView
@@ -33,15 +47,56 @@ const Login = () => {
 
                             {/* input section */}
                             <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <Text className='font-bold text-xl'>Username or Email</Text>
-                                <View className='flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full'>
-                                    <TextInput placeholder='example@gmail.com' placeholderTextColor={'#C9C9C9'} className='rounded-xl min-w-[80%]' />
+                                <View className='flex-row justify-between'>
+                                    <View className='flex-row gap-1 items-center p-1'>
+                                        <Text className='font-bold text-xl'>Username or Email</Text>
+                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
+                                    </View>
+                                    {errors.identifier &&
+                                        <Text className='color-red-500 self-center'>{errors.identifier.message}</Text>
+                                    }
+                                </View>
+                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.identifier && 'border-red-400 border-[1.5px]'}`}>
+                                    <Controller
+                                        control={control}
+                                        name="identifier"
+                                        render={({ field: { onChange, value } }) => (
+                                            <TextInput
+                                                placeholder='example@gmail.com'
+                                                placeholderTextColor={'#C9C9C9'}
+                                                className='rounded-xl min-w-[80%]'
+                                                onChangeText={onChange}
+                                                value={value}
+                                            />
+                                        )}
+                                    />
                                 </View>
                             </Animated.View>
                             <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <Text className='font-bold text-xl'>Password</Text>
-                                <View className='flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full'>
-                                    <TextInput placeholder='password' placeholderTextColor={'#C9C9C9'} secureTextEntry={isPasswordVisbile} className='rounded-xl min-w-[80%]' />
+                                <View className='flex-row justify-between'>
+                                    <View className='flex-row gap-1 items-center p-1'>
+                                        <Text className='font-bold text-xl'>Password</Text>
+                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
+                                    </View>
+                                    {errors.password &&
+                                        <Text className='color-red-500 self-center'>{errors.password.message}</Text>
+                                    }
+                                </View>
+                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.password && 'border-red-400 border-[1.5px]'}`}>
+                                    <Controller
+                                        control={control}
+                                        name="password"
+                                        render={({ field: { onChange, value } }) => (
+                                            <TextInput
+                                                placeholder='password'
+                                                placeholderTextColor={'#C9C9C9'}
+                                                secureTextEntry={isPasswordVisbile}
+                                                className='rounded-xl min-w-[80%]'
+                                                onChangeText={onChange}
+                                                value={value}
+                                            />
+                                        )}
+                                    />
                                     <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisbile)}>
                                         <Image source={isPasswordVisbile ? icons.password_invisible : icons.password_visible} className='w-[25px] h-[25px]' />
                                     </TouchableOpacity>
@@ -50,7 +105,7 @@ const Login = () => {
 
                             {/* button section */}
                             <View className='self-center mt-12 items-center gap-5'>
-                                <TouchableOpacity>
+                                <TouchableOpacity onPress={handleSubmit(onSubmit)}>
                                     <Animated.View
                                         entering={FadeInDown.delay(200).duration(1000).springify()}
                                         className='bg-[#1A736A] border-white border-2 rounded-xl py-3 px-[69px]'

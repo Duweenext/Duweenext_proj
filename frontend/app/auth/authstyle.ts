@@ -25,7 +25,7 @@ const style = StyleSheet.create({
     input_section: {
         width: '100%'
     },
-    text_input_box: {
+    input_box: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -34,6 +34,10 @@ const style = StyleSheet.create({
         paddingVertical: 8,
         borderRadius: 15,
         width: '100%',
+    },
+    text_input_box: {
+        borderRadius: 15,
+        minWidth: '80%',
     },
     input_header: {
         fontWeight: 'bold',

@@ -6,6 +6,9 @@ import (
 
 	"main/config"
 	"main/database"
+	"main/duckweed/handlers"
+	"main/duckweed/repositories"
+	"main/duckweed/usecases"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -29,14 +32,65 @@ func NewFiberServer(conf *config.Config, db database.Database) Server {
 }
 
 func (s *fiberServer) Start() {
+	// Middlewares
 	s.app.Use(recover.New())
 	s.app.Use(logger.New())
 
-	// Health check adding
+	// Health check
 	s.app.Get("v1/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
 
+	// Repositories
+	userRepo := repositories.NewUserRepository(s.db.GetDb())
+	// sensorRepo := repositories.NewSensorRepository(s.db.GetDb())
+	// pondHealthRepo := repositories.NewPondHealthRepository(s.db.GetDb())
+	// educationRepo := repositories.NewEducationRepository(s.db.GetDb())
+	// boardRepo := repositories.NewBoardRepository(s.db.GetDb())
+
+	// Use cases
+	userUseCase := usecases.NewUserUseCase(*userRepo)
+	// sensorUseCase := usecases.NewSensorUseCase(*sensorRepo)
+	// pondHealthUseCase := usecases.NewPondHealthUseCase(*pondHealthRepo)
+	// educationUseCase := usecases.NewEducationUseCase(*educationRepo)
+	// boardUseCase := usecases.NewBoardUseCase(*boardRepo)
+
+	// Handlers
+	userHandler := handlers.NewUserHandler(userUseCase)
+	// sensorHandler := handlers.NewSensorHandler(sensorUseCase)
+	// pondHealthHandler := handlers.NewPondHealthHandler(pondHealthUseCase)
+	// educationHandler := handlers.NewEducationHandler(educationUseCase)
+	// boardHandler := handlers.NewBoardHandler(boardUseCase)
+
+	// Routes
+	api := s.app.Group("/v1")
+
+	// User routes
+	// api.Post("/users", userHandler.CreateUser)
+	api.Get("/users", userHandler.GetAllUsers)
+	api.Get("/users/:id", userHandler.GetUserByID)
+
+	// Sensor routes
+	// api.Post("/sensors", sensorHandler.CreateSensor)
+	// api.Get("/sensors", sensorHandler.GetAllSensors)
+	// api.Get("/sensors/:id", sensorHandler.GetSensorByID)
+
+	// // PondHealth routes
+	// api.Post("/pondhealth", pondHealthHandler.CreatePondHealth)
+	// api.Get("/pondhealth", pondHealthHandler.GetAllPondHealth)
+	// api.Get("/pondhealth/:id", pondHealthHandler.GetPondHealthByID)
+
+	// // Education routes
+	// api.Post("/education", educationHandler.CreateEducation)
+	// api.Get("/education", educationHandler.GetAllEducation)
+	// api.Get("/education/:id", educationHandler.GetEducationByID)
+
+	// // Board routes
+	// api.Post("/boards", boardHandler.CreateBoard)
+	// api.Get("/boards", boardHandler.GetAllBoards)
+	// api.Get("/boards/:id", boardHandler.GetBoardByID)
+
+	// Start server
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	log.Fatal(s.app.Listen(serverUrl))
 }

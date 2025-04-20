@@ -2,13 +2,13 @@ package entities
 
 
 type (
-	// // InsertEducationDto defines the structure for creating a new education post.
-	// InsertEducationDto struct {
-	// 	PostTitle  string `json:"postTitle"`
-	// 	PostDetail string `json:"postDetail"`
-	// 	ImageURL   string `json:"imageURL"`
-	// 	Quote      string `json:"quote"`
-	// }
+	
+	InsertEducationDto struct {
+		PostTitle  string 
+		PostDetail string 
+		ImageURL   string 
+		Quote      string 
+	}
 
 	// Education represents the education entity.
 	Education struct {
@@ -19,12 +19,12 @@ type (
 		Quote      *string 
 	}
 
-	// // EducationResponseDto defines the structure for responding with education post data.
-	// EducationResponseDto struct {
-	// 	PostID     int64  `json:"postId"`
-	// 	PostTitle  string `json:"postTitle"`
-	// 	PostDetail string `json:"postDetail"`
-	// 	ImageURL   string `json:"imageURL"`
-	// 	Quote      string `json:"quote"`
-	// }
+	
+	EducationResponseDto struct {
+		PostID     int64  
+		PostTitle  string 
+		PostDetail string 
+		ImageURL   string 
+		Quote      string 
+	}
 )

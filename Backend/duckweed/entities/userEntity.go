@@ -6,19 +6,19 @@ import (
 	"gorm.io/gorm"
 )
 
-// type InsertUserDto struct {
-// 	UserName    string 
-// 	Email       string 
-// 	PhoneNumber string 
-// 	Password    string 
-// }
+type InsertUserDto struct {
+	UserName    string 
+	Email       string 
+	PhoneNumber string 
+	Password    string 
+}
 
-// type UserResponseDto struct {
-// 	UserID      int64  
-// 	UserName    string 
-// 	Email       string 
-// 	PhoneNumber string 
-// }
+type UserResponseDto struct {
+	UserID      int64  
+	UserName    string 
+	Email       string 
+	PhoneNumber string 
+}
 
 type User struct {
 	UserID      *uint     `gorm:"primaryKey;autoIncrement"`

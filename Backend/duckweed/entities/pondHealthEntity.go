@@ -13,3 +13,17 @@ type PondHealth struct {
 	Data     *time.Time 
 	User      User      `gorm:"foreignKey:UserID"`
 }
+type InsertPondHealthDto struct {
+	UserID  uint    `json:"user_id"`
+	Picture string  `json:"picture"`
+	Result  string  `json:"result"`
+	Data    time.Time `json:"data"`
+}
+
+type PondHealthResponseDto struct {
+	PondID  uint    `json:"pond_id"`
+	UserID  uint    `json:"user_id"`
+	Picture string  `json:"picture"`
+	Result  string  `json:"result"`
+	Data    time.Time `json:"data"`
+}

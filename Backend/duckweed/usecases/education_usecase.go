@@ -5,24 +5,28 @@ import (
 	"main/duckweed/repositories"
 )
 
-type EducationUseCase struct {
+
+type EducationUseCase interface {
+	GetAllEducation() ([]entities.Education, error)
+	GetEducationByID(id uint) (*entities.Education, error)
+}
+
+
+
+type educationUseCase struct {
 	repo repositories.EducationRepository
 }
 
-func NewEducationUseCase(repo repositories.EducationRepository) *EducationUseCase {
-	return &EducationUseCase{repo}
+func NewEducationUseCase(repo repositories.EducationRepository) EducationUseCase {
+	return &educationUseCase{repo: repo}
 }
 
-func (uc *EducationUseCase) GetAllEducation() ([]entities.Education, error) {
+
+func (uc *educationUseCase) GetAllEducation() ([]entities.Education, error) {
 	return uc.repo.FindAll()
 }
 
-func (uc *EducationUseCase) GetEducationByID(id uint) (*entities.Education, error) {
+func (uc *educationUseCase) GetEducationByID(id uint) (*entities.Education, error) {
 	return uc.repo.FindByID(id)
 }
 
-// func (uc *EducationUseCase) CreateEducation(edu entities.Education) (*entities.Education, error) {
-// 	// Any validation or business logic for Education creation
-// 	err := uc.repo.Create(edu)
-// 	return &edu, err
-// }

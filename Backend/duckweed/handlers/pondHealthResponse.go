@@ -1,51 +1,50 @@
 package handlers
 
 import (
+	"main/duckweed/usecases"
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
-	"main/duckweed/entities"
 )
 
-func CreatePondHealth(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		dto := new(entities.InsertPondHealthDto)
-		if err := c.BodyParser(dto); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-		}
-
-		pond := entities.PondHealth{
-			UserID:  &dto.UserID,
-			Picture: &dto.Picture,
-			Result:  &dto.Result,
-			Data:    &dto.Data,
-		}
-
-		if err := db.Create(&pond).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-		}
-
-		return c.Status(fiber.StatusCreated).JSON(pond)
-	}
+type PondHealthHandler struct {
+	UseCase usecases.PondHealthUseCase
 }
 
-
-func GetAllPondHealth(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var ponds []entities.PondHealth
-		if err := db.Preload("User").Find(&ponds).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.JSON(ponds)
-	}
+func NewPondHealthHandler(useCase usecases.PondHealthUseCase) *PondHealthHandler {
+	return &PondHealthHandler{UseCase: useCase}
 }
 
-func GetPondHealthByID(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		id := c.Params("id")
-		var pond entities.PondHealth
-		if err := db.Preload("User").First(&pond, id).Error; err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "PondHealth not found"})
-		}
-		return c.JSON(pond)
+func (h *PondHealthHandler) GetAllPondHealth(c *fiber.Ctx) error {
+	ponds, err := h.UseCase.GetAllPondHealth()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
+	return c.JSON(ponds)
+}
+
+func (h *PondHealthHandler) GetPondHealthByID(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
+	}
+	pond, err := h.UseCase.GetPondHealthByID(uint(id))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(pond)
+}
+
+func (h *PondHealthHandler) GetPondHealthByUserID(c *fiber.Ctx) error {
+	idParam := c.Params("userid")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
+	}
+	ponds, err := h.UseCase.GetPondHealthByUserID(uint(id))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(ponds)
 }

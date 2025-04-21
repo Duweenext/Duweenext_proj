@@ -44,22 +44,22 @@ func (s *fiberServer) Start() {
 	// Repositories
 	userRepo := repositories.NewUserRepository(s.db.GetDb())
 	// sensorRepo := repositories.NewSensorRepository(s.db.GetDb())
-	// pondHealthRepo := repositories.NewPondHealthRepository(s.db.GetDb())
-	// educationRepo := repositories.NewEducationRepository(s.db.GetDb())
+	pondHealthRepo := repositories.NewPondHealthRepository(s.db.GetDb())
+	educationRepo := repositories.NewEducationRepository(s.db.GetDb())
 	// boardRepo := repositories.NewBoardRepository(s.db.GetDb())
 
 	// Use cases
 	userUseCase := usecases.NewUserUseCase(*userRepo)
 	// sensorUseCase := usecases.NewSensorUseCase(*sensorRepo)
-	// pondHealthUseCase := usecases.NewPondHealthUseCase(*pondHealthRepo)
-	// educationUseCase := usecases.NewEducationUseCase(*educationRepo)
+	pondHealthUseCase := usecases.NewpondHealthUseCase(*pondHealthRepo)
+	educationUseCase := usecases.NewEducationUseCase(*educationRepo)
 	// boardUseCase := usecases.NewBoardUseCase(*boardRepo)
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userUseCase)
 	// sensorHandler := handlers.NewSensorHandler(sensorUseCase)
-	// pondHealthHandler := handlers.NewPondHealthHandler(pondHealthUseCase)
-	// educationHandler := handlers.NewEducationHandler(educationUseCase)
+	pondHealthHandler := handlers.NewPondHealthHandler(pondHealthUseCase)
+	educationHandler := handlers.NewEducationHandler(educationUseCase)
 	// boardHandler := handlers.NewBoardHandler(boardUseCase)
 
 	// Routes
@@ -77,13 +77,13 @@ func (s *fiberServer) Start() {
 
 	// // PondHealth routes
 	// api.Post("/pondhealth", pondHealthHandler.CreatePondHealth)
-	// api.Get("/pondhealth", pondHealthHandler.GetAllPondHealth)
-	// api.Get("/pondhealth/:id", pondHealthHandler.GetPondHealthByID)
-
+	api.Get("/pondhealth", pondHealthHandler.GetAllPondHealth)
+	api.Get("/pondhealth/:id", pondHealthHandler.GetPondHealthByID)
+	api.Get("/pondhealthByUserId/:userid", pondHealthHandler.GetPondHealthByUserID)
 	// // Education routes
 	// api.Post("/education", educationHandler.CreateEducation)
-	// api.Get("/education", educationHandler.GetAllEducation)
-	// api.Get("/education/:id", educationHandler.GetEducationByID)
+	api.Get("/education", educationHandler.GetAllEducation)
+	api.Get("/education/:id", educationHandler.GetEducationByID)
 
 	// // Board routes
 	// api.Post("/boards", boardHandler.CreateBoard)

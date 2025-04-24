@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"main/duckweed/entities"
 	"main/duckweed/usecases"
 	"strconv"
 
@@ -47,4 +48,18 @@ func (h *PondHealthHandler) GetPondHealthByUserID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(ponds)
+}
+
+func (h *PondHealthHandler) PostPondHealth(c *fiber.Ctx) error {
+	dto := new(entities.InsertPondHealthDto)
+	if err := c.BodyParser(dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	pond, err := h.UseCase.PostPondHealth(dto)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(pond)
 }

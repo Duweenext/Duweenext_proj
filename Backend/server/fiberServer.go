@@ -80,6 +80,7 @@ func (s *fiberServer) Start() {
 	api.Get("/pondhealth", pondHealthHandler.GetAllPondHealth)
 	api.Get("/pondhealth/:id", pondHealthHandler.GetPondHealthByID)
 	api.Get("/pondhealthByUserId/:userid", pondHealthHandler.GetPondHealthByUserID)
+	api.Post("/PostPondHealth/" , pondHealthHandler.PostPondHealth)
 	// // Education routes
 	// api.Post("/education", educationHandler.CreateEducation)
 	api.Get("/education", educationHandler.GetAllEducation)

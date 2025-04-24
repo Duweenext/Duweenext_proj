@@ -10,14 +10,14 @@ type PondHealth struct {
 	UserID   *uint     `gorm:"not null"`   
 	Picture  *string    
 	Result   *string    
-	Data     *time.Time 
+	Data     time.Time `json:"data" gorm:"autoCreateTime"`
 	User      User      `gorm:"foreignKey:UserID"`
 }
 type InsertPondHealthDto struct {
 	UserID  uint    `json:"user_id"`
 	Picture string  `json:"picture"`
 	Result  string  `json:"result"`
-	Data    time.Time `json:"data"`
+	Data    time.Time `json:"data" gorm:"autoCreateTime"`
 }
 
 type PondHealthResponseDto struct {
@@ -25,5 +25,4 @@ type PondHealthResponseDto struct {
 	UserID  uint    `json:"user_id"`
 	Picture string  `json:"picture"`
 	Result  string  `json:"result"`
-	Data    time.Time `json:"data"`
 }

@@ -3,6 +3,7 @@ package usecases
 import (
 	"main/duckweed/entities"
 	"main/duckweed/repositories"
+	"time"
 )
 
 // func (uc *PondHealthUseCase) CreatePondHealth(pond entities.PondHealth) (*entities.PondHealth, error) {
@@ -16,6 +17,7 @@ type PondHealthUseCase interface {
 	GetAllPondHealth() ([]entities.PondHealth, error)
 	GetPondHealthByUserID(id uint) ([]entities.PondHealth, error)
 	// CreateUser(dto *entities.InsertUserDto) (*entities.User, error)
+	PostPondHealth(dto *entities.InsertPondHealthDto) (*entities.PondHealth, error)
 }
 
 
@@ -38,4 +40,19 @@ func (u *pondHealthUseCase) GetAllPondHealth() ([]entities.PondHealth, error) {
 
 func (u *pondHealthUseCase) GetPondHealthByUserID(userId uint) ([]entities.PondHealth, error) {
 	return u.repo.FindByUserID(userId)
+}
+
+func (u *pondHealthUseCase) PostPondHealth(dto *entities.InsertPondHealthDto) (*entities.PondHealth, error){
+	pond := entities.PondHealth{
+		UserID: &dto.UserID,
+		Picture: &dto.Picture,
+		Result: &dto.Result,
+		Data: time.Now(),
+	}
+
+	err := u.repo.PostPondHealth(pond)
+	if err != nil {
+		return nil, err
+	}
+	return &pond , nil
 }

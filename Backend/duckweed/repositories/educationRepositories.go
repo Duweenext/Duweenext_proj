@@ -24,3 +24,4 @@ func (r *EducationRepository) FindByID(id uint) (*entities.Education, error) {
 	err := r.db.First(&edu, id).Error
 	return &edu, err
 }
+

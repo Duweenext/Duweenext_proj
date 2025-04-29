@@ -55,7 +55,15 @@ func migrate(db database.Database) {
         log.Fatalf("Failed to migrate Sensor: %v", err)
         return // Stop if migration fails
     }
-    log.Println("Migrated Sensor")
+    log.Println("Migrated BoardRelationship")
+
+        // 5. Migrate Sensor
+        err = gormDB.AutoMigrate(&entities.BoardRelationship{})
+        if err != nil {
+            log.Fatalf("Failed to migrate BoardRelationship: %v", err)
+            return // Stop if migration fails
+        }
+        log.Println("Migrated BoardRelationship")
 
 }
 

@@ -106,6 +106,22 @@ const _Layout = () => {
                     }
                 }
             />
+            <Tabs.Screen
+                name='sensor'
+                options={
+                    {
+                        title: 'Sensor',
+                        headerShown: true,
+                        tabBarIcon: ({ focused }) => (
+                            <TabIcon
+                                focused={focused}
+                                icon={icons.setting}
+                            />
+                        ),
+                        header: () => <CustomHeader title='Sensor' />
+                    }
+                }
+            />
 
         </Tabs>
     )

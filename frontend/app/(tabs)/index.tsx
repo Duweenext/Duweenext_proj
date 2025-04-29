@@ -20,17 +20,19 @@ const InfoSection = ({ time, harvest, waterchange }: { time: string, harvest: nu
     </>
   );
 }
-
+//router.push('/sensor')
+//router.push('/imageprocess')
+//router.push('/assistant')
 export default function Index() {
   const router = useRouter();
 
   return (
     <ScrollView>
-      <View className="flex-1 justify-start items-start p-10 gap-6">
+      <View className="flex-1 justify-start items-start p-5 gap-6">
         <View className="flex-row justify-between items-center gap-3">
-          <TabBox title="Sensor" icon={icons.sensor} onNav={() => router.push('/sensor')} />
-          <TabBox title="Check pond health" icon={icons.camera} onNav={() => router.push('/(tabs)/education')} />
-          <TabBox title="Assistance" icon={icons.assistant} onNav={() => router.push('/(tabs)/education')} />
+          <TabBox title="Sensor" icon={icons.sensor} onNav={() => null} />
+          <TabBox title="Check pond health" icon={icons.camera} onNav={() => null} />
+          <TabBox title="Assistance" icon={icons.assistant} onNav={() => null} />
         </View>
         <View className="bg-[#1A736A] w-full h-[0.75%] opacity-20" />
         <InfoSection time="15 April 2025 (Saturday)" harvest={1} waterchange={2} />

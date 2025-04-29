@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const Sensor = () => {
+const ImageProcess = () => {
     return (
         <View>
-            <Text>Sensor</Text>
+            <Text>ImageProcess</Text>
         </View>
     )
 }
 
-export default Sensor
+export default ImageProcess

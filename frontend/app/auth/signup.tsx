@@ -9,6 +9,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { signUpSchema, SignUpSchemaType } from './validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getPasswordStrength } from '../utlis/passwordStrength';
+import { user_register } from './auth';
 
 const SingUp = () => {
     const {
@@ -27,6 +28,14 @@ const SingUp = () => {
     const onSubmit = (data: SignUpSchemaType) => {
         console.log('Form Data:', data);
     };
+
+    const handleRegister = async () => {
+        const response = await user_register({
+            username: 'Hello_test',
+            email: 'Johndoe_notest@gmail.com',
+            password: 'admin',
+        });
+    }
 
     const strengthBarWidth = useSharedValue(0);
 

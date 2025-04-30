@@ -7,6 +7,8 @@ import { icons } from '@/constants/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginSchemaType, loginSchema } from './validation';
+import { user_login } from './auth';
+import Storage from '../utlis/storage';
 
 const Login = () => {
     const {
@@ -23,6 +25,14 @@ const Login = () => {
     const onSubmit = (data: LoginSchemaType) => {
         console.log('Form Data:', data);
     };
+
+    const handleLogin = async () => {
+        const response = await user_login({
+            username: 'XD22',
+            email: 'Johndoe22@gmail.com',
+            password: 'admin',
+        });
+    }
 
     return (
         <KeyboardAvoidingView
@@ -105,7 +115,7 @@ const Login = () => {
 
                             {/* button section */}
                             <View className='self-center mt-12 items-center gap-5'>
-                                <TouchableOpacity onPress={handleSubmit(onSubmit)}>
+                                <TouchableOpacity onPress={() => handleLogin()}>
                                     <Animated.View
                                         entering={FadeInDown.delay(200).duration(1000).springify()}
                                         className='bg-[#1A736A] border-white border-2 rounded-xl py-3 px-[69px]'

@@ -1,9 +1,13 @@
 package handlers
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"fmt"
+	"main/duckweed/entities"
 	"main/duckweed/usecases"
+	"main/duckweed/utils"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type UserHandler struct {
@@ -49,4 +53,61 @@ func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(user)
+}
+
+func (h *UserHandler) Login(c *fiber.Ctx) error {
+	var req entities.AuthenticateUserDto
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	fmt.Println(req.Email + req.Password + req.UserName)
+
+	user, err := h.UseCase.Login(req.Email, req.Password)
+	fmt.Println("Hello")
+	if err != nil {
+		fmt.Println("Error")
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid Credential"})
+	}
+
+	token, err := utils.GenerateJWT(*user.UserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Token generation failed"})
+	}
+
+	return c.JSON(fiber.Map{
+		"token": token,
+		"user": fiber.Map{
+			"id":       user.UserID,
+			"email":    user.Email,
+			"username": user.UserName,
+		},
+	})
+}
+
+func (h *UserHandler) Register(c *fiber.Ctx) error {
+	var req entities.InsertUserDto
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	user, err := h.UseCase.Register(req.UserName, req.Email, req.Password)
+	fmt.Println("Hello")
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid Credential"})
+	}
+
+	token, err := utils.GenerateJWT(*user.UserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Token generation failed"})
+	}
+
+	return c.JSON(fiber.Map{
+		"token": token,
+		"user": fiber.Map{
+			"id":       user.UserID,
+			"email":    user.Email,
+			"username": user.UserName,
+		},
+	})
 }

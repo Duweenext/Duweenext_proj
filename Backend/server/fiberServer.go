@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gofiber/fiber/v2/middleware/cors"
+
 	"main/config"
 	"main/database"
 	"main/duckweed/handlers"
@@ -32,14 +34,18 @@ func NewFiberServer(conf *config.Config, db database.Database) Server {
 }
 
 func (s *fiberServer) Start() {
-	// Middlewares
 	s.app.Use(recover.New())
 	s.app.Use(logger.New())
 
-	// Health check
 	s.app.Get("v1/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
+
+	s.app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:8081",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowCredentials: true,
+	}))
 
 	// Repositories
 	userRepo := repositories.NewUserRepository(s.db.GetDb())
@@ -69,6 +75,8 @@ func (s *fiberServer) Start() {
 	// api.Post("/users", userHandler.CreateUser)
 	api.Get("/users", userHandler.GetAllUsers)
 	api.Get("/users/:id", userHandler.GetUserByID)
+	api.Post("/login", userHandler.Login)
+	api.Post("/register", userHandler.Register)
 
 	// Sensor routes
 	// api.Post("/sensors", sensorHandler.CreateSensor)
@@ -80,7 +88,7 @@ func (s *fiberServer) Start() {
 	api.Get("/pondhealth", pondHealthHandler.GetAllPondHealth)
 	api.Get("/pondhealth/:id", pondHealthHandler.GetPondHealthByID)
 	api.Get("/pondhealthByUserId/:userid", pondHealthHandler.GetPondHealthByUserID)
-	api.Post("/PostPondHealth/" , pondHealthHandler.PostPondHealth)
+	api.Post("/PostPondHealth/", pondHealthHandler.PostPondHealth)
 	// // Education routes
 	// api.Post("/education", educationHandler.CreateEducation)
 	api.Get("/education", educationHandler.GetAllEducation)
@@ -95,4 +103,3 @@ func (s *fiberServer) Start() {
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	log.Fatal(s.app.Listen(serverUrl))
 }
-

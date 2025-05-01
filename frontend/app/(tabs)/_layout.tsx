@@ -1,18 +1,28 @@
-import { View, Text, ImageBackground, Image } from 'react-native'
+import { View, Text, ImageBackground, Image, Platform } from 'react-native'
 import React from 'react'
-import { Tabs } from 'expo-router'
+import { Redirect, Tabs } from 'expo-router'
 import { images } from '@/constants/images'
 import { icons } from '@/constants/icons'
+import { useAuth } from '@/srcs/auth/context/auth_context'
 
 const TabIcon = ({ focused, icon }: any) => {
     if (focused) {
         return (
             <ImageBackground
                 source={images.highlight}
+                style={{
+                    width: 70,
+                    height: 70,
+                    marginTop: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: 35,
+                    overflow: 'hidden',
+                }}
                 className='flex flex-row w-full flex-1 min-w-[70px] min-h-[70px] mt-2 justify-center items-center rounded-full overflow-hidden'
                 tintColor='#087979'
             >
-                <Image source={icon} tintColor="#ffffff" className='size-8 mb-2' />
+                <Image source={icon} style={{ width: 32, height: 32, marginBottom: 6 }} tintColor="#ffffff" className='size-8 mb-2' />
             </ImageBackground>
         )
     }
@@ -22,6 +32,7 @@ const TabIcon = ({ focused, icon }: any) => {
                 <Image
                     source={icon}
                     tintColor="#A8B5DB"
+                    style={{ width: 32, height: 32, marginBottom: 8 }}
                     className='size-8 mb-2'
                 />
             </View>
@@ -40,6 +51,15 @@ const CustomHeader = ({ title }: { title: string }) => {
 }
 
 const _Layout = () => {
+    const { session, isLoading } = useAuth();
+
+    if (isLoading) {
+        return <Text>Loading...</Text>;
+    }
+
+    if (!session) {
+        return <Redirect href="/auth/welcome" />;
+    }
     return (
         <Tabs
             screenOptions={{
@@ -52,7 +72,7 @@ const _Layout = () => {
                     justifyContent: 'flex-start',
                     alignItems: 'flex-start',
                     minHeight: 60,
-                    position: 'absolute',
+                    position: Platform.OS === 'web' ? 'relative' : 'absolute',
                 },
                 tabBarActiveTintColor: '#fff', // color when tab is active
                 tabBarInactiveTintColor: '#fff',
@@ -107,21 +127,13 @@ const _Layout = () => {
                 }
             />
             <Tabs.Screen
-                name='sensor'
-                options={
-                    {
-                        title: 'Sensor',
-                        headerShown: true,
-                        tabBarIcon: ({ focused }) => (
-                            <TabIcon
-                                focused={focused}
-                                icon={icons.setting}
-                            />
-                        ),
-                        header: () => <CustomHeader title='Sensor' />
-                    }
-                }
+                name="sensor/[id]"
+                options={{
+                    href: null,
+                    header: () => <CustomHeader title='Setting' />
+                }}
             />
+
 
         </Tabs>
     )

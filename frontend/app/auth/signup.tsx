@@ -3,15 +3,18 @@ import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, P
 import React, { useEffect, useState } from 'react'
 import { images } from '@/constants/images';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAnimatedStyle, withTiming, FadeOutDown, FadeInRight, FadeOutRight, } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { icons } from '@/constants/icons';
 import { useForm, Controller } from 'react-hook-form';
-import { signUpSchema, SignUpSchemaType } from './validation';
+import { signUpSchema, SignUpSchemaType } from '../../srcs/auth/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getPasswordStrength } from '../utlis/passwordStrength';
-import { user_register } from './auth';
+import { getPasswordStrength } from '../../srcs/utlis/passwordStrength';
+import { user_register } from '../../srcs/auth/auth';
+import { useAuth } from '@/srcs/auth/context/auth_context';
 
 const SingUp = () => {
+    const { login, session } = useAuth();
+
     const {
         control,
         handleSubmit,
@@ -31,10 +34,16 @@ const SingUp = () => {
 
     const handleRegister = async () => {
         const response = await user_register({
-            username: 'Hello_test',
-            email: 'Johndoe_notest@gmail.com',
+            username: 'Hello_test23',
+            email: 'Johndoe32_notest@gmail.com',
             password: 'admin',
         });
+
+        if (response.success) {
+            login(response.data.token);
+        } else {
+
+        }
     }
 
     const strengthBarWidth = useSharedValue(0);
@@ -47,7 +56,11 @@ const SingUp = () => {
         } else {
             strengthBarWidth.value = withTiming(60, { duration: 300 });
         }
-    }, [passwordStrength]);
+
+        if (session) {
+            router.replace('/(tabs)');
+        }
+    }, [passwordStrength, session]);
 
     const animatedBarStyle = useAnimatedStyle(() => ({
         width: strengthBarWidth.value,
@@ -70,7 +83,7 @@ const SingUp = () => {
                             {/* logo section */}
                             <Animated.Image
                                 entering={FadeInUp.delay(200).duration(1000).springify()}
-                                source={images.highlight}
+                                source={images.logo}
                                 className='self-center w-[250px] h-[250px] rounded-full mb-2'
                             />
 
@@ -197,7 +210,7 @@ const SingUp = () => {
 
                             {/* button section */}
                             <View className='self-center mt-2 items-center gap-5'>
-                                <TouchableOpacity onPress={handleSubmit(onSubmit)}>
+                                <TouchableOpacity onPress={handleRegister}>
                                     <Animated.View
                                         entering={FadeInDown.delay(400).duration(1000).springify()}
                                         className='bg-[#1A736A] border-white border-2 rounded-xl py-3 px-[60px]'

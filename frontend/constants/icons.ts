@@ -13,6 +13,9 @@ import google from "@/assets/icons/google.png";
 import password_visible from "@/assets/icons/password_visible.png";
 import password_invisible from "@/assets/icons/password_invisible.png";
 import question_mark from "@/assets/icons/question mark.png";
+import add from "@/assets/icons/add.png";
+import right_arrow from "@/assets/icons/right_arrow_white.png";
+import question_mark_white from "@/assets/icons/question_mark_white.png";
 
 export const icons = {
   home,
@@ -29,5 +32,8 @@ export const icons = {
   google,
   password_invisible,
   password_visible,
-  question_mark
+  question_mark,
+  add,
+  right_arrow,
+  question_mark_white,
 };

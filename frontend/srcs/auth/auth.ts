@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import ApiAxios from "../api/apiManager";
 import * as SecureStore from "expo-secure-store";
-import Storage from "../utlis/storage";
+import { setStorageItemAsync } from "@/srcs/utlis/storage";
 
 interface Data {
   username: string;
@@ -21,10 +21,8 @@ export const user_login = async (data: Data) => {
 
     const token = response.data.token;
     if (token) {
-      Storage.setItem("auth-key", token);
+      return { success: true, data: response.data };
     }
-
-    return { success: true, data: response.data };
   } catch (error: unknown) {
     if (axios.isAxiosError(error) && error.response) {
       console.error("Axios error:", error.response.data);
@@ -48,10 +46,8 @@ export const user_register = async (data: Data) => {
 
     const token = response.data.token;
     if (token) {
-      Storage.setItem("auth-key", token);
+      return { success: true, data: response.data };
     }
-
-    return { success: true, data: response.data };
   } catch (error: unknown) {
     if (axios.isAxiosError(error) && error.response) {
       console.error("Axios error:", error.response.data);

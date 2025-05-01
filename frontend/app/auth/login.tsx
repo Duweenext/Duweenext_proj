@@ -1,16 +1,18 @@
-import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { images } from '@/constants/images';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
+import * as SecureStore from "expo-secure-store";
+import { router, useRouter } from 'expo-router';
 import { icons } from '@/constants/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchemaType, loginSchema } from './validation';
-import { user_login } from './auth';
-import Storage from '../utlis/storage';
+import { LoginSchemaType, loginSchema } from '../../srcs/auth/validation';
+import { user_login } from '../../srcs/auth/auth';
+import { useAuth } from '@/srcs/auth/context/auth_context';
 
 const Login = () => {
+    const { login, session } = useAuth();
     const {
         control,
         handleSubmit,
@@ -32,7 +34,18 @@ const Login = () => {
             email: 'Johndoe22@gmail.com',
             password: 'admin',
         });
+
+        if (response.success) {
+            login(response.data.token);
+        } else {
+
+        }
     }
+    useEffect(() => {
+        if (session) {
+            router.replace('/(tabs)');
+        }
+    }, [session]);
 
     return (
         <KeyboardAvoidingView
@@ -50,13 +63,15 @@ const Login = () => {
                         <View className='flex-col items-start gap-5 p-11' >
                             {/* logo section */}
                             <Animated.Image
-                                entering={FadeInUp.delay(200).duration(1000).springify()}
-                                source={images.highlight}
+                                // entering={FadeInUp.delay(200).duration(1000).springify()}
+                                source={images.logo}
                                 className='self-center w-[250px] h-[250px] rounded-full mb-2'
                             />
 
                             {/* input section */}
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
+                            <Animated.View
+                                entering={FadeInDown.duration(1000).springify()} className='w-full'
+                            >
                                 <View className='flex-row justify-between'>
                                     <View className='flex-row gap-1 items-center p-1'>
                                         <Text className='font-bold text-xl'>Username or Email</Text>
@@ -115,7 +130,7 @@ const Login = () => {
 
                             {/* button section */}
                             <View className='self-center mt-12 items-center gap-5'>
-                                <TouchableOpacity onPress={() => handleLogin()}>
+                                <TouchableOpacity onPress={handleLogin}>
                                     <Animated.View
                                         entering={FadeInDown.delay(200).duration(1000).springify()}
                                         className='bg-[#1A736A] border-white border-2 rounded-xl py-3 px-[69px]'

@@ -20,7 +20,7 @@ const InfoSection = ({ time, harvest, waterchange }: { time: string, harvest: nu
     </>
   );
 }
-//router.push('/sensor')
+
 //router.push('/imageprocess')
 //router.push('/assistant')
 export default function Index() {
@@ -30,7 +30,10 @@ export default function Index() {
     <ScrollView>
       <View className="flex-1 justify-start items-start p-5 gap-6">
         <View className="flex-row justify-between items-center gap-3">
-          <TabBox title="Sensor" icon={icons.sensor} onNav={() => null} />
+          <TabBox title="Sensor" icon={icons.sensor} onNav={() => router.push({
+            pathname: '/(tabs)/sensor/[id]',
+            params: { id: 2 },
+          })} />
           <TabBox title="Check pond health" icon={icons.camera} onNav={() => null} />
           <TabBox title="Assistance" icon={icons.assistant} onNav={() => null} />
         </View>

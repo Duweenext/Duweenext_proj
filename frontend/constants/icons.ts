@@ -16,6 +16,7 @@ import question_mark from "@/assets/icons/question mark.png";
 import add from "@/assets/icons/add.png";
 import right_arrow from "@/assets/icons/right_arrow_white.png";
 import question_mark_white from "@/assets/icons/question_mark_white.png";
+import down_arrow from "@/assets/icons/down-arrow.png";
 
 export const icons = {
   home,
@@ -36,4 +37,5 @@ export const icons = {
   add,
   right_arrow,
   question_mark_white,
+  down_arrow,
 };

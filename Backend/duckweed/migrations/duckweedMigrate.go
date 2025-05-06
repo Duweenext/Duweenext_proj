@@ -17,6 +17,18 @@ func main() {
 func migrate(db database.Database) {
     gormDB := db.GetDb()
 
+    // err := gormDB.Migrator().DropColumn(&entities.Education{}, "id")
+    // gormDB.Migrator().DropColumn(&entities.Board{}, "id")
+    // gormDB.Migrator().DropColumn(&entities.User{}, "id")
+    // gormDB.Migrator().DropColumn(&entities.PondHealth{}, "id")
+    // gormDB.Migrator().DropColumn(&entities.Sensor{}, "id")
+    // gormDB.Migrator().DropColumn(&entities.BoardRelationship{}, "id")
+    // gormDB.Migrator().DropTable(&entities.BoardStatus{})
+    // gormDB.Migrator().DropColumn(&entities.BoardStatus{}, "board_id")
+    // if err != nil {
+    //     log.Fatalf("failed to drop column: %v", err)
+    // }
+
     // 1. Migrate Education
     err := gormDB.AutoMigrate(&entities.Education{})
     if err != nil {
@@ -57,13 +69,21 @@ func migrate(db database.Database) {
     }
     log.Println("Migrated BoardRelationship")
 
-        // 5. Migrate Sensor
-        err = gormDB.AutoMigrate(&entities.BoardRelationship{})
-        if err != nil {
-            log.Fatalf("Failed to migrate BoardRelationship: %v", err)
-            return // Stop if migration fails
-        }
-        log.Println("Migrated BoardRelationship")
+    // 5. Migrate Sensor
+    err = gormDB.AutoMigrate(&entities.BoardRelationship{})
+    if err != nil {
+        log.Fatalf("Failed to migrate BoardRelationship: %v", err)
+        return // Stop if migration fails
+    }
+    log.Println("Migrated BoardRelationship")
+
+    // 6. Migrate status
+    err = gormDB.AutoMigrate(&entities.BoardStatus{})
+    if err != nil {
+        log.Fatalf("Failed to migrate BoardRelationship: %v", err)
+        return // Stop if migration fails
+    }
+    log.Println("Migrated BoardStatus") 
 
 }
 

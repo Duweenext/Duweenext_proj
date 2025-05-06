@@ -26,3 +26,5 @@ func (uc *SensorUseCase) GetSensorByID(id uint) (*entities.Sensor, error) {
 // 	err := uc.repo.Create(sensor)
 // 	return &sensor, err
 // }
+
+

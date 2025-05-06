@@ -1,39 +1,54 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	"main/config"
 	"main/database"
+	"main/duckweed/entities"
 	"main/duckweed/handlers"
 	"main/duckweed/repositories"
 	"main/duckweed/usecases"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
-type fiberServer struct {
+type FiberServer struct {
 	app  *fiber.App
 	db   database.Database
 	conf *config.Config
+	clients map[*websocket.Conn]bool
+	mutex sync.Mutex
+	wsOutput usecases.WebSocketOutputPort // server itself implement the port
+	
 }
 
 func NewFiberServer(conf *config.Config, db database.Database) Server {
 	fiberApp := fiber.New()
 
-	return &fiberServer{
-		app:  fiberApp,
-		db:   db,
-		conf: conf,
+	server := &FiberServer{
+		app:     fiberApp,
+		db:      db,
+		conf:    conf,
+		clients: make(map[*websocket.Conn]bool),
+		mutex:   sync.Mutex{},
 	}
+	server.wsOutput = server // Now it's defined
+
+	return server
 }
 
-func (s *fiberServer) Start() {
+
+func (s *FiberServer) Start() {
 	s.app.Use(recover.New())
 	s.app.Use(logger.New())
 
@@ -99,7 +114,156 @@ func (s *fiberServer) Start() {
 	// api.Get("/boards", boardHandler.GetAllBoards)
 	// api.Get("/boards/:id", boardHandler.GetBoardByID)
 
+	// WebSocket Route
+	api.Get("/ws", s.websocketHandler)
+
+
+	//
+
+	go s.monitorBoardStatus()
 	// Start server
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	log.Fatal(s.app.Listen(serverUrl))
 }
+
+func (s *FiberServer) websocketHandler(c *fiber.Ctx) error {
+    if websocket.IsWebSocketUpgrade(c) {
+        return websocket.New(func(conn *websocket.Conn) {
+            log.Println("Client Connected for WebSocket")
+            s.mutex.Lock()
+            s.clients[conn] = true
+            s.mutex.Unlock()
+
+            defer func() {
+                log.Println("Client Disconnected from WebSocket")
+                s.mutex.Lock()
+                delete(s.clients, conn)
+                s.mutex.Unlock()
+                conn.Close()
+            }()
+
+            for {
+                msgType, msg, err := conn.ReadMessage() // We are primarily broadcasting, so reading might be less frequent
+                if err != nil {
+                    log.Println("WebSocket Read Error:", err)
+                    break
+                }
+
+                if msgType == websocket.TextMessage {
+                    var boardStatus entities.BoardStatus
+                    err := json.Unmarshal(msg, &boardStatus)
+                    if err != nil {
+                        log.Println("Error unmarshaling board status:", err)
+                        continue
+                    }
+
+                    // Update board status in the database
+                    err = updateBoardStatus(boardStatus.BoardID, boardStatus.Status, s.db)
+                    if err != nil {
+                        log.Println("Error updating board status:", err)
+                    } else {
+                        log.Printf("Board %s status updated to: %s", boardStatus.BoardID, boardStatus.Status)
+                    }
+                }
+            }
+        })(c)
+    }
+    return fiber.ErrNotFound
+}
+
+
+func (s *FiberServer) BroadcastSensorData(data *entities.SensorData) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Println("Error marshaling sensor data:", err)
+		return
+	}
+
+	for client := range s.clients {
+		err := client.WriteMessage(websocket.TextMessage, jsonData)
+		if err != nil {
+			log.Println("Broadcast Error:", err)
+			client.Close()
+			delete(s.clients, client)
+		}
+	}
+}
+
+func (s *FiberServer) BroadcastStatus(status *entities.BoardStatus) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	jsonData, err := json.Marshal(status)
+	if err != nil {
+		log.Println("Error marshaling board status:", err)
+		return
+	}
+
+	for client := range s.clients {
+		err := client.WriteMessage(websocket.TextMessage, jsonData)
+		if err != nil {
+			log.Println("Broadcast Error:", err)
+			client.Close()
+			delete(s.clients, client)
+		}
+	}
+}
+
+// Function to update the board status to the database
+func updateBoardStatus(boardId string, status string, db database.Database) error {
+    var boardStatus entities.BoardStatus
+    result := db.GetDb().Where("board_id = ?", boardId).First(&boardStatus)
+    
+    if result.Error != nil {
+        // Handle error if no record found
+        return result.Error
+    }
+
+    // Update the status
+    boardStatus.Status = status
+    boardStatus.UpdatedAt = time.Now() // Store the last update time
+    if err := db.GetDb().Save(&boardStatus).Error; err != nil {
+        return err
+    }
+
+    log.Printf("Updated Board ID: %s to status: %s", boardId, status)
+    return nil
+}
+
+
+func (s *FiberServer) monitorBoardStatus() {
+	ticker := time.NewTicker(30 * time.Second) // Check every 30 seconds
+	defer ticker.Stop()
+
+	for {
+		<-ticker.C
+		var boards []entities.BoardStatus
+		err := s.db.GetDb().Find(&boards).Error
+		if err != nil {
+			log.Printf("Error checking board statuses: %v", err)
+			continue
+		}
+
+		now := time.Now()
+		for _, board := range boards {
+			if !board.LastSeen.IsZero() && now.Sub(board.LastSeen) > time.Minute && board.Status != "offline" {
+				// Mark as offline
+				board.Status = "offline"
+				board.UpdatedAt = now
+				if err := s.db.GetDb().Save(&board).Error; err != nil {
+					log.Printf("Error updating board status to offline for %s: %v", board.BoardID, err)
+					continue
+				}
+				log.Printf("Marked board %s as OFFLINE", board.BoardID)
+			
+				// Also broadcast offline status
+				s.BroadcastStatus(&board)
+			}
+			
+		}
+	}
+}
+

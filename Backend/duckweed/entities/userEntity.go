@@ -27,13 +27,13 @@ type UserResponseDto struct {
 }
 
 type User struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 	UserID      *uint `gorm:"primaryKey;autoIncrement"`
 	UserName    *string
 	Email       *string
 	PhoneNumber *string
 	Password    *string
-	CreatedAt   *time.Time
-	UpdatedAt   *time.Time
-	DeletedAt   *gorm.DeletedAt
 }
 

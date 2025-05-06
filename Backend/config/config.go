@@ -11,6 +11,7 @@ type (
   Config struct {
     Server *Server
     Db     *Db
+    MQTT   *MQTT 
   }
   
   Server struct {
@@ -25,6 +26,13 @@ type (
     DBName   string
     TimeZone string
   }
+
+  MQTT struct { // Define MQTT configuration struct
+		BrokerURL string
+		ClientID  string
+    TopicTelemetry string
+    TopicStatus string
+	}
 )
 
 var (
@@ -36,6 +44,9 @@ func GetConfig() *Config {
   once.Do(func() {
     viper.SetConfigName("config")
     viper.SetConfigType("yaml")
+    // for local migrations
+    // viper.AddConfigPath("../..") 
+    // use for main running
     viper.AddConfigPath("./")
     viper.AutomaticEnv()
     viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

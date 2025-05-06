@@ -2,9 +2,14 @@ package entities
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Board struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 	BoardID           *uint  `gorm:"primaryKey;autoIncrement"`
 	SensorID		  *uint	 `gorm:"not null"`   
 	BoardName         *string    

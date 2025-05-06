@@ -1,8 +1,15 @@
 package entities
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type BoardRelationship struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 	ConnectionID       uint      `gorm:"primaryKey;autoIncrement"`
 	BoardID            *string   `gorm:"not null"`
 	UserID             *uint     `gorm:"not null"`

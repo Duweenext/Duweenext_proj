@@ -2,10 +2,15 @@ package entities
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 
 type PondHealth struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 	PondID   *uint     `gorm:"primaryKey;autoIncrement"`
 	UserID   *uint     `gorm:"not null"`   
 	Picture  *string    

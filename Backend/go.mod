@@ -5,8 +5,12 @@ go 1.22.2
 require github.com/gofiber/fiber/v2 v2.52.6
 
 require (
+	github.com/fatih/color v1.9.0 // indirect
+	github.com/githubnemo/CompileDaemon v1.4.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/radovskyb/watcher v1.0.7 // indirect
 )
 
 require (

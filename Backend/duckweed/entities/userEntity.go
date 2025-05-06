@@ -13,10 +13,10 @@ type AuthenticateUserDto struct {
 }
 
 type InsertUserDto struct {
-	UserName    string `json:"username"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phonenumber"`
-	Password    string `json:"password"`
+	UserName    string 
+	Email       string 
+	PhoneNumber string 
+	Password    string 
 }
 
 type UserResponseDto struct {
@@ -36,3 +36,4 @@ type User struct {
 	UpdatedAt   *time.Time
 	DeletedAt   *gorm.DeletedAt
 }
+

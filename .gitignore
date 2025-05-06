@@ -38,3 +38,4 @@ frontend/*.mobileprovision
 frontend/app-example
 
 Backend/config.yaml
+node_modules

@@ -1,7 +1,9 @@
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View, ScrollView, TextInput } from 'react-native';
 import React, { useState } from 'react';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { DropDown } from '@/components/menu';
 
 // Status color mapping
 const statusTabColorClassMap: Record<string, string> = {
@@ -25,7 +27,7 @@ const buttonTextMap: Record<string, string> = {
 // Mock sensor data
 const mockSensors = [
     { name: 'Ph sensor', value: 20, status: 'Connected' },
-    { name: 'Temp sensor', value: 25, status: 'Disconnected' },
+    { name: 'Temp sensor', value: 25, status: 'Connected' },
     { name: 'EC sensor', value: 20, status: 'Connected' },
 ];
 
@@ -74,32 +76,83 @@ interface BoardData {
 
 // Sensor Item Component - Used inside expanded board tabs
 const SensorItem = ({ sensor }: { sensor: SensorData }) => {
+    const [expanded, setExpanded] = useState(false);
     const textColor = statusTextColorClassMap[sensor.status] || 'text-white';
     const buttonText = buttonTextMap[sensor.status] || 'Reconnect';
+    const [selectedFreq, setSelectedFreq] = useState('Continous');
+
+    const toggleExpanded = () => {
+        setExpanded(!expanded);
+    };
+
+    const handleFreqSelect = (value: string) => {
+        setSelectedFreq(value);
+    };
 
     return (
-        <View className="flex-1 bg-black/10 rounded-lg p-3 mb-2">
-            <View className="flex-row justify-between items-center w-full">
-                <View className="flex-1">
-                    <Text className={`${textColor} font-medium text-sm`}>{sensor.name}</Text>
-                    <Text className={`${textColor} font-normal text-xs`}>
-                        Current value: {sensor.value}
-                    </Text>
-                    <Text className={`${textColor} font-normal text-xs`}>
-                        Status: {sensor.status}
-                    </Text>
-                </View>
+        <TouchableOpacity onPress={toggleExpanded}>
+            <View className="flex bg-primary rounded-lg mb-2">
+                <View className='p-3'>
+                    <View className="flex-row justify-between items-center w-full">
+                        <View className="flex-1">
+                            <Text className={`${textColor} font-medium text-lg`}>{sensor.name}</Text>
+                            <Text className={`${textColor} font-normal text-sm`}>
+                                Current value: {sensor.value}
+                            </Text>
+                            <Text className={`${textColor} font-normal text-sm`}>
+                                Status: {sensor.status}
+                            </Text>
+                        </View>
 
-                <TouchableOpacity onPress={() => console.log(`${buttonText} ${sensor.name}`)}>
-                    <View className="bg-white rounded-lg py-1 px-3 mr-2">
-                        <Text className="font-medium text-black text-xs">{buttonText}</Text>
+                        {/* <TouchableOpacity onPress={() => console.log(`${buttonText} ${sensor.name}`)}>
+                            <View className="bg-white rounded-lg py-1 px-3 mr-2">
+                                <Text className="font-medium text-black text-xs">{buttonText}</Text>
+                            </View>
+                        </TouchableOpacity> */}
+
+                        <Image source={icons.right_arrow} style={{ height: 15, width: 15 }} />
                     </View>
-                </TouchableOpacity>
+                </View>
+                {expanded && (
 
-                <Image source={icons.right_arrow} style={{ height: 15, width: 15 }} />
+                    <View className="py-4 px-3 bg-white rounded-b-lg gap-2">
+                        <View className='flex-row justify-between'>
+                            <View className='flex gap-3'>
+                                <View className='flex-row gap-1 items-center w-full '>
+                                    <Text className="font-semibold text-lg text-black">Threshold</Text>
+                                    <TouchableOpacity>
+                                        <Image source={icons.question_mark} className='h-5 w-5' />
+                                    </TouchableOpacity>
+                                </View>
+                                <View className='flex-row justify-between items-center'>
+                                    <Text className="font-semibold text-lg text-black">Max: </Text>
+                                    <TextInput className='border-2 border-black h-auto px-6 py-1 rounded-md' placeholder='5.5' />
+                                </View>
+                                <View className='flex-row justify-between items-center'>
+                                    <Text className="font-semibold text-lg text-black">Max: </Text>
+                                    <TextInput className='border-2 border-black h-auto px-6 py-1 rounded-md' placeholder='5.5' />
+                                </View>
+                            </View>
+                            <View>
+                                <Text className="font-semibold text-lg text-black">Frequency</Text>
+                                <DropDown
+                                    options={['Continous', '3 per days', 'Manually']}
+                                    selected={selectedFreq}
+                                    onSelect={handleFreqSelect}
+                                    buttonText="Select Graph"
+                                />
+                            </View>
+                        </View>
+                        <View>
+                            <Text className='font-semibold text-lg'>Summary</Text>
+                        </View>
+                    </View>
+                )}
             </View>
-        </View>
+        </TouchableOpacity>
     );
+
+
 };
 
 // Expandable Board Tab Component
@@ -129,20 +182,20 @@ const BoardTab = ({ board }: { board: BoardData }) => {
                     <View className="flex-row justify-between items-end w-full mt-1">
                         <View className="flex-1">
                             {board.status === 'Disconnected' && board.last_connected && (
-                                <Text className={`${textColor} font-normal text-xs`}>
+                                <Text className={`${textColor} font-normal text-sm`}>
                                     Last Connected: {board.last_connected} hours
                                 </Text>
                             )}
 
                             {(board.status === 'Connected' || board.status === 'Disconnected') && (
-                                <Text className={`${textColor} font-normal text-xs`}>
+                                <Text className={`${textColor} font-normal text-sm`}>
                                     Running: {board.running_time} hours
                                 </Text>
                             )}
 
                             {board.status === 'UnableToConnect' && (
                                 <View className="flex-row gap-1 items-end">
-                                    <Text className={`${textColor} font-normal text-xs`}>
+                                    <Text className={`${textColor} font-normal text-sm`}>
                                         Why is it not connecting?
                                     </Text>
                                     <Image
@@ -152,7 +205,7 @@ const BoardTab = ({ board }: { board: BoardData }) => {
                                 </View>
                             )}
 
-                            <Text className={`${textColor} font-normal text-xs`}>Status: {board.status}</Text>
+                            <Text className={`${textColor} font-normal text-sm`}>Status: {board.status}</Text>
                         </View>
 
                         <TouchableOpacity onPress={() => console.log(`${buttonText} ${board.name}`)}>
@@ -166,13 +219,24 @@ const BoardTab = ({ board }: { board: BoardData }) => {
 
             {/* Expandable content - sensors list */}
             {expanded && board.status === 'Connected' && (
-                <View className="px-4 pb-4">
-                    {board.sensors.map((sensor, index) => (
-                        <SensorItem key={index} sensor={sensor} />
-                    ))}
-                </View>
-            )}
-        </View>
+                // <View className="p-5">
+                <LinearGradient
+                    colors={['#95E7E7', '#5A9696']}
+                    style={{ padding: 10 }}
+                    start={{ x: 0, y: 0 }} // top
+                    end={{ x: 0, y: 1 }}   // bottom
+                >
+                    {/* Mapping over sensors */}
+                    <View className='px-1'>
+                        {board.sensors.map((sensor, index) => (
+                            <SensorItem key={index} sensor={sensor} />
+                        ))}
+                    </View>
+                </LinearGradient>
+                // </View>
+            )
+            }
+        </View >
     );
 };
 
@@ -183,39 +247,41 @@ const SensorScreen = () => {
     };
 
     return (
-        <View className="flex-1 h-screen w-screen relative">
-            <Image
-                source={images.background}
-                resizeMode="cover"
-                style={{ flex: 1, width: '100%', height: '100%' }}
-                className="absolute h-full w-full"
-            />
-            <View className="flex-1 px-4 py-5 gap-5">
-                <View className="gap-2">
+        <ScrollView>
+            <View className="flex-1 h-screen w-screen relative">
+                <Image
+                    source={images.background}
+                    resizeMode="cover"
+                    style={{ flex: 1, width: '100%', height: '100%' }}
+                    className="absolute h-full w-full"
+                />
+                <View className="flex-1 justify-start px-4 py-2 gap-2">
+                    {/* <View className="gap-2"> */}
                     <View className='flex-row gap-1 items-center w-full'>
                         <Text className="font-semibold text-2xl text-white">Add board</Text>
                         <TouchableOpacity>
-                            <Image source={icons.question_mark_white} style={{ height: 20, width: 20 }} />
+                            <Image source={icons.question_mark_white} className='h-5 w-5' />
                         </TouchableOpacity>
                     </View>
                     {/* Add board button */}
                     <TouchableOpacity
                         onPress={onAddBoard}
-                        className="flex-1 p-5 bg-white rounded-2xl justify-center items-center"
+                        className="flex p-10 bg-white rounded-2xl justify-center items-center"
                     >
-                        <Image source={icons.add} style={{ height: 40, width: 40 }} />
+                        <Image source={icons.add} className='h-8 w-8' />
                     </TouchableOpacity>
-                </View>
+                    {/* </View> */}
 
-                <View className="gap-2">
-                    <Text className="font-semibold text-2xl text-white">Board</Text>
-                    {/* Render all board tabs */}
-                    {mockBoards.map((board) => (
-                        <BoardTab key={board.id} board={board} />
-                    ))}
+                    <View className="gap-2">
+                        <Text className="font-semibold text-2xl text-white">Board</Text>
+                        {/* Render all board tabs */}
+                        {mockBoards.map((board) => (
+                            <BoardTab key={board.id} board={board} />
+                        ))}
+                    </View>
                 </View>
             </View>
-        </View>
+        </ScrollView>
     );
 };
 

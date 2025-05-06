@@ -1,6 +1,7 @@
 import { Slot } from 'expo-router';
 import './globals.css';
 import { AuthProvider } from '../srcs/auth/context/auth_context';
+import { PaperProvider } from 'react-native-paper';
 // import { NativeWindStyleSheet } from "nativewind";
 
 // NativeWindStyleSheet.setOutput({
@@ -9,8 +10,10 @@ import { AuthProvider } from '../srcs/auth/context/auth_context';
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <Slot />
-    </AuthProvider>
+    <PaperProvider>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </PaperProvider>
   );
 }

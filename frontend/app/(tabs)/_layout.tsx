@@ -4,49 +4,42 @@ import { Redirect, Tabs } from 'expo-router'
 import { images } from '@/constants/images'
 import { icons } from '@/constants/icons'
 import { useAuth } from '@/srcs/auth/context/auth_context'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-const TabIcon = ({ focused, icon }: any) => {
+function TabIcon({ focused, icon, title }: any) {
     if (focused) {
         return (
             <ImageBackground
                 source={images.highlight}
-                style={{
-                    width: 70,
-                    height: 70,
-                    marginTop: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: 35,
-                    overflow: 'hidden',
-                }}
-                className='flex flex-row w-full flex-1 min-w-[70px] min-h-[70px] mt-2 justify-center items-center rounded-full overflow-hidden'
-                tintColor='#087979'
+                className="flex p-3 w-full flex-1 min-w-[120px] min-h-16 mt-3.5 justify-center items-center rounded-xl overflow-hidden"
             >
-                <Image source={icon} style={{ width: 32, height: 32, marginBottom: 6 }} tintColor="#ffffff" className='size-8 mb-2' />
+                <Image source={icon} tintColor="#fff" className="size-6" />
+                <Text className="text-white text-sm font-semibold ml-2">
+                    {title}
+                </Text>
             </ImageBackground>
-        )
+        );
     }
-    else {
-        return (
-            <View className='size-full justify-center items-center mt-4 rounded-full'>
-                <Image
-                    source={icon}
-                    tintColor="#A8B5DB"
-                    style={{ width: 32, height: 32, marginBottom: 8 }}
-                    className='size-8 mb-2'
-                />
-            </View>
-        )
-    }
+
+    return (
+        <View className=" min-w-[120px] size-full justify-center items-center mt-4 rounded-full">
+            <Image source={icon} tintColor="#A8B5DB" className="size-7" />
+            <Text className="text-black text-sm font-semibold ml-2">
+                {title}
+            </Text>
+        </View>
+    );
 }
 
 const CustomHeader = ({ title }: { title: string }) => {
     return (
-        <View className="py-6 px-6 bg-[#95E7E7]">
-            <Text className='text-start font-bold text-[#1A736A] text-2xl' >
-                {title}
-            </Text>
-        </View>
+        <SafeAreaView>
+            <View className="py-6 px-6 bg-[#95E7E7]">
+                <Text className='text-start font-bold text-[#1A736A] text-2xl' >
+                    {title}
+                </Text>
+            </View>
+        </SafeAreaView>
     );
 }
 
@@ -57,37 +50,45 @@ const _Layout = () => {
         return <Text>Loading...</Text>;
     }
 
-    if (!session) {
-        return <Redirect href="/auth/welcome" />;
-    }
+    // if (!session) {
+    //     return <Redirect href="/auth/welcome" />;
+    // }
     return (
         <Tabs
             screenOptions={{
                 tabBarItemStyle: {
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
+                    width: "100%",
+                    height: "100%",
+                    justifyContent: "center",
+                    alignItems: "center",
                 },
                 tabBarStyle: {
-                    backgroundColor: '#95E7E7',
-                    justifyContent: 'flex-start',
-                    alignItems: 'flex-start',
-                    minHeight: 60,
-                    position: Platform.OS === 'web' ? 'relative' : 'absolute',
+                    backgroundColor: "#fff",
+                    borderRadius: 15,
+                    marginHorizontal: 20,
+                    marginBottom: 60,
+                    paddingTop: 5,
+                    height: 60,
+                    position: "absolute",
+                    overflow: "hidden",
+                    borderWidth: 1,
+                    elevation: 0, // Android shadow
+                    shadowOpacity: 0, // iOS shadow
+                    borderTopWidth: 0,
                 },
-                tabBarActiveTintColor: '#fff', // color when tab is active
-                tabBarInactiveTintColor: '#fff',
             }}
         >
             <Tabs.Screen
                 name='education'
                 options={
                     {
-                        title: 'Education',
+                        title: '',
                         headerShown: true,
                         tabBarIcon: ({ focused }) => (
                             <TabIcon
                                 focused={focused}
                                 icon={icons.educate}
+                                title='Education'
                             />
                         ),
                         header: () => <CustomHeader title='Education' />
@@ -98,12 +99,13 @@ const _Layout = () => {
                 name='index'
                 options={
                     {
-                        title: 'Home',
+                        title: '',
                         headerShown: true,
                         tabBarIcon: ({ focused }) => (
                             <TabIcon
                                 focused={focused}
                                 icon={icons.home}
+                                title='Home'
                             />
                         ),
                         header: () => <CustomHeader title='Home' />
@@ -114,12 +116,13 @@ const _Layout = () => {
                 name='setting'
                 options={
                     {
-                        title: 'Setting',
+                        title: '',
                         headerShown: true,
                         tabBarIcon: ({ focused }) => (
                             <TabIcon
                                 focused={focused}
                                 icon={icons.setting}
+                                title='Setting'
                             />
                         ),
                         header: () => <CustomHeader title='Setting' />

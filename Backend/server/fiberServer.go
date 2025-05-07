@@ -26,7 +26,7 @@ type FiberServer struct {
 	app  *fiber.App
 	db   database.Database
 	conf *config.Config
-	clients map[*websocket.Conn]bool
+	clients map[*websocket.Conn]map[string]bool // map to track connected clients
 	mutex sync.Mutex
 	wsOutput usecases.WebSocketOutputPort // server itself implement the port
 	
@@ -39,7 +39,7 @@ func NewFiberServer(conf *config.Config, db database.Database) Server {
 		app:     fiberApp,
 		db:      db,
 		conf:    conf,
-		clients: make(map[*websocket.Conn]bool),
+		clients: make(map[*websocket.Conn]map[string]bool),
 		mutex:   sync.Mutex{},
 	}
 	server.wsOutput = server // Now it's defined
@@ -130,8 +130,15 @@ func (s *FiberServer) websocketHandler(c *fiber.Ctx) error {
     if websocket.IsWebSocketUpgrade(c) {
         return websocket.New(func(conn *websocket.Conn) {
             log.Println("Client Connected for WebSocket")
+
+			userId := c.Locals("userId").(uint)
+			boardId := c.Params("boardId")
+
             s.mutex.Lock()
-            s.clients[conn] = true
+			if _, exists := s.clients[conn]; !exists {
+                s.clients[conn] = make(map[string]bool) // Initialize a map for this connection
+            }
+            s.clients[conn][boardId] = true // Store the boardId for this connection
             s.mutex.Unlock()
 
             defer func() {
@@ -141,6 +148,13 @@ func (s *FiberServer) websocketHandler(c *fiber.Ctx) error {
                 s.mutex.Unlock()
                 conn.Close()
             }()
+
+			 // Check if there's a relationship in the DB
+			 hasRelationship := s.isUserSubscribedToBoard(userId, boardId)
+			 if !hasRelationship {
+				 log.Println("User not subscribed to this board. No telemetry data will be sent.")
+				 return // Do not send telemetry to this user
+			 }
 
             for {
                 msgType, msg, err := conn.ReadMessage() // We are primarily broadcasting, so reading might be less frequent
@@ -169,6 +183,36 @@ func (s *FiberServer) websocketHandler(c *fiber.Ctx) error {
         })(c)
     }
     return fiber.ErrNotFound
+}
+
+func (s *FiberServer) isUserSubscribedToBoard(userID uint, boardID string) bool {
+    var relationship entities.BoardRelationship
+    result := s.db.GetDb().Where("user_id = ? AND board_id = ?", userID, boardID).First(&relationship)
+    return result.Error == nil // Return true if relationship exists
+}
+
+// Method to broadcast data to all users that are subscribed to a board
+func (s *FiberServer) BroadcastTelemetryData(boardID string, data *entities.SensorData) {
+    s.mutex.Lock()
+    defer s.mutex.Unlock()
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Println("Error marshaling sensor data:", err)
+		return
+	}
+
+    for conn, boardMap := range s.clients {
+        // Only send telemetry to clients that are subscribed to the specific board
+        if _, ok := boardMap[boardID]; ok {
+            err := conn.WriteMessage(websocket.TextMessage, jsonData)
+            if err != nil {
+                log.Println("Error sending data to client:", err)
+                conn.Close()
+                delete(s.clients, conn)
+            }
+        }
+    }
 }
 
 
@@ -267,3 +311,4 @@ func (s *FiberServer) monitorBoardStatus() {
 	}
 }
 
+// check if the connection is good for user 1 and user 2 , if user 1 can see but user 2 cannot see. that mean it work!

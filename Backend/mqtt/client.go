@@ -64,48 +64,74 @@ func subscribe(client mqtt.Client, topic string, handler mqtt.MessageHandler) {
 
 // handleTelemetryMessage handles messages received on the telemetry topic.
 func handleTelemetryMessage(client mqtt.Client, msg mqtt.Message) {
-	log.Printf("Received telemetry message on topic: %s\n", msg.Topic())
-	log.Printf("Telemetry Message: %s\n", msg.Payload())
+    log.Printf("Received telemetry message on topic: %s\n", msg.Topic())
+    log.Printf("Telemetry Message: %s\n", msg.Payload())
 
-	// Extract the device ID from the topic
-	parts := strings.Split(msg.Topic(), "/")
-	var boardId string // Changed from deviceId to boardId to match your database
-	if len(parts) == 3 && parts[0] == "iot" && parts[2] == "telemetry" {
-		boardId = parts[1] // Now boardId
-		log.Printf("Telemetry Device ID: %s\n", boardId)
-	} else {
-		log.Printf("Could not extract Board ID from telemetry topic: %s\n", msg.Topic())
-		return
-	}
+    // Extract the device ID from the topic
+    parts := strings.Split(msg.Topic(), "/")
+    var boardId string // Changed from deviceId to boardId to match your database
+    if len(parts) == 3 && parts[0] == "iot" && parts[2] == "telemetry" {
+        boardId = parts[1] // Now boardId
+        log.Printf("Telemetry Device ID: %s\n", boardId)
+    } else {
+        log.Printf("Could not extract Board ID from telemetry topic: %s\n", msg.Topic())
+        return
+    }
 
-	var sensorData entities.SensorData
-	err := json.Unmarshal(msg.Payload(), &sensorData) // Assuming JSON payload
-	if err != nil {
-		log.Printf("Error unmarshaling telemetry payload: %v", err)
-		return
-	}
+    var sensorData entities.SensorData
+    err := json.Unmarshal(msg.Payload(), &sensorData) // Assuming JSON payload
+    if err != nil {
+        log.Printf("Error unmarshaling telemetry payload: %v", err)
+        return
+    }
 
-	// Fetch the user ID from the database based on the board ID.
-	userID, err := getUserIdFromBoardId(boardId) // Now using boardId
-	if err != nil {
-		log.Printf("Error fetching User ID from database: %v", err)
-		return // Important:  Return here to prevent processing with invalid User ID.
-	}
-	if userID == 0 {
-		log.Printf("User ID not found for Board ID: %s\n", boardId)
-		return // IMPORTANT: return, do not process further
-	}
+    // Fetch the user ID from the database based on the board ID.
+    userID, err := getUserIdFromBoardId(boardId) // Now using boardId
+    if err != nil {
+        log.Printf("Error fetching User ID from database: %v", err)
+        return // Important:  Return here to prevent processing with invalid User ID.
+    }
+    if userID == 0 {
+        log.Printf("User ID not found for Board ID: %s\n", boardId)
+        return // IMPORTANT: return, do not process further
+    }
 
-	sensorData.UserID = userID // Set the UserID, converting int to uint
+    sensorData.UserID = userID // Set the UserID, converting int to uint
 
-	// Broadcast the received sensor data via WebSocket
-	if serverInstance != nil {
-		serverInstance.BroadcastSensorData(&sensorData)
-	} else {
-		log.Println("serverInstance is nil, cannot broadcast WebSocket message")
-	}
-	updateLastSeen(boardId)
+    // Check if the user is subscribed to this board
+    isSubscribed := isUserSubscribedToBoard(uint(userID), boardId)
+    if !isSubscribed {
+        log.Printf("User ID %d is not subscribed to board %s. Skipping telemetry broadcast.\n", userID, boardId)
+        return // Don't send telemetry data to this user
+    }
+
+    // Broadcast the received sensor data via WebSocket only if the user is subscribed
+    if serverInstance != nil {
+        serverInstance.BroadcastTelemetryData(boardId,&sensorData)
+    } else {
+        log.Println("serverInstance is nil, cannot broadcast WebSocket message")
+    }
+
+    updateLastSeen(boardId)
 }
+
+// Example implementation for checking user subscription to a board
+func isUserSubscribedToBoard(userID uint, boardID string) bool {
+    // Query the database to check if this user has a relationship with the board
+    var count int64
+    result := db.Model(&entities.BoardRelationship{}).
+        Where("user_id = ? AND board_id = ?", userID, boardID).
+        Count(&count)
+    
+    if result.Error != nil {
+        log.Printf("Error checking subscription: %v", result.Error)
+        return false
+    }
+
+    return count > 0
+}
+
+
 
 // handleStatusMessage handles messages received on the status topic.
 func handleStatusMessage(client mqtt.Client, msg mqtt.Message) {

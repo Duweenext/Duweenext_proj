@@ -6,7 +6,8 @@ import (
 
 type Server interface {
   Start()
-  BroadcastSensorData(data *entities.SensorData) 
+  // BroadcastSensorData(data *entities.SensorData)
+  BroadcastTelemetryData(boardId string,data *entities.SensorData)
   BroadcastStatus(status *entities.BoardStatus)
   // BroadcastSensorDataToClient(clientID string, data *entities.SensorData)
   // RegisterClient(clientID string, connection interface{})

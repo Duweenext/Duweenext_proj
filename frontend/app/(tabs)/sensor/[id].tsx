@@ -4,6 +4,8 @@ import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DropDown } from '@/components/menu';
+import { z } from 'zod';
+import SensorModal from '@/components/sensorModal';
 
 // Status color mapping
 const statusTabColorClassMap: Record<string, string> = {
@@ -242,12 +244,21 @@ const BoardTab = ({ board }: { board: BoardData }) => {
 
 // Main Sensor Screen
 const SensorScreen = () => {
-    const onAddBoard = () => {
-        console.log('Add board pressed');
+
+    const [showModal, setShowModal] = useState(false);
+
+    const handleWifiSubmit = (data: { ssid: string; password: string }) => {
+        console.log('Submitted Wi-Fi Credentials:', data);
+        setShowModal(false);
     };
 
     return (
         <ScrollView>
+            <SensorModal
+                visible={showModal}
+                onClose={() => setShowModal(false)}
+                onSubmit={handleWifiSubmit}
+            />
             <View className="flex-1 h-screen w-screen relative">
                 <Image
                     source={images.background}
@@ -265,7 +276,7 @@ const SensorScreen = () => {
                     </View>
                     {/* Add board button */}
                     <TouchableOpacity
-                        onPress={onAddBoard}
+                        onPress={() => setShowModal(true)}
                         className="flex p-10 bg-white rounded-2xl justify-center items-center"
                     >
                         <Image source={icons.add} className='h-8 w-8' />

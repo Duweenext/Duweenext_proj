@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -115,7 +116,9 @@ func (s *FiberServer) Start() {
 	// api.Get("/boards/:id", boardHandler.GetBoardByID)
 
 	// WebSocket Route
-	api.Get("/ws", s.websocketHandler)
+	// api.Get("/ws", s.websocketHandler)
+	// in Start():
+	api.Get("/ws/:userId/:boardId", s.websocketHandler)
 
 
 	//
@@ -127,63 +130,67 @@ func (s *FiberServer) Start() {
 }
 
 func (s *FiberServer) websocketHandler(c *fiber.Ctx) error {
+    // 1) Extract userId and boardId from path params
+    userIdStr := c.Params("userId")
+    uid, err := strconv.ParseUint(userIdStr, 10, 32)
+    if err != nil {
+        log.Println("Invalid userId param:", userIdStr, err)
+        return fiber.ErrBadRequest
+    }
+    userId := uint(uid)
+
+    boardId := c.Params("boardId")
+    if boardId == "" {
+        log.Println("Missing boardId param")
+        return fiber.ErrBadRequest
+    }
+
+    // 2) Upgrade to WebSocket, capturing userId and boardId
     if websocket.IsWebSocketUpgrade(c) {
         return websocket.New(func(conn *websocket.Conn) {
-            log.Println("Client Connected for WebSocket")
+            log.Printf("Client Connected: user %d → board %s", userId, boardId)
 
-			userId := c.Locals("userId").(uint)
-			boardId := c.Params("boardId")
-
-            s.mutex.Lock()
-			if _, exists := s.clients[conn]; !exists {
-                s.clients[conn] = make(map[string]bool) // Initialize a map for this connection
+            // 3) Check subscription
+            if !s.isUserSubscribedToBoard(userId, boardId) {
+                conn.WriteMessage(websocket.TextMessage,
+                    []byte(`{"error":"not subscribed to board"}`))
+                conn.Close()
+                return
             }
-            s.clients[conn][boardId] = true // Store the boardId for this connection
+
+            // 4) Register connection
+            s.mutex.Lock()
+            if s.clients[conn] == nil {
+                s.clients[conn] = make(map[string]bool)
+            }
+            s.clients[conn][boardId] = true
             s.mutex.Unlock()
 
             defer func() {
-                log.Println("Client Disconnected from WebSocket")
+                // Cleanup on disconnect
                 s.mutex.Lock()
                 delete(s.clients, conn)
                 s.mutex.Unlock()
                 conn.Close()
+                log.Printf("Client Disconnected: user %d → board %s", userId, boardId)
             }()
 
-			 // Check if there's a relationship in the DB
-			 hasRelationship := s.isUserSubscribedToBoard(userId, boardId)
-			 if !hasRelationship {
-				 log.Println("User not subscribed to this board. No telemetry data will be sent.")
-				 return // Do not send telemetry to this user
-			 }
+            // 5) Acknowledge subscription
+            conn.WriteMessage(websocket.TextMessage,
+                []byte(`{"type":"subscribed","boardId":"`+boardId+`"}`))
 
+            // 6) Keep the connection alive
             for {
-                msgType, msg, err := conn.ReadMessage() // We are primarily broadcasting, so reading might be less frequent
-                if err != nil {
-                    log.Println("WebSocket Read Error:", err)
+                if _, _, err := conn.ReadMessage(); err != nil {
                     break
-                }
-
-                if msgType == websocket.TextMessage {
-                    var boardStatus entities.BoardStatus
-                    err := json.Unmarshal(msg, &boardStatus)
-                    if err != nil {
-                        log.Println("Error unmarshaling board status:", err)
-                        continue
-                    }
-
-                    // Update board status in the database
-                    err = updateBoardStatus(boardStatus.BoardID, boardStatus.Status, s.db)
-                    if err != nil {
-                        log.Println("Error updating board status:", err)
-                    } else {
-                        log.Printf("Board %s status updated to: %s", boardStatus.BoardID, boardStatus.Status)
-                    }
                 }
             }
         })(c)
     }
-    return fiber.ErrNotFound
+
+    return fiber.ErrUpgradeRequired
 }
+
 
 func (s *FiberServer) isUserSubscribedToBoard(userID uint, boardID string) bool {
     var relationship entities.BoardRelationship
@@ -196,7 +203,17 @@ func (s *FiberServer) BroadcastTelemetryData(boardID string, data *entities.Sens
     s.mutex.Lock()
     defer s.mutex.Unlock()
 
-	jsonData, err := json.Marshal(data)
+	    // envelope with a "type" and a "data" field
+		envelope := struct {
+			Type string               `json:"type"`
+			Data *entities.SensorData `json:"data"`
+		}{
+			Type: "telemetry",
+			Data: data,
+		}
+		payload, err := json.Marshal(envelope)
+
+	// jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Println("Error marshaling sensor data:", err)
 		return
@@ -205,7 +222,7 @@ func (s *FiberServer) BroadcastTelemetryData(boardID string, data *entities.Sens
     for conn, boardMap := range s.clients {
         // Only send telemetry to clients that are subscribed to the specific board
         if _, ok := boardMap[boardID]; ok {
-            err := conn.WriteMessage(websocket.TextMessage, jsonData)
+            err := conn.WriteMessage(websocket.TextMessage, payload)
             if err != nil {
                 log.Println("Error sending data to client:", err)
                 conn.Close()

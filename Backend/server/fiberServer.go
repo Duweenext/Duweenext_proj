@@ -68,6 +68,7 @@ func (s *FiberServer) Start() {
 	// sensorRepo := repositories.NewSensorRepository(s.db.GetDb())
 	pondHealthRepo := repositories.NewPondHealthRepository(s.db.GetDb())
 	educationRepo := repositories.NewEducationRepository(s.db.GetDb())
+	boardRelationShipRepo := repositories.NewBoardRelationshipRepository(s.db.GetDb())
 	// boardRepo := repositories.NewBoardRepository(s.db.GetDb())
 
 	// Use cases
@@ -75,6 +76,7 @@ func (s *FiberServer) Start() {
 	// sensorUseCase := usecases.NewSensorUseCase(*sensorRepo)
 	pondHealthUseCase := usecases.NewpondHealthUseCase(*pondHealthRepo)
 	educationUseCase := usecases.NewEducationUseCase(*educationRepo)
+	boardRelationShipUseCase := usecases.NewBoardRelationshipUseCase(*&boardRelationShipRepo)
 	// boardUseCase := usecases.NewBoardUseCase(*boardRepo)
 
 	// Handlers
@@ -82,6 +84,7 @@ func (s *FiberServer) Start() {
 	// sensorHandler := handlers.NewSensorHandler(sensorUseCase)
 	pondHealthHandler := handlers.NewPondHealthHandler(pondHealthUseCase)
 	educationHandler := handlers.NewEducationHandler(educationUseCase)
+	boardRelationShipHandler := handlers.NewBoardRelationshipHandler(boardRelationShipUseCase)
 	// boardHandler := handlers.NewBoardHandler(boardUseCase)
 
 	// Routes
@@ -109,6 +112,10 @@ func (s *FiberServer) Start() {
 	// api.Post("/education", educationHandler.CreateEducation)
 	api.Get("/education", educationHandler.GetAllEducation)
 	api.Get("/education/:id", educationHandler.GetEducationByID)
+
+	// Board Relationship routes
+	api.Post("board/manual", boardRelationShipHandler.CreateManualBoardRelationship)
+	api.Post("board/ble", boardRelationShipHandler.CreateBLEBoardRelationship)
 
 	// // Board routes
 	// api.Post("/boards", boardHandler.CreateBoard)
@@ -328,4 +335,3 @@ func (s *FiberServer) monitorBoardStatus() {
 	}
 }
 
-// check if the connection is good for user 1 and user 2 , if user 1 can see but user 2 cannot see. that mean it work!

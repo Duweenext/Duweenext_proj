@@ -45,7 +45,7 @@ func GetConfig() *Config {
     viper.SetConfigName("config")
     viper.SetConfigType("yaml")
     // for local migrations
-    // viper.AddConfigPath("../..") 
+    viper.AddConfigPath("../..") 
     // use for main running
     viper.AddConfigPath("./")
     viper.AutomaticEnv()

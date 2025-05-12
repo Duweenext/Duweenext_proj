@@ -1,11 +1,13 @@
 import { Image, Text, TouchableOpacity, View, ScrollView, TextInput } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DropDown } from '@/components/menu';
-import { z } from 'zod';
-import SensorModal from '@/components/sensorModal';
+import OptionModal from '@/components/modal/sensor/optionalModal';
+import ManualConfigModal from '@/components/modal/sensor/manuaModal';
+import BleConfigModal from '@/components/modal/sensor/bleModal';
+import WifiConfigModal, { WifiFormData } from '@/components/modal/sensor/wificonfigModal';
 
 // Status color mapping
 const statusTabColorClassMap: Record<string, string> = {
@@ -245,20 +247,84 @@ const BoardTab = ({ board }: { board: BoardData }) => {
 // Main Sensor Screen
 const SensorScreen = () => {
 
-    const [showModal, setShowModal] = useState(false);
+    const [showOptionModal, setShowOptionModal] = useState(false);
+    const [showManualModal, setShowManualModal] = useState(false);
+    const [showBleModal, setShowBleModal] = useState(false);
+    const [showWifiConfig, setShowWifiConfig] = useState(false);
 
-    const handleWifiSubmit = (data: { ssid: string; password: string }) => {
-        console.log('Submitted Wi-Fi Credentials:', data);
-        setShowModal(false);
+    const [boardId, setBoardId] = useState('');
+
+    const openOptionModal = () => {
+        setShowOptionModal(true);
     };
+
+    const handleManualSelect = () => {
+        setShowOptionModal(false);
+        setShowManualModal(true);
+    };
+
+    const handleBleSelect = () => {
+        setShowOptionModal(false);
+        setShowBleModal(true);
+    };
+
+    const handleCloseAll = () => {
+        setShowOptionModal(false);
+        setShowManualModal(false);
+        setShowBleModal(false);
+        setShowWifiConfig(false);
+    };
+
+    const handleDeviceSelect = (selectedId: string) => {
+        setBoardId(selectedId);
+        setShowBleModal(false);
+        setShowWifiConfig(true);
+    };
+
+    const onAddBoard = () => {
+        openOptionModal();
+    };
+
+    const handleWifiSubmit = (data: WifiFormData) => {
+        console.log('Wi-Fi Config Submitted:', data);
+        handleCloseAll();
+    };
+
+    useEffect(() => {
+        if (boardId) {
+            console.log('Board ID updated:', boardId);
+        }
+    }, [boardId]);
+
 
     return (
         <ScrollView>
-            <SensorModal
-                visible={showModal}
-                onClose={() => setShowModal(false)}
-                onSubmit={handleWifiSubmit}
+            <OptionModal
+                visible={showOptionModal}
+                onSelectBle={handleBleSelect}
+                onSelectManual={handleManualSelect}
+                onClose={() => setShowOptionModal(false)}
             />
+
+            <ManualConfigModal
+                visible={showManualModal}
+                onClose={handleCloseAll}
+            />
+
+            <BleConfigModal
+                visible={showBleModal}
+                onClose={handleCloseAll}
+                onSelectDevice={handleDeviceSelect}
+            />
+
+
+            <WifiConfigModal
+                visible={showWifiConfig}
+                onClose={handleCloseAll}
+                onSubmit={handleWifiSubmit}
+                boardId={boardId}
+            />
+
             <View className="flex-1 h-screen w-screen relative">
                 <Image
                     source={images.background}
@@ -276,7 +342,7 @@ const SensorScreen = () => {
                     </View>
                     {/* Add board button */}
                     <TouchableOpacity
-                        onPress={() => setShowModal(true)}
+                        onPress={onAddBoard}
                         className="flex p-10 bg-white rounded-2xl justify-center items-center"
                     >
                         <Image source={icons.add} className='h-8 w-8' />

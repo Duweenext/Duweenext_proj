@@ -7,6 +7,7 @@ toolchain go1.24.2
 require github.com/gofiber/fiber/v2 v2.52.6
 
 require (
+	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.5.0 // indirect
 	github.com/fasthttp/websocket v1.5.12 // indirect
 	github.com/fatih/color v1.9.0 // indirect
@@ -30,6 +31,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/gofiber/contrib/jwt v1.1.1
 	github.com/gofiber/storage/postgres/v3 v3.1.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0 // indirect

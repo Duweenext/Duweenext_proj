@@ -16,6 +16,8 @@ type (
   
   Server struct {
     Port int
+    AllowOrigins string 
+    JwtSecret string
   }
   
   Db struct {

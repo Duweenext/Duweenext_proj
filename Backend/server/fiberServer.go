@@ -21,6 +21,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+
+	jwtware "github.com/gofiber/contrib/jwt"
 )
 
 type FiberServer struct {
@@ -58,10 +60,37 @@ func (s *FiberServer) Start() {
 	})
 
 	s.app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:8081",
+		AllowOrigins:     s.conf.Server.AllowOrigins,
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
 	}))
+
+		// --- JWT Secret Key ---
+	jwtSecret := s.conf.Server.JwtSecret // Assuming JwtSecret is in your config struct
+	if jwtSecret == "" {
+	 log.Fatal("JWT Secret Key not configured!")
+	}
+
+	// --- JWT Middleware Configuration ---
+	jwtMiddleware := jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{
+			JWTAlg: jwtware.HS256,             // Must match the signing algorithm
+			Key:    []byte(jwtSecret), // <<< MUST MATCH THE SIGNING KEY EXACTLY
+		},
+		// Optional: Define how to handle errors (e.g., invalid token, expired token)
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			if err.Error() == "Missing or malformed JWT" {
+				return c.Status(fiber.StatusBadRequest).
+					JSON(fiber.Map{"status": "error", "message": "Missing or malformed JWT", "data": nil})
+			} else {
+				// Handles "Invalid or expired JWT" and other verification errors
+				return c.Status(fiber.StatusUnauthorized).
+					JSON(fiber.Map{"status": "error", "message": "Invalid or expired JWT", "data": nil})
+			}
+		},
+		// Optional: Define where to store the decoded token payload in context
+		ContextKey: "user", // Default is "user", access via c.Locals("user").(*jwt.Token)
+	})
 
 	// Repositories
 	userRepo := repositories.NewUserRepository(s.db.GetDb())
@@ -88,14 +117,17 @@ func (s *FiberServer) Start() {
 	// boardHandler := handlers.NewBoardHandler(boardUseCase)
 
 	// Routes
-	api := s.app.Group("/v1")
+	// no auth
+	apivisit := s.app.Group("/visit")
+	// with auth
+	api := s.app.Group("/v1", jwtMiddleware)
 
 	// User routes
 	// api.Post("/users", userHandler.CreateUser)
 	api.Get("/users", userHandler.GetAllUsers)
 	api.Get("/users/:id", userHandler.GetUserByID)
-	api.Post("/login", userHandler.Login)
-	api.Post("/register", userHandler.Register)
+	apivisit.Post("/login", userHandler.Login)
+	apivisit.Post("/register", userHandler.Register)
 
 	// Sensor routes
 	// api.Post("/sensors", sensorHandler.CreateSensor)

@@ -11,7 +11,7 @@ interface Data {
 
 export const user_login = async (data: Data) => {
   try {
-    const response = await ApiAxios.post("/v1/login", data, {
+    const response = await ApiAxios.post("/visit/login", data, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -36,7 +36,7 @@ export const user_login = async (data: Data) => {
 
 export const user_register = async (data: Data) => {
   try {
-    const response = await ApiAxios.post("/v1/register", data, {
+    const response = await ApiAxios.post("/visit/register", data, {
       headers: {
         "Content-Type": "application/json",
       },

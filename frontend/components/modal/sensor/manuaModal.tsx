@@ -148,7 +148,7 @@ const ManualConfigModal = ({ visible, onClose }: { visible: boolean; onClose: ()
           />
           {errors.board_id && <Text className="text-red-600 text-sm mb-2.5">{errors.board_id.message}</Text>}
 
-          <View className="flex-row justify-between mt-8 space-x-3">
+          <View className="flex-row justify-between mt-8 gap-6">
             <TouchableOpacity
               onPress={onClose}
               className="bg-gray-500 hover:bg-gray-600 py-3 px-5 rounded-md items-center flex-1 active:opacity-80"

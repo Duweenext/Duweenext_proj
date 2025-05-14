@@ -50,9 +50,9 @@ const _Layout = () => {
         return <Text>Loading...</Text>;
     }
 
-    // if (!session) {
-    //     return <Redirect href="/auth/welcome" />;
-    // }
+    if (!session) {
+        return <Redirect href="/auth/welcome" />;
+    }
     return (
         <Tabs
             screenOptions={{
@@ -132,8 +132,16 @@ const _Layout = () => {
             <Tabs.Screen
                 name="sensor/[id]"
                 options={{
-                    href: null,
-                    header: () => <CustomHeader title='Setting' />
+                    title: '',
+                        headerShown: true,
+                        tabBarIcon: ({ focused }) => (
+                            <TabIcon
+                                focused={focused}
+                                icon={icons.sensor}
+                                title='Sensor'
+                            />
+                        ),
+                    header: () => <CustomHeader title='Sensor' />
                 }}
             />
 

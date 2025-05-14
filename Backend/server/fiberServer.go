@@ -157,7 +157,7 @@ func (s *FiberServer) Start() {
 	// WebSocket Route
 	// api.Get("/ws", s.websocketHandler)
 	// in Start():
-	api.Get("/ws/:userId/:boardId", s.websocketHandler)
+	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)
 
 
 	//

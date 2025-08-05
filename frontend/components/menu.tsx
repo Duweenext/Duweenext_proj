@@ -4,10 +4,10 @@ import { View, Text, Image } from 'react-native';
 import { Menu, Button } from 'react-native-paper';
 
 interface DropDownProps {
-    options: string[]; // List of options to display in the dropdown
-    selected: string; // The currently selected value
-    onSelect: (value: string) => void; // Callback to handle selection change
-    buttonText: string; // Text for the dropdown button
+    options: string[]; 
+    selected: string; 
+    onSelect: (value: string) => void; 
+    buttonText: string; 
 }
 
 export const DropDown: React.FC<DropDownProps> = ({ options, selected, onSelect, buttonText }) => {

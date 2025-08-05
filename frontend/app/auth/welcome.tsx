@@ -3,13 +3,14 @@ import React from 'react'
 import { useRouter } from 'expo-router';
 import { images } from '@/constants/images';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { Button } from '@/components/ui/button';
 
 const SplashScreen = () => {
     const navigation = useRouter();
 
     return (
         <>
-            div
+            <Button>Div</Button>
         </>
     )
 }

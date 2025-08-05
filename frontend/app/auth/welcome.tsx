@@ -12,13 +12,7 @@ const SplashScreen = () => {
 
     return (
         <div className='w-full h-full p-4 flex items-center justify-center bg-[#02c39a]'>
-            <CardBoardPrimary
-                mode="disconnected"
-                lastConnected='05 April 2024 11:09 PM'
-                runningTime="45 hours 32 minutes"
-                onCardPress={() => {}}
-                onButtonPress={() => {}}
-            />
+            ddd
         </div>
     )
 }

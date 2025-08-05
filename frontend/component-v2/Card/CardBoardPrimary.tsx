@@ -37,7 +37,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     return (
         <TouchableOpacity
             onPress={onCardPress}
-            className={`w-full h-32 p-4 flex items-center justify-center bg-white `}
+            className={`w-full h-32 p-4 flex items-center justify-center bg-primary `}
         >
 
         </TouchableOpacity>

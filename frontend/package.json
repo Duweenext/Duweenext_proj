@@ -21,6 +21,8 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "axios": "^1.9.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "expo": "~53.0.7",
     "expo-asset": "~11.1.5",
     "expo-blur": "~14.1.4",
@@ -39,6 +41,7 @@
     "expo-web-browser": "~14.1.6",
     "formik": "^2.4.6",
     "jwt-decode": "^4.0.0",
+    "lucide-react": "^0.536.0",
     "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -54,7 +57,9 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.3"
   },
   "devDependencies": {

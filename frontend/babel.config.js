@@ -3,11 +3,14 @@ module.exports = function (api) {
     return {
       presets: [
         ["babel-preset-expo", { jsxImportSource: "nativewind" }],
-        "nativewind/babel",
+        
       ],
       env: {
         production: {
-          plugins: ['react-native-paper/babel'],
+          plugins: [
+            'react-native-paper/babel',
+            'nativewind/babel',
+          ],
         },
       },
     };

@@ -41,9 +41,9 @@ const getStrength = (text: string): Strength => {
 };
 
 const strengthColorMap: Record<Strength, string> = {
-  Weak: '#ef4444',   // red-500
-  Medium: '#facc15', // yellow-400
-  Strong: '#22c55e', // green-500
+  Weak: '#F77979',
+  Medium: '#F2BC79',
+  Strong: '#A6F98D',
 };
 
 const strengthPercentMap: Record<Strength, number> = {
@@ -68,15 +68,18 @@ const TextFieldPrimary: React.FC<Props> = ({
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [localValue, setLocalValue] = useState(value);
 
   const isPassword = type === 'password';
-  const strength = getStrength(value);
+  const isEmail = type === 'email';
+  const isText = type === 'text';
 
+  const strength = getStrength(value);
   const animatedWidth = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!isPassword || !strengthIndicator) return;
-
     const toValue = strengthPercentMap[strength] * width;
 
     Animated.timing(animatedWidth, {
@@ -87,58 +90,73 @@ const TextFieldPrimary: React.FC<Props> = ({
     }).start();
   }, [strength, value, isPassword, strengthIndicator]);
 
+  const handleInputChange = (text: string) => {
+    setLocalValue(text);
+    let error = '';
+
+    if (isText) {
+      const onlyLetters = /^[A-Za-z\s\-]+$/;
+      if (text && !onlyLetters.test(text)) {
+        error = 'Should be letters only.';
+      }
+    } else if (isEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const trimmedText = text.trim().toLowerCase();
+      if (text && !emailRegex.test(trimmedText)) {
+        error = 'Invalid email format.';
+      } else {
+        text = trimmedText;
+      }
+    }
+
+    setErrorMessage(error);
+    if (!error || text === '') {
+      onChangeText(text);
+    }
+  };
+
   return (
     <View className="w-full px-4 py-4 bg-purple-200 rounded-lg">
-      {/* Label */}
-      <Text className="text-white font-bold text-lg mb-2">{name}</Text>
+      <Text className="text-white text-header-3 font-r-semibold mb-2">{name}</Text>
 
-      {/* Hint with tooltip toggle */}
       {hint && (
         <View className="flex-row items-center mb-1">
-          <Text className="text-white mr-2">{hint}</Text>
+          <Text className="text-white font-r-regular text-text-field mr-2">{hint}</Text>
           {isPassword && showStrengthRules && (
             <Pressable onPress={() => setShowRules(!showRules)}>
-              <Text className="text-white text-lg">ⓘ</Text>
+              <Text className="text-white text-header-3">ⓘ</Text>
             </Pressable>
           )}
         </View>
       )}
 
-      {/* Password Rules */}
       {showRules && (
         <View className="bg-white p-3 rounded-xl mb-3 w-[90%] self-center">
-          <Text className="text-black font-semibold">Recommended password format</Text>
-          <Text className="text-black mt-1">• At least one number</Text>
-          <Text className="text-black">• At least one uppercase</Text>
-          <Text className="text-black">• At least one lowercase</Text>
-          <Text className="text-black">• At least 8 characters</Text>
-          <Text className="text-black">• At least one special character</Text>
+          <Text className="text-black font-r-semibold text-text-field">Recommended password format</Text>
+          <Text className="text-black mt-1 font-r-regular text-text-field">• At least one number</Text>
+          <Text className="text-black font-r-regular text-text-field">• At least one uppercase</Text>
+          <Text className="text-black font-r-regular text-text-field">• At least one lowercase</Text>
+          <Text className="text-black font-r-regular text-text-field">• At least 8 characters</Text>
+          <Text className="text-black font-r-regular text-text-field">• At least one special character</Text>
         </View>
       )}
 
-      {/* Text Field */}
       <View
         style={{ width, height, borderRadius }}
         className="flex-row items-center bg-white px-4"
       >
         <TextInput
-          style={{
-            flex: 1,
-            height: '70%',
-            fontSize: 16,
-            fontFamily: 'RobotoCondensed_400Regular',
-          }}
-          className="text-black"
+          style={{ flex: 1, height: '70%' }}
+          className="text-black font-r-regular text-text-field"
           placeholder={placeholder}
           placeholderTextColor="#9ca3af"
           secureTextEntry={isPassword && !isPasswordVisible}
-          keyboardType={type === 'email' ? 'email-address' : 'default'}
-          autoCapitalize={type === 'email' ? 'none' : 'sentences'}
-          value={value}
-          onChangeText={onChangeText}
+          keyboardType={isEmail ? 'email-address' : 'default'}
+          autoCapitalize={isEmail ? 'none' : 'sentences'}
+          value={localValue}
+          onChangeText={handleInputChange}
         />
 
-        {/* Eye Icon (only for passwords) */}
         {icon && isPassword && (
           <Pressable onPress={() => setIsPasswordVisible(prev => !prev)}>
             {isPasswordVisible ? (
@@ -150,7 +168,10 @@ const TextFieldPrimary: React.FC<Props> = ({
         )}
       </View>
 
-      {/* Strength bar */}
+      {errorMessage ? (
+        <Text className="text-fail text-text-field font-r-regular mt-1">{errorMessage}</Text>
+      ) : null}
+
       {isPassword && strengthIndicator && (
         <View className="mt-2" style={{ width }}>
           <View
@@ -173,7 +194,7 @@ const TextFieldPrimary: React.FC<Props> = ({
           </View>
 
           <Text
-            className="mt-1 text-sm font-semibold"
+            className="mt-1 font-r-semibold text-text-field"
             style={{ color: strengthColorMap[strength] }}
           >
             {strength}

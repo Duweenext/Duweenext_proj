@@ -8,8 +8,13 @@ import {
   Easing,
 } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
-
-type Strength = 'Weak' | 'Medium' | 'Strong';
+import {
+  getPasswordStrength,
+  validateEmail,
+  validateText,
+  strengthColorMap,
+  strengthPercentMap,
+} from '../../srcs/utlis/input';
 
 type Props = {
   name: string;
@@ -26,32 +31,6 @@ type Props = {
   onChangeText: (text: string) => void;
 };
 
-const getStrength = (text: string): Strength => {
-  const hasNumber = /\d/.test(text);
-  const hasUpper = /[A-Z]/.test(text);
-  const hasLower = /[a-z]/.test(text);
-  const hasSpecial = /[^A-Za-z0-9]/.test(text);
-  const isLongEnough = text.length >= 8;
-
-  const score = [hasNumber, hasUpper, hasLower, hasSpecial, isLongEnough].filter(Boolean).length;
-
-  if (score === 5) return 'Strong';
-  if (score >= 3) return 'Medium';
-  return 'Weak';
-};
-
-const strengthColorMap: Record<Strength, string> = {
-  Weak: '#F77979',
-  Medium: '#F2BC79',
-  Strong: '#A6F98D',
-};
-
-const strengthPercentMap: Record<Strength, number> = {
-  Weak: 0.25,
-  Medium: 0.66,
-  Strong: 1,
-};
-
 const TextFieldPrimary: React.FC<Props> = ({
   name,
   hint,
@@ -62,7 +41,7 @@ const TextFieldPrimary: React.FC<Props> = ({
   type = 'text',
   width = 325,
   height = 60,
-  borderRadius = 15,
+  borderRadius = 10,
   value,
   onChangeText,
 }) => {
@@ -75,7 +54,7 @@ const TextFieldPrimary: React.FC<Props> = ({
   const isEmail = type === 'email';
   const isText = type === 'text';
 
-  const strength = getStrength(value);
+  const strength = getPasswordStrength(value);
   const animatedWidth = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -95,19 +74,13 @@ const TextFieldPrimary: React.FC<Props> = ({
     let error = '';
 
     if (isText) {
-      const onlyLetters = /^[A-Za-z\s\-]+$/;
-      if (text && !onlyLetters.test(text)) {
-        error = 'Should be letters only.';
-      }
+      error = validateText(text);
     } else if (isEmail) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const trimmedText = text.trim().toLowerCase();
-      if (text && !emailRegex.test(trimmedText)) {
-        error = 'Invalid email format.';
-      } else {
-        text = trimmedText;
-      }
-    }
+    const { error: emailError, cleaned } = validateEmail(text);
+    error = emailError;
+    text = cleaned;
+}
+
 
     setErrorMessage(error);
     if (!error || text === '') {
@@ -116,38 +89,45 @@ const TextFieldPrimary: React.FC<Props> = ({
   };
 
   return (
-    <View className="w-full px-4 py-4 bg-purple-200 rounded-lg">
-      <Text className="text-white text-header-3 font-r-semibold mb-2">{name}</Text>
+    <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '', borderRadius: 12 }}>
+      <Text style={{ color: 'white', fontSize: 16, fontWeight: '600', marginBottom: 8 }}>{name}</Text>
 
       {hint && (
-        <View className="flex-row items-center mb-1">
-          <Text className="text-white font-r-regular text-text-field mr-2">{hint}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={{ color: 'white', fontSize: 14, marginRight: 8 }}>{hint}</Text>
           {isPassword && showStrengthRules && (
             <Pressable onPress={() => setShowRules(!showRules)}>
-              <Text className="text-white text-header-3">ⓘ</Text>
+              <Text style={{ color: 'white', fontSize: 14, fontWeight: 'bold' }}>ⓘ</Text>
             </Pressable>
           )}
         </View>
       )}
 
       {showRules && (
-        <View className="bg-white p-3 rounded-xl mb-3 w-[90%] self-center">
-          <Text className="text-black font-r-semibold text-text-field">Recommended password format</Text>
-          <Text className="text-black mt-1 font-r-regular text-text-field">• At least one number</Text>
-          <Text className="text-black font-r-regular text-text-field">• At least one uppercase</Text>
-          <Text className="text-black font-r-regular text-text-field">• At least one lowercase</Text>
-          <Text className="text-black font-r-regular text-text-field">• At least 8 characters</Text>
-          <Text className="text-black font-r-regular text-text-field">• At least one special character</Text>
+        <View style={{ backgroundColor: 'white', padding: 12, borderRadius: 12, marginBottom: 12, width: '90%', alignSelf: 'center' }}>
+          <Text style={{ color: 'black', fontWeight: '600', fontSize: 14 }}>Recommended password format</Text>
+          <Text style={{ color: 'black', fontSize: 14, marginTop: 4 }}>• At least one number</Text>
+          <Text style={{ color: 'black', fontSize: 14 }}>• At least one uppercase</Text>
+          <Text style={{ color: 'black', fontSize: 14 }}>• At least one lowercase</Text>
+          <Text style={{ color: 'black', fontSize: 14 }}>• At least 8 characters</Text>
+          <Text style={{ color: 'black', fontSize: 14 }}>• At least one special character</Text>
         </View>
       )}
 
       <View
-        style={{ width, height, borderRadius }}
-        className="flex-row items-center bg-white px-4"
+        style={{
+          width,
+          height,
+          borderRadius,
+          paddingHorizontal: 10,
+          backgroundColor: 'white',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
       >
         <TextInput
-          style={{ flex: 1, height: '70%' }}
-          className="text-black font-r-regular text-text-field"
+          style={{ flex: 1, fontSize: 16, height:50, width:300, color: 'black' }}
           placeholder={placeholder}
           placeholderTextColor="#9ca3af"
           secureTextEntry={isPassword && !isPasswordVisible}
@@ -169,11 +149,11 @@ const TextFieldPrimary: React.FC<Props> = ({
       </View>
 
       {errorMessage ? (
-        <Text className="text-fail text-text-field font-r-regular mt-1">{errorMessage}</Text>
+        <Text style={{ color: '#F77979', fontSize: 14, marginTop: 4 }}>{errorMessage}</Text>
       ) : null}
 
       {isPassword && strengthIndicator && (
-        <View className="mt-2" style={{ width }}>
+        <View style={{ marginTop: 8, width }}>
           <View
             style={{
               height: 8,
@@ -194,8 +174,12 @@ const TextFieldPrimary: React.FC<Props> = ({
           </View>
 
           <Text
-            className="mt-1 font-r-semibold text-text-field"
-            style={{ color: strengthColorMap[strength] }}
+            style={{
+              marginTop: 4,
+              fontWeight: '600',
+              fontSize: 14,
+              color: strengthColorMap[strength],
+            }}
           >
             {strength}
           </Text>

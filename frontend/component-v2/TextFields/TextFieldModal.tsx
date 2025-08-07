@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput } from 'react-native';
+import { validateText } from '../../srcs/utlis/input'; 
 
 type Props = {
   name?: string;
   placeholder: string;
-  borderColor: string; // Accepts Tailwind-defined colors e.g. '#F77979'
-  textColor: string;   // Accepts Tailwind-defined colors e.g. '#1A736A'
+  borderColor: string; // e.g., '#FFFFFF'
+  textColor: string;   // e.g., '#FFFFFF'
   value: string;
   onChangeText: (text: string) => void;
 };
@@ -18,35 +19,53 @@ const TextFieldModal: React.FC<Props> = ({
   value,
   onChangeText,
 }) => {
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleInputChange = (text: string) => {
+    const error = validateText(text); // ✅ validateText returns string
+    setErrorMessage(error);
+    if (!error || text === '') {
+      onChangeText(text);
+    }
+  };
+
   return (
-    <View style={{ width: 261 }}>
-      
+    <View style={{ width: '100%' }}>
       {name && (
         <Text
-          className="text-header-3 font-r-semibold mb-1"
-          style={{ color: textColor }}
+          style={{
+            marginBottom: 4,
+            fontSize: 16,
+            fontWeight: '600',
+            color: textColor,
+          }}
         >
           {name}
         </Text>
       )}
 
-      {/* Input */}
       <TextInput
         placeholder={placeholder}
         placeholderTextColor="#9ca3af"
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={handleInputChange}
         style={{
           height: 49,
           borderRadius: 5,
           borderWidth: 1,
-          borderColor: borderColor,
           paddingHorizontal: 12,
           backgroundColor: 'white',
+          fontSize: 16,
           color: textColor,
+          borderColor: borderColor,
         }}
-        className="font-r-regular text-text-field"
-      /> 
+      />
+
+      {errorMessage ? (
+        <Text style={{ marginTop: 4, color: '#F77979', fontSize: 14 }}>
+          {errorMessage}
+        </Text>
+      ) : null}
     </View>
   );
 };

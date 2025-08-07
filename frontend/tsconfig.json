@@ -4,8 +4,10 @@
     "strict": true,
     "paths": {
       "@/*": [
-        "./*"
-      ]
+        "./*",
+      ],
+      "@/theme": ["./app/theme.ts"],
+      "@/src/*": ["./srcs/*"],
     }
   },
   "include": [

@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import React, { useEffect } from 'react'
 import { useRouter } from 'expo-router';
 import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
 import TextFieldModal from '@/component-v2/TextFields/TextFieldModal';
@@ -16,31 +15,42 @@ import TopBar from '@/component-v2/NavBar/TopBar';
 import ButtonAddBoard from '@/component-v2/Buttons/ButtonAddBoard';
 import ModalVerificationComplete from '@/component-v2/Modals/ModalVerificationComplete';
 import CardIcon from '@/component-v2/Card/CardIcon';
+import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrimary';
+import { theme } from '@/theme';
+import { View } from 'react-native';
+import { Board } from '@/srcs/interfaces/board';
+import { DateDisplayOnCard } from '@/srcs/utlis/date';
+import { CardBoardModal } from '@/component-v2/Card/CardBoardModal';
+import { CardImageProcessingResult } from '@/component-v2/Card/CardImageProcessingResult';
+import { Ionicons} from '@expo/vector-icons';
+import { CardEducation } from '@/component-v2/Card/CardEducation';
+import { CardImageProcessingHistory } from '@/component-v2/Card/CardImageProcessingHistory';
+import { CardNotification } from '@/component-v2/Card/CardNotification';
+import { SettingCard } from '@/component-v2/Card/SettingCard';
+import { SensorCard } from '@/component-v2/Card/CardSensor';
 
 const SplashScreen = () => {
   const navigation = useRouter();
-  const { height: screenHeight } = useWindowDimensions();
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [boardId, setBoardId] = useState('');
-  const [minThreshold, setMinThreshold] = useState('6.5');
-  const [maxThreshold, setMaxThreshold] = useState('28');
-  const [hasError, setHasError] = useState(false); // ✅ define once
+  const [boards, setBoards] = React.useState<Board[]>();
 
-  const handleCodeFilled = (code: string) => {
-    console.log('Verification Code:', code);
-    const correctCode = '123456';
-    setHasError(code !== correctCode);
-  };
+  useEffect(() => {
+    setBoards([{
+      board_id: 1,
+      updated_at: DateDisplayOnCard('2023-10-01T11:00:00Z', ''),
+      created_at: DateDisplayOnCard('2023-10-01T12:00:00Z', ''),
+      board_name: 'Board 1',
+      board_status: 'connected',
+      board_register_date: DateDisplayOnCard('2023-10-01T12:00:00Z', ''),
+      deleted_at: null,
+      sensor_id: 1,
+    }])
+  }, [])
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        minHeight: screenHeight,
-        padding: 10,
-        alignItems: 'center',
+    <View
+      style={{
+        flex: 1,
         justifyContent: 'center',
         backgroundColor: 'black',
       }}
@@ -59,8 +69,9 @@ const SplashScreen = () => {
         onPress={() => console.log('Share')}
       />
     </View>
-    </ScrollView>
+    </View>
   );
-};
+  
+}
 
 export default SplashScreen;

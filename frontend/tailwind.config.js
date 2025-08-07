@@ -1,41 +1,32 @@
 /** @type {import('tailwindcss').Config} */
+const { tokens } = require("./srcs/style/style_token");
+
 module.exports = {
-  darkMode: ["class"],
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
-	"./component-v2/**/*.{js,jsx,ts,tsx}",
+    "./component-v2/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      colors: tokens.colors,
       fontFamily: {
-        'r-regular': ['roboto-condensed-regular'],
-        'r-medium': ['roboto-condensed-medium'],
-        'r-semibold': ['roboto-condensed-semibold'],
+        // wrap each in an array as Tailwind expects
+        "r-regular": [tokens.fontFamily.regular],
+        "r-medium": [tokens.fontFamily.medium],
+        "r-semibold": [tokens.fontFamily.semibold],
+        "r-bold": [tokens.fontFamily.bold],
       },
-      fontSize: {
-        'text-field': '15px',
-        'header-3': '16px',
-        'header-2': '20px',
-        'description': '16px',
-        'header-1': '24px',
-        'data': '14px',
-        'topbar': '28px',
-      },
-      colors: {
-        primary: "#1A736A",
-        secondary: "#95E7E7",
-        "background-1": "#D9D9D9",
-        "background-2": "#DEFFFD",
-        fail: "#F77979",
-        warning: "#F2BC79",
-        success: "#A6F98D",
-      },
-      borderRadius: {
-        lg: '12px',
-        md: '10px',
-        sm: '8px',
+      fontSize: Object.fromEntries(
+        Object.entries(tokens.fontSize).map(([k, v]) => [k, `${v}px`])
+      ),
+      spacing: tokens.spacing,
+      borderRadius: tokens.borderRadius,
+      // If you want to use your RN shadow tokens as Tailwind utilities:
+      boxShadow: {
+        sm: `${tokens.shadows.sm.shadowOffset.width}px ${tokens.shadows.sm.shadowOffset.height}px ${tokens.shadows.sm.shadowRadius}px rgba(0,0,0,${tokens.shadows.sm.shadowOpacity})`,
+        md: `${tokens.shadows.md.shadowOffset.width}px ${tokens.shadows.md.shadowOffset.height}px ${tokens.shadows.md.shadowRadius}px rgba(0,0,0,${tokens.shadows.md.shadowOpacity})`,
       },
     },
   },

@@ -11,6 +11,11 @@ import ButtonModalXL from '@/component-v2/Buttons/ButtonModalXL';
 import ButtonCard from '@/component-v2/Buttons/ButtonCard';
 import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
+import DropDownTemplate from '@/component-v2/Dropdown/DropDownTemplate';
+import TopBar from '@/component-v2/NavBar/TopBar';
+import ButtonAddBoard from '@/component-v2/Buttons/ButtonAddBoard';
+import ModalVerificationComplete from '@/component-v2/Modals/ModalVerificationComplete';
+import CardIcon from '@/component-v2/Card/CardIcon';
 
 const SplashScreen = () => {
   const navigation = useRouter();
@@ -37,17 +42,21 @@ const SplashScreen = () => {
         padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'white',
+        backgroundColor: 'black',
       }}
     >
-   <View style={{ padding: 20 }}>
-      <ButtonUnderline
-        text="Learn more"
-        onPress={() => console.log('Learn more tapped')}
+    <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
+      <CardIcon
+        icon={require('../../assets/images/camera.png')}
+        onPress={() => console.log('Camera')}
       />
-      <ButtonUnderline
-        text="register"
-        onPress={() => console.log('Register tapped')}
+      <CardIcon
+        icon={require('../../assets/images/upload.png')}
+        onPress={() => console.log('Upload')}
+      />
+      <CardIcon
+        icon={require('../../assets/images/share.png')}
+        onPress={() => console.log('Share')}
       />
     </View>
     </ScrollView>

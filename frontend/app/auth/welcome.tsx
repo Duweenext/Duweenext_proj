@@ -1,59 +1,56 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
 import TextFieldModal from '@/component-v2/TextFields/TextFieldModal';
+import TextFieldSensorValue from '@/component-v2/TextFields/TextFieldSensorValue';
+import TextFieldVerificationCode from '@/component-v2/TextFields/TextFieldVerificationCode';
+import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
+import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
+import ButtonModalXL from '@/component-v2/Buttons/ButtonModalXL';
+import ButtonCard from '@/component-v2/Buttons/ButtonCard';
+import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
+import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 
 const SplashScreen = () => {
   const navigation = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
 
-  // States
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [boardId, setBoardId] = useState('');
+  const [minThreshold, setMinThreshold] = useState('6.5');
+  const [maxThreshold, setMaxThreshold] = useState('28');
+  const [hasError, setHasError] = useState(false); // ✅ define once
+
+  const handleCodeFilled = (code: string) => {
+    console.log('Verification Code:', code);
+    const correctCode = '123456';
+    setHasError(code !== correctCode);
+  };
 
   return (
-    <View className="w-full h-full p-10 flex items-center justify-center bg-white space-y-4">
-      {/* Full Name Field with Validation */}
-      <TextFieldPrimary
-        name="Full Name"
-        placeholder="John Doe"
-        type="text"
-        value={fullName}
-        onChangeText={setFullName}
+    <ScrollView
+      contentContainerStyle={{
+        minHeight: screenHeight,
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'white',
+      }}
+    >
+   <View style={{ padding: 20 }}>
+      <ButtonUnderline
+        text="Learn more"
+        onPress={() => console.log('Learn more tapped')}
       />
-
-      {/* Email Field with Validation */}
-      <TextFieldPrimary
-        name="Email"
-        placeholder="you@example.com"
-        type="email"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      {/* Password Field with strength indicator */}
-      <TextFieldPrimary
-        name="Password"
-        placeholder="********"
-        type="password"
-        icon
-        strengthIndicator
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      {/* Board ID (Modal) Field */}
-      <TextFieldModal
-        name="Enter board ID"
-        placeholder="Enter board ID"
-        borderColor="#000000"
-        textColor="#000000"
-        value={boardId}
-        onChangeText={setBoardId}
+      <ButtonUnderline
+        text="register"
+        onPress={() => console.log('Register tapped')}
       />
     </View>
+    </ScrollView>
   );
 };
 

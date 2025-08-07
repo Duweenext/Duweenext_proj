@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/srcs/auth/context/auth_context'; // Adjust path if needed
 import { jwtDecode } from 'jwt-decode';
-import ApiAxios from '@/srcs/api/apiManager'; // Adjust path if needed
+import axiosInstance from '@/srcs/api/apiManager'; // Adjust path if needed
 // import * as SecureStore from 'expo-secure-store'; // No longer needed here if session is the token
 
 // Zod schema for validation
@@ -94,7 +94,7 @@ const ManualConfigModal = ({ visible, onClose }: { visible: boolean; onClose: ()
         return; 
       }
 
-      const apiResponse = await ApiAxios.post("/v1/board/manual", data, {
+      const apiResponse = await axiosInstance.post("/v1/board/manual", data, {
         headers: headers,
       });
 

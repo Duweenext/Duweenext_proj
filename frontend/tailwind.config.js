@@ -1,40 +1,34 @@
 /** @type {import('tailwindcss').Config} */
+const { tokens } = require("./srcs/style/style_token");
+
 module.exports = {
-	darkMode: ["class"],
-	// NOTE: Update this to include the paths to all of your component files.
-	content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
-	presets: [require("nativewind/preset")],
-	theme: {
-		extend: {
-			fontFamily: {
-				'r-regular': ['roboto-condensed-regular'],
-				'r-medium': ['roboto-condensed-medium'],
-				'r-semibold': ['roboto-condensed-semibold'],
-			},
-			fontSize: {
-				'text-field': '15px',  // Regular
-				'header-3': '16px',  // SemiBold
-				'header-2': '20px',  // Medium
-				'description': '16px',  // Regular
-				'header-1': '24px',  // SemiBold
-				'data': '14px',  // Regular
-				'topbar': '28px',  // SemiBold
-			},
-			colors: {
-				primary: "#1A736A",  // e.g. blue-700
-				secondary: "#95E7E7",  // e.g. purple-600
-				"background-1": "#D9D9D9", // light gray
-				"background-2": "#DEFFFD", // darker gray
-				fail: "#F77979",  // red-600
-				warning: "#F2BC79",  // amber-600
-				success: "#A6F98D",  // green-600
-			},
-			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
-			}
-		}
-	},
-	plugins: [require("tailwindcss-animate")],
-}
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}",
+    "./component-v2/**/*.{js,jsx,ts,tsx}",
+  ],
+  presets: [require("nativewind/preset")],
+  theme: {
+    extend: {
+      colors: tokens.colors,
+      fontFamily: {
+        // wrap each in an array as Tailwind expects
+        "r-regular": [tokens.fontFamily.regular],
+        "r-medium": [tokens.fontFamily.medium],
+        "r-semibold": [tokens.fontFamily.semibold],
+        "r-bold": [tokens.fontFamily.bold],
+      },
+      fontSize: Object.fromEntries(
+        Object.entries(tokens.fontSize).map(([k, v]) => [k, `${v}px`])
+      ),
+      spacing: tokens.spacing,
+      borderRadius: tokens.borderRadius,
+      // If you want to use your RN shadow tokens as Tailwind utilities:
+      boxShadow: {
+        sm: `${tokens.shadows.sm.shadowOffset.width}px ${tokens.shadows.sm.shadowOffset.height}px ${tokens.shadows.sm.shadowRadius}px rgba(0,0,0,${tokens.shadows.sm.shadowOpacity})`,
+        md: `${tokens.shadows.md.shadowOffset.width}px ${tokens.shadows.md.shadowOffset.height}px ${tokens.shadows.md.shadowRadius}px rgba(0,0,0,${tokens.shadows.md.shadowOpacity})`,
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+};

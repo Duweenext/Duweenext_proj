@@ -1,8 +1,7 @@
 import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { images } from '@/constants/images';
-import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
-import * as SecureStore from "expo-secure-store";
+import Animated, {FadeInDown} from 'react-native-reanimated';
 import { router, useRouter } from 'expo-router';
 import { icons } from '@/constants/icons';
 import { useForm, Controller } from 'react-hook-form';

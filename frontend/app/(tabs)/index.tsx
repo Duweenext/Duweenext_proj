@@ -6,8 +6,7 @@ import TabBox from "@/components/TabBox";
 import { icons } from "@/constants/icons";
 import { router, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { Button, Menu } from "react-native-paper";
+import {ScrollView, Text,View } from "react-native";
 
 const InfoSection = ({ time, harvest, waterchange }: { time: string, harvest: number, waterchange: number }) => {
   return (

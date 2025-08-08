@@ -91,7 +91,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
             onPress={handleMeasureAgain}
             filledColor={theme.colors.primary}
             textColor={theme.colors.white}
-            borderColor={theme.colors.primary}
+            // borderColor={theme.colors.primary}
             marginBottom={3}
             // You can add more props as needed
           />

@@ -1,51 +1,57 @@
 // app/layout.tsx
 import { Slot, useRouter, useSegments } from 'expo-router';
-import { AuthProvider, useAuth } from '../srcs/auth/context/auth_context';
+import { AuthProvider  } from '../srcs/auth/context/auth_context';
 import { PaperProvider } from 'react-native-paper';
 import { useFonts } from 'expo-font';
 
+// Toggle here (or use process.env.EXPO_PUBLIC_AUTH_DISABLED === 'true')
+const AUTH_DISABLED = true;
+
 function InnerLayout() {
-  const { session, isLoading } = useAuth();
   const router = useRouter();
-  const segments = useSegments();                // e.g. ['auth', 'welcome'] or ['tabs', 'education']
+  const segments = useSegments(); // e.g. ['auth', 'welcome'] or ['tabs', 'education']
 
-  if (isLoading) {
-    // you could return a splash screen here
-    return null;
+  // 🔹 Skip auth entirely
+  if (AUTH_DISABLED) {
+    return <Slot />;
   }
 
-  const onAuthRoute = segments[0] === 'auth';    // adjust if you use (auth) group
+  // 🔹 Normal auth flow
+  // const { session, isLoading } = useAuth();
 
-  if (!session && !onAuthRoute) {
-    // no session → go to welcome/login
-    router.replace('/auth/welcome');
-    return null;
-  }
+  // if (isLoading) {
+  //   // Optional: return splash
+  //   return null;
+  // }
 
-  if (session && onAuthRoute) {
-    // already logged in → skip auth routes
-    router.replace('/');
-    return null;
-  }
+  const onAuthRoute = segments[0] === 'auth';
 
-  // otherwise, render whatever segment you’re on
+  // if (!session && !onAuthRoute) {
+  //   router.replace('/auth/welcome');
+  //   return null;
+  // }
+
+  // if (session && onAuthRoute) {
+  //   router.replace('/');
+  //   return null;
+  // }
+
   return <Slot />;
 }
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    "roboto-condensed-regular": require("../assets/fonts/Roboto_Condensed/RobotoCondensed-Regular.ttf"),
-    "roboto-condensed-medium": require("../assets/fonts/Roboto_Condensed/RobotoCondensed-Medium.ttf"),
-    "roboto-condensed-semibold": require("../assets/fonts/Roboto_Condensed/RobotoCondensed-SemiBold.ttf"),
-    "roboto-condensed-bold": require("../assets/fonts/Roboto_Condensed/RobotoCondensed-Bold.ttf"),
+    'roboto-condensed-regular': require('../assets/fonts/Roboto_Condensed/RobotoCondensed-Regular.ttf'),
+    'roboto-condensed-medium': require('../assets/fonts/Roboto_Condensed/RobotoCondensed-Medium.ttf'),
+    'roboto-condensed-semibold': require('../assets/fonts/Roboto_Condensed/RobotoCondensed-SemiBold.ttf'),
+    'roboto-condensed-bold': require('../assets/fonts/Roboto_Condensed/RobotoCondensed-Bold.ttf'),
   });
   if (!loaded) return null;
 
   return (
     <PaperProvider>
-      <AuthProvider>
+        // No provider needed because InnerLayout won't call useAuth()
         <InnerLayout />
-      </AuthProvider>
     </PaperProvider>
   );
 }

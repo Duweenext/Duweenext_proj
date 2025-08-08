@@ -71,11 +71,7 @@ const handleSendAgain = () => {
           padding: theme.spacing.md,
         }}
       >
-        <CardBoardPrimary 
-          board={boards ? boards[0] : undefined}
-          runningTime="0 hours 0 minutes"
-          onButtonPress={() => console.log('Button pressed')}
-        />
+        
       </View>
     </ScrollView>
   );

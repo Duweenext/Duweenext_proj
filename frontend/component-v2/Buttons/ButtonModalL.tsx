@@ -27,7 +27,6 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
         styles.button,
         {
           backgroundColor: filledColor,
-          borderColor: borderColor,
           marginBottom: marginBottom ?? styles.button.marginVertical, // use prop if given
         },
       ]}

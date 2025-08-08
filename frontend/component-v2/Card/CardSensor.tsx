@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: parseInt(theme.fontSize['header-2'], 10),
-    fontFamily: theme.fontFamily['r-semibold'][0],
+    fontFamily: theme.fontFamily.semibold,
     flexShrink: 1,
   },
   iconButton: {
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   status: {
     fontSize: parseInt(theme.fontSize.description, 10),
-    fontFamily: theme.fontFamily['r-regular'][0],
+    fontFamily: theme.fontFamily.regular,
   },
   actionButton: {
     paddingVertical: 6,
@@ -120,6 +120,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: parseInt(theme.fontSize.description, 10),
-    fontFamily: theme.fontFamily['r-medium'][0],
+    fontFamily: theme.fontFamily.medium,
   },
 });

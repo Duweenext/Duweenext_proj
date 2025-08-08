@@ -72,13 +72,13 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: parseInt(theme.fontSize['header2'], 10),   // e.g. 20px
-    fontFamily: theme.fontFamily['r-semibold'][0],
+    fontFamily: theme.fontFamily.semibold,
     color: '#000000',
     flexShrink: 1,
   },
   timeText: {
     fontSize: parseInt(theme.fontSize['description'], 10), // e.g. 16px
-    fontFamily: theme.fontFamily['r-medium'][0],
+    fontFamily: theme.fontFamily.medium,
     color: '#000000',
   },
   body: {
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   messageText: {
     flex: 1,
     fontSize: parseInt(theme.fontSize['description'], 10),
-    fontFamily: theme.fontFamily['r-regular'][0],
+    fontFamily: theme.fontFamily.regular,
     color: '#000000',
     lineHeight: 22,
   },

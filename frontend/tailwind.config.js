@@ -12,12 +12,12 @@ module.exports = {
     extend: {
       colors: tokens.colors,
       fontFamily: {
-        // wrap each in an array as Tailwind expects
-        "r-regular": [tokens.fontFamily.regular],
-        "r-medium": [tokens.fontFamily.medium],
-        "r-semibold": [tokens.fontFamily.semibold],
-        "r-bold": [tokens.fontFamily.bold],
+        regular: tokens.fontFamily.regular,
+        medium: tokens.fontFamily.medium,
+        semibold: tokens.fontFamily.semibold,
+        bold: tokens.fontFamily.bold,
       },
+
       fontSize: Object.fromEntries(
         Object.entries(tokens.fontSize).map(([k, v]) => [k, `${v}px`])
       ),

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useRouter } from 'expo-router';
 import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrimary';
 import { theme } from '@/theme';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Board } from '@/srcs/interfaces/board';
 import { DateDisplayOnCard } from '@/srcs/utlis/date';
 import { CardBoardModal } from '@/component-v2/Card/CardBoardModal';
@@ -33,21 +33,23 @@ const SplashScreen = () => {
   }, [])
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: theme.colors['background3'],
-        padding: theme.spacing.lg,
-      }}
-    >
-      <CardBoardPrimary 
-        board={boards ? boards[0] : undefined}
-        runningTime="0 hours 0 minutes"
-        onButtonPress={() => console.log('Button pressed')}
-      />
-    </View>
+    <ScrollView>
+      <View
+        style={{
+          justifyContent: 'center',
+          // alignItems: 'center',
+          backgroundColor: theme.colors['background1'],
+          height: 'auto',
+          padding: theme.spacing.md,
+        }}
+      >
+        <CardBoardPrimary 
+          board={boards ? boards[0] : undefined}
+          runningTime="0 hours 0 minutes"
+          onButtonPress={() => console.log('Button pressed')}
+        />
+      </View>
+    </ScrollView>
   );
 }
 

@@ -76,23 +76,23 @@ const styles = StyleSheet.create({
   title: {
     marginLeft: 8,
     fontSize: parseInt(theme.fontSize['header-2'], 10),     // ~20px
-    fontFamily: theme.fontFamily['r-semibold'][0],
+    fontFamily: theme.fontFamily.semibold,
     color: '#FFFFFF',
   },
   time: {
     fontSize: parseInt(theme.fontSize['description'], 10),
-    fontFamily: theme.fontFamily['r-regular'][0],
+    fontFamily: theme.fontFamily.regular,
     color: '#FFFFFF',
   },
   headline: {
     fontSize: parseInt(theme.fontSize.description, 10),
-    fontFamily: theme.fontFamily['r-medium'][0],
+    fontFamily: theme.fontFamily.medium,
     color: theme.colors.warning,                             // orange text
     marginBottom: 4,
   },
   message: {
     fontSize: parseInt(theme.fontSize.description, 10),
-    fontFamily: theme.fontFamily['r-regular'][0],
+    fontFamily: theme.fontFamily.regular,
     color: '#FFFFFF',
     lineHeight: 22,
   },

@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: parseInt(theme.fontSize.description, 10),    // ~16px
-    fontFamily: theme.fontFamily['r-medium'][0],         // semibold
+    fontFamily: theme.fontFamily.medium,         // semibold
     color: '#000000',
     textAlign: 'center',
   },

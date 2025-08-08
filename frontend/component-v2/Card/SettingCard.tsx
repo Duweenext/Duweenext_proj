@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: parseInt(theme.fontSize['header2'], 10),  // ~20px
-    fontFamily: theme.fontFamily['r-medium'][0],
+    fontFamily: theme.fontFamily.medium,
     color: '#000000',
   },
 });

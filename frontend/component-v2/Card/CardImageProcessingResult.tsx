@@ -40,22 +40,22 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: parseInt(theme.fontSize['header1'], 10),      // ~20px
-    fontFamily: theme.fontFamily['r-semibold'][0],
+    fontFamily: theme.fontFamily.semibold,
     color: '#FFFFFF',
     marginBottom: 8,
   },
   status: {
     fontSize: parseInt(theme.fontSize.description, 10),     // ~16px
-    fontFamily: theme.fontFamily['r-medium'][0],
+    fontFamily: theme.fontFamily.medium,
     color: '#FFFFFF',
     marginBottom: 4,
   },
   statusValue: {
-    fontFamily: theme.fontFamily['r-medium'][0],
+    fontFamily: theme.fontFamily.medium,
   },
   message: {
     fontSize: parseInt(theme.fontSize.description, 10),
-    fontFamily: theme.fontFamily['r-regular'][0],
+    fontFamily: theme.fontFamily.regular,
     color: '#FFFFFF',
     lineHeight: 22,   // gives a bit of breathing space
   },

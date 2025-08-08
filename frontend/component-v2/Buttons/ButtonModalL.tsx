@@ -12,6 +12,7 @@ interface ButtonModalLProps {
   borderColor?: string;
   textColor?: string;
   onPress?: (event: GestureResponderEvent) => void;
+  marginBottom?: number;
 }
 
 const ButtonModalL: React.FC<ButtonModalLProps> = ({
@@ -19,7 +20,8 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
   filledColor = '#FFFFFF',
   borderColor = '#000000',
   textColor = '#000000',
-  onPress = () => {},
+  onPress = () => { },
+  marginBottom,
 }) => {
   return (
     <TouchableOpacity
@@ -28,6 +30,7 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
         {
           backgroundColor: filledColor,
           borderColor: borderColor,
+          marginBottom: marginBottom ?? styles.button.marginVertical, // use prop if given
         },
       ]}
       activeOpacity={0.85}
@@ -35,6 +38,7 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
     >
       <Text style={[styles.text, { color: textColor }]}>{text}</Text>
     </TouchableOpacity>
+
   );
 };
 

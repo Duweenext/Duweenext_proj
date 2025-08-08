@@ -1,7 +1,7 @@
 import axiosInstance from "@/srcs/api/apiManager";
 import { useCallback, useState } from "react";
 
-export const useReturn = () => {
+export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
 

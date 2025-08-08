@@ -22,7 +22,7 @@ const TextFieldModal: React.FC<Props> = ({
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleInputChange = (text: string) => {
-    const error = validateText(text); // ✅ validateText returns string
+    const error = validateText(text); // validateText returns string
     setErrorMessage(error);
     if (!error || text === '') {
       onChangeText(text);

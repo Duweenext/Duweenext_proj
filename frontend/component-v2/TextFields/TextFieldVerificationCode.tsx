@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   input: {
-    width: 30,
-    height: 49,
+    width: 38,
+    height: 55,
     borderWidth: 2,
     borderRadius: 10,
     fontSize: 16,

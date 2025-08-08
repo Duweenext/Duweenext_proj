@@ -9,7 +9,6 @@ import {
 interface ButtonModalLProps {
   text: string;
   filledColor?: string;
-  borderColor?: string;
   textColor?: string;
   onPress?: (event: GestureResponderEvent) => void;
   marginBottom?: number;
@@ -18,7 +17,6 @@ interface ButtonModalLProps {
 const ButtonModalL: React.FC<ButtonModalLProps> = ({
   text,
   filledColor = '#FFFFFF',
-  borderColor = '#000000',
   textColor = '#000000',
   onPress = () => { },
   marginBottom,
@@ -47,7 +45,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 12,
-    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 6,

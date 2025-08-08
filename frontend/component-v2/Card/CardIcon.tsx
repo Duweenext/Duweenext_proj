@@ -1,4 +1,5 @@
 import React from 'react';
+import { theme } from '@/theme';
 import {
   TouchableOpacity,
   View,
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#227C71',
+    borderColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 6,

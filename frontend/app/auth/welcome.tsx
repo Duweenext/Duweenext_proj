@@ -28,11 +28,24 @@ import { CardImageProcessingHistory } from '@/component-v2/Card/CardImageProcess
 import { CardNotification } from '@/component-v2/Card/CardNotification';
 import { SettingCard } from '@/component-v2/Card/SettingCard';
 import { SensorCard } from '@/component-v2/Card/CardSensor';
+import ButtonCamera from '@/component-v2/Buttons/ButtonCamera';
+import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
 
 const SplashScreen = () => {
   const navigation = useRouter();
 
   const [boards, setBoards] = React.useState<Board[]>();
+  const [modalVisible, setModalVisible] = React.useState(true); // or false initially
+const [password, setPassword] = React.useState('');
+
+const handleNext = () => {
+  console.log('Next pressed with password:', password);
+};
+
+const handleSendAgain = () => {
+  console.log('Resend verification triggered');
+};
+
 
   useEffect(() => {
     setBoards([{
@@ -52,23 +65,34 @@ const SplashScreen = () => {
       style={{
         flex: 1,
         justifyContent: 'center',
-        backgroundColor: 'black',
+        backgroundColor: 'white',
       }}
     >
-    <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
-      <CardIcon
-        icon={require('../../assets/images/camera.png')}
-        onPress={() => console.log('Camera')}
-      />
-      <CardIcon
-        icon={require('../../assets/images/upload.png')}
-        onPress={() => console.log('Upload')}
-      />
-      <CardIcon
-        icon={require('../../assets/images/share.png')}
-        onPress={() => console.log('Share')}
-      />
-    </View>
+   <ModalChangeInformation
+  visible={modalVisible}
+  title="Varification Code"
+  titleColor= {theme.colors.black}
+  descriptionText="The Verification code has been sent to"
+  email="example@email.com" 
+  errorMessage="Code required"
+  fields={[
+    {
+      type: 'code',
+      
+    },
+  ]}
+  underlineButton={{
+    text: 'Send again',
+    onPress: handleSendAgain,
+  }}
+  button={{
+    text: 'Confirm',
+    onPress: handleNext,
+    filledColor: theme.colors.primary,
+    textColor: '#FFFFFF',
+  }}
+  onClose={() => setModalVisible(false)}
+/>
     </View>
   );
   

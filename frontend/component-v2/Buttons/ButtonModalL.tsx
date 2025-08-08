@@ -9,7 +9,6 @@ import {
 interface ButtonModalLProps {
   text: string;
   filledColor?: string;
-  borderColor?: string;
   textColor?: string;
   onPress?: (event: GestureResponderEvent) => void;
 }
@@ -17,7 +16,6 @@ interface ButtonModalLProps {
 const ButtonModalL: React.FC<ButtonModalLProps> = ({
   text,
   filledColor = '#FFFFFF',
-  borderColor = '#000000',
   textColor = '#000000',
   onPress = () => {},
 }) => {
@@ -27,7 +25,7 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
         styles.button,
         {
           backgroundColor: filledColor,
-          borderColor: borderColor,
+          //borderColor: borderColor,
         },
       ]}
       activeOpacity={0.85}
@@ -43,7 +41,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 12,
-    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 6,

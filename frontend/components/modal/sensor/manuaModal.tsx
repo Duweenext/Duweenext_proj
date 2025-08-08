@@ -3,7 +3,7 @@ import { Modal, View, Text, TouchableOpacity, TextInput, Alert } from 'react-nat
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '@/srcs/auth/context/auth_context'; // Adjust path if needed
+// import { useAuth } from '@/srcs/auth/context/auth_context'; // Adjust path if needed
 import { jwtDecode } from 'jwt-decode';
 import axiosInstance from '@/srcs/api/apiManager'; // Adjust path if needed
 // import * as SecureStore from 'expo-secure-store'; // No longer needed here if session is the token
@@ -25,28 +25,28 @@ interface MyJwtPayload {
 
 const ManualConfigModal = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
   // 'session' from useAuth() IS the JWT token string.
-  const { session } = useAuth(); 
+  // const { session } = useAuth(); 
 
   const [derivedUserId, setDerivedUserId] = useState<number | undefined>(undefined);
 
-  useEffect(() => {
-    if (session) { // 'session' is the JWT token string
-      try {
-        const decodedPayload = jwtDecode<MyJwtPayload>(session);
-        if (decodedPayload && typeof decodedPayload.user_id === 'number') {
-          setDerivedUserId(decodedPayload.user_id);
-        } else {
-          console.warn("User ID not found or not a number in JWT payload from session.");
-          setDerivedUserId(undefined);
-        }
-      } catch (error) {
-        console.error("Failed to decode JWT session:", error);
-        setDerivedUserId(undefined);
-      }
-    } else {
-      setDerivedUserId(undefined);
-    }
-  }, [session]);
+  // useEffect(() => {
+  //   if (session) { // 'session' is the JWT token string
+  //     try {
+  //       const decodedPayload = jwtDecode<MyJwtPayload>(session);
+  //       if (decodedPayload && typeof decodedPayload.user_id === 'number') {
+  //         setDerivedUserId(decodedPayload.user_id);
+  //       } else {
+  //         console.warn("User ID not found or not a number in JWT payload from session.");
+  //         setDerivedUserId(undefined);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to decode JWT session:", error);
+  //       setDerivedUserId(undefined);
+  //     }
+  //   } else {
+  //     setDerivedUserId(undefined);
+  //   }
+  // }, [session]);
 
 
   const {
@@ -80,19 +80,19 @@ const ManualConfigModal = ({ visible, onClose }: { visible: boolean; onClose: ()
     console.log('Submitting Data (frontend):', data);
 
     try {
-      const token = session;
+      // const token = session;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
 
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-        console.log("Authorization header added using session token.");
-      } else {
-        console.warn("Auth token (session) not found. Request will be sent without Authorization header.");
-        Alert.alert("Authentication Error", "You are not logged in. Please log in to submit.");
-        return; 
-      }
+      // if (token) {
+      //   headers["Authorization"] = `Bearer ${token}`;
+      //   console.log("Authorization header added using session token.");
+      // } else {
+      //   console.warn("Auth token (session) not found. Request will be sent without Authorization header.");
+      //   Alert.alert("Authentication Error", "You are not logged in. Please log in to submit.");
+      //   return; 
+      // }
 
       const apiResponse = await axiosInstance.post("/v1/board/manual", data, {
         headers: headers,

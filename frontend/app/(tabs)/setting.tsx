@@ -3,8 +3,8 @@ import React from 'react'
 
 const Setting = () => {
     return (
-        <View>
-            <Text>Setting</Text>
+        <View style={{ flex: 1, padding: 20 }}>
+            <Text style={{ fontSize: 18, color: '#1A736A' }}>Setting</Text>
         </View>
     )
 }

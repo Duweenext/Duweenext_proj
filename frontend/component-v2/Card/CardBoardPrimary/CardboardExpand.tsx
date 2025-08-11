@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { theme } from '@/theme'; // Adjust path as needed
-import { useBoard } from '@/srcs/api/useBoard';
+import { useBoard } from '@/src/api/useBoard';
 import HalfCircleGauge from '@/component-v2/Chart/GaugeChart';
 import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
 

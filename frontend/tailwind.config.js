@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const { tokens } = require("./srcs/style/style_token");
+const { tokens } = require("./src/style/style_token");
 
 module.exports = {
   content: [

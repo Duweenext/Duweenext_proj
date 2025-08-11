@@ -6,12 +6,12 @@ import { router, useRouter } from 'expo-router';
 import { icons } from '@/constants/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchemaType, loginSchema } from '../../srcs/auth/validation';
-import { user_login } from '../../srcs/auth/auth';
-import { useAuth } from '@/srcs/auth/context/auth_context';
+import { LoginSchemaType, loginSchema } from '@/src/auth/validation';
+import { user_login } from '@/src/auth/auth';
+import { useAuth } from '@/src/auth/context/auth_context';
 
 const Login = () => {
-    const { login, session } = useAuth();
+    // const { login, session } = useAuth();
     const {
         control,
         handleSubmit,
@@ -35,16 +35,16 @@ const Login = () => {
         });
 
         if (response.success) {
-            login(response.data.token);
+            // login(response.data.token);
         } else {
 
         }
     }
-    useEffect(() => {
-        if (session) {
-            router.replace('/(tabs)');
-        }
-    }, [session]);
+    // useEffect(() => {
+    //     if (session) {
+    //         router.replace('/(tabs)');
+    //     }
+    // }, [session]);
 
     return (
         <KeyboardAvoidingView

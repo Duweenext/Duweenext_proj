@@ -1,10 +1,13 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
 
-const ButtonAddBoard: React.FC = () => {
+interface ButtonAddBoardProps {
+  onPress?: () => void;
+}
+
+const ButtonAddBoard: React.FC<ButtonAddBoardProps> = ({ onPress }) => {
   const handlePress = () => {
-    console.log('Add board button pressed!');
-    // Add your action here
+    onPress?.();
   };
 
   return (

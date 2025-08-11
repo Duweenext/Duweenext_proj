@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput } from 'react-native';
-import { validateText } from '../../srcs/utlis/input'; 
+import { validateText } from '../../src/utlis/input'; 
 
 type Props = {
   name?: string;

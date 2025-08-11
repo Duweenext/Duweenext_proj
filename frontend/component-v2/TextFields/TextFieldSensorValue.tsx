@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput } from 'react-native';
-import { sanitizeDecimalInput } from '../../srcs/utlis/input'; // adjust path as needed
+import { sanitizeDecimalInput } from '../../src/utlis/input'; // adjust path as needed
 
 type Props = {
   defaultValue: string;

@@ -4,7 +4,7 @@ import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrim
 
 const Education = () => {
     return (
-        <View className='flex-1 justify-center items-center bg-black p-10'>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
             {/* <CardBoardPrimary mode='disconnected'/> */}
         </View>
     )

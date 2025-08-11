@@ -6,14 +6,14 @@ import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAni
 import { router, useRouter } from 'expo-router';
 import { icons } from '@/constants/icons';
 import { useForm, Controller } from 'react-hook-form';
-import { signUpSchema, SignUpSchemaType } from '../../srcs/auth/validation';
+import { signUpSchema, SignUpSchemaType } from '@/src/auth/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getPasswordStrength } from '../../srcs/utlis/passwordStrength';
-import { user_register } from '../../srcs/auth/auth';
-import { useAuth } from '@/srcs/auth/context/auth_context';
+import { getPasswordStrength } from '@/src/utlis/passwordStrength';
+import { user_register } from '@/src/auth/auth';
+import { useAuth } from '@/src/auth/context/auth_context';
 
 const SingUp = () => {
-    const { login, session } = useAuth();
+    // const { login, session } = useAuth();
 
     const {
         control,
@@ -40,7 +40,7 @@ const SingUp = () => {
         });
 
         if (response.success) {
-            login(response.data.token);
+            // login(response.data.token);
         } else {
 
         }
@@ -57,10 +57,10 @@ const SingUp = () => {
             strengthBarWidth.value = withTiming(60, { duration: 300 });
         }
 
-        if (session) {
-            router.replace('/(tabs)');
-        }
-    }, [passwordStrength, session]);
+        // if (session) {
+        //     router.replace('/(tabs)');
+        // }
+    }, [passwordStrength]);
 
     const animatedBarStyle = useAnimatedStyle(() => ({
         width: strengthBarWidth.value,

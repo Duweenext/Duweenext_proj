@@ -1,7 +1,7 @@
 // TextFieldVerificationCode.tsx
 import React, { useRef, useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { sanitizeIntegerInput } from '../../srcs/utlis/input';
+import { sanitizeIntegerInput } from '../../src/utlis/input';
 
 interface Props {
   length?: number;

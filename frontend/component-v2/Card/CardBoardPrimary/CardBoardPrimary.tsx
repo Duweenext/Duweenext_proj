@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
-import { Board } from '@/srcs/interfaces/board';
+import { Board } from '@/src/interfaces/board';
 import CardBoardExpanded from './CardboardExpand';
 import MeasurementDashboard from './CardboardExpand';
+import ButtonCard from '@/component-v2/Buttons/ButtonCard';
 
 type Mode = 'connected' | 'failed' | 'disconnected';
 
@@ -127,17 +128,19 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
 
                 {/* Action button */}
                 <View style={styles.leftsection}>
-                    <TouchableOpacity style={styles.iconButton} onPress={onIconPress}>
-                        <Ionicons name="chevron-forward" size={24} color={iconColor} />
+                    <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)}>
+                        <Ionicons 
+                            name={expanded ? "chevron-down" : "chevron-forward"} 
+                            size={24} 
+                            color={iconColor} 
+                        />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: buttonBg }]}
+                    <ButtonCard
+                        text={actionLabel}
+                        filledColor={buttonBg}
+                        textColor={buttonText}
                         onPress={onButtonPress}
-                    >
-                        <Text style={[styles.actionText, { color: buttonText }]}>
-                            {actionLabel}
-                        </Text>
-                    </TouchableOpacity>
+                    />
                 </View>
             </View>
 
@@ -194,17 +197,6 @@ const styles = StyleSheet.create({
         // marginTop: 4,
         fontSize: parseInt(theme.fontSize.description, 10),
         fontFamily: theme.fontFamily.regular,
-    },
-    actionButton: {
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        // borderRadius: parseInt(theme.borderRadius.md, 10),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    actionText: {
-        fontSize: parseInt(theme.fontSize.description, 10),
-        fontFamily: theme.fontFamily.medium,
     },
     leftsection: {
         flexDirection: 'column',

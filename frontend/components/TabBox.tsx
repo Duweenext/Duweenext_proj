@@ -10,11 +10,37 @@ interface Props {
 const TabBox = ({ title, icon, onNav }: Props) => {
     return (
         <TouchableOpacity
-            className="flex justify-evenly items-center w-[31.5%] py-2 aspect-square bg-[#1A736A] rounded-xl"
+            style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#1A736A',
+                borderRadius: 12,
+                paddingVertical: 16,
+                paddingHorizontal: 8,
+                aspectRatio: 1,
+                maxWidth: '31%',
+            }}
             onPress={onNav}
         >
-            <Image tintColor="#fff" source={icon} className="w-12 h-12" />
-            <Text className="text-lg font-bold text-white text-center">{title}</Text>
+            <Image 
+                source={icon} 
+                style={{ 
+                    width: 32, 
+                    height: 32, 
+                    tintColor: '#ffffff',
+                    marginBottom: 8,
+                }} 
+            />
+            <Text style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: '#ffffff',
+                textAlign: 'center',
+                lineHeight: 14,
+            }}>
+                {title}
+            </Text>
         </TouchableOpacity>
     );
 }

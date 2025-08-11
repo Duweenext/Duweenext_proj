@@ -14,7 +14,7 @@ import {
   validateText,
   strengthColorMap,
   strengthPercentMap,
-} from '../../srcs/utlis/input';
+} from '../../src/utlis/input';
 
 type PasswordVariant = 'default' | 'old' | 'confirm';
 

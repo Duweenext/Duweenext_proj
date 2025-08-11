@@ -18,8 +18,8 @@ import CardIcon from '@/component-v2/Card/CardIcon';
 import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrimary';
 import { theme } from '@/theme';
 import { ScrollView, View } from 'react-native';
-import { Board } from '@/srcs/interfaces/board';
-import { DateDisplayOnCard } from '@/srcs/utlis/date';
+import { Board } from '@/src/interfaces/board';
+import { DateDisplayOnCard } from '@/src/utlis/date';
 import { CardBoardModal } from '@/component-v2/Card/CardBoardModal';
 import { CardImageProcessingResult } from '@/component-v2/Card/CardImageProcessingResult';
 import { Ionicons} from '@expo/vector-icons';
@@ -65,8 +65,6 @@ const handleSendAgain = () => {
       <View
         style={{
           justifyContent: 'center',
-          // alignItems: 'center',
-          backgroundColor: theme.colors['background1'],
           height: 'auto',
           padding: theme.spacing.md,
         }}

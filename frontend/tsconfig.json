@@ -6,8 +6,9 @@
       "@/*": [
         "./*",
       ],
-      "@/theme": ["./app/theme.ts"],
-      "@/src/*": ["./srcs/*"],
+      "@/theme": ["./src/theme.ts"],
+      "@/src/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"]
     }
   },
   "include": [
@@ -15,6 +16,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "types/**/*.d.ts"
   ]
 }

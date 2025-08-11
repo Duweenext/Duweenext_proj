@@ -5,6 +5,7 @@ import {
   StyleSheet,
   GestureResponderEvent,
 } from 'react-native';
+import {theme} from '@/theme';
 
 type ButtonSize = 'L' | 'XL' | '2XL' | '3XL';
 
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   text: {
-    fontWeight: 'bold',
+    fontFamily: theme.fontFamily.semibold,
   },
 });
 

@@ -9,18 +9,19 @@ import BoardSectionHeader from '@/component-v2/Screens/BoardSectionHeader';
 import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrimary';
 
 // Modals
-import BleConfigModal from '@/components/modal/sensor/bleModal';
-import WifiConfigModal, { WifiFormData } from '@/components/modal/sensor/wificonfigModal';
+import BleConfigModal from '@/component-v2/Modals/bleModal';
+import WifiConfigModal, { WifiFormData } from '@/component-v2/Modals/wificonfigModal';
 
 // Data
 import { mockBoards, formatRunningTime, type ExtendedBoardData } from '@/component-v2/Screens/mockBoardData';
+import { CardBoardModal } from '@/component-v2/Card/CardBoardModal';
+import { useTranslation } from 'react-i18next';
 
 // Main Sensor Screen
 const SensorScreen = () => {
-  // const [showManualModal, setShowManualModal] = useState(false);
-  // const [showBleModal, setShowBleModal] = useState(false);
-  // const [showWifiConfig, setShowWifiConfig] = useState(false);
   const [boardId, setBoardId] = useState('');
+
+  const {t} = useTranslation();
 
   const handleBackPress = () => {
     router.back();
@@ -52,6 +53,7 @@ const SensorScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
+
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       
       {/* Header */}
@@ -81,25 +83,6 @@ const SensorScreen = () => {
           ))}
         </View>
       </ScrollView>
-
-      {/* Modals */}
-      {/* <ManualConfigModal
-        visible={showManualModal}
-        onClose={handleCloseAll}
-      />
-
-      <BleConfigModal
-        visible={showBleModal}
-        onClose={handleCloseAll}
-        onSelectDevice={handleDeviceSelect}
-      />
-
-      <WifiConfigModal
-        visible={showWifiConfig}
-        onClose={handleCloseAll}
-        onSubmit={handleWifiSubmit}
-        boardId={boardId}
-      /> */}
     </View>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput } from 'react-native';
 import { validateText } from '../../src/utlis/input'; 
+import {theme} from '@/theme'; // Adjust the import path as necessary
 
 type Props = {
   name?: string;
@@ -62,7 +63,7 @@ const TextFieldModal: React.FC<Props> = ({
       />
 
       {errorMessage ? (
-        <Text style={{ marginTop: 4, color: '#F77979', fontSize: 14 }}>
+        <Text style={{ marginTop: 4, color: '#F77979', fontSize: theme.fontSize.data_text, fontFamily: theme.fontFamily.regular }}>
           {errorMessage}
         </Text>
       ) : null}

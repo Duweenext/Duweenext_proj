@@ -5,13 +5,15 @@ export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
 
-    const getReturnList = useCallback(async () => {
+    const verifyBoardInformation = useCallback(async (boardId : number) => {
         setLoading(true);
         setError(null);
 
         try {
-            const res = await axiosInstance.get("/admin/returns/request/all");
-
+            // const res = await axiosInstance.get("");
+            console.log(boardId);
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            return true;
         } catch (err) {
             setError(err);
             throw err;
@@ -20,12 +22,13 @@ export const useBoard = () => {
         }
     }, []);
 
-    const getReturnListbyGroup = useCallback(async () => {
+    const forPatching = useCallback(async (returning_id: string, returner_info: string, phone: string) => {
         setLoading(true);
         setError(null);
 
         try {
-            const res = await axiosInstance.get("admin/returns/request/grouped-by-status");
+
+            // const res = await axiosInstance.patch(`/admin/returns/${returning_id}/update-returner`);
             // 
 
         } catch (err) {
@@ -36,52 +39,19 @@ export const useBoard = () => {
         }
     }, []);
 
-    const getReturnById = useCallback(async (returning_id: string) => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const res = await axiosInstance.get(`admin/returns/request/details/${returning_id}`,);
-
-
-        } catch (err) {
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const addReturnerInformation = useCallback(async (returning_id: string, returner_info: string, phone: string) => {
-        setLoading(true);
-        setError(null);
-
-        try {
-
-            const res = await axiosInstance.patch(`/admin/returns/${returning_id}/update-returner`);
-            // 
-
-        } catch (err) {
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const completedReturn = useCallback(async (returnId: string, formData: FormData) => {
+    const forPatchingwithForm = useCallback(async (returnId: string, formData: FormData) => {
         setLoading(true);
         setError(null);
 
         try {
             // 
-            const res = await axiosInstance.patch(
-                `/admin/returns/request/${returnId}/update-info`,
-                formData,
-                { headers: { 'Content-Type': 'multipart/form-data' } }
-            );
+            // const res = await axiosInstance.patch(
+            //     `/admin/returns/request/${returnId}/update-info`,
+            //     formData,
+            //     { headers: { 'Content-Type': 'multipart/form-data' } }
+            // );
             // 
-            return res;
+            // return res;
         } catch (err) {
             setError(err);
             throw err;
@@ -89,40 +59,12 @@ export const useBoard = () => {
             setLoading(false);
         }
     }, []);
-
-    const addPermission = useCallback(async (email: string, role: string) => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const body = {
-                email: email,
-                role: role,
-            }
-            const res = await axiosInstance.patch("/admin/users/grant-access", body);
-            let result = true;
-            if (res.data == "User not found or role unchanged." || "Invalid request body.") {
-                result = false;
-            }
-            return result;
-        } catch (err) {
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-
-
+    
     return {
         loading,
         error,
-        getReturnList,
-        addPermission,
-        getReturnListbyGroup,
-        getReturnById,
-        addReturnerInformation,
-        completedReturn
+        forPatching,
+        forPatchingwithForm,
+        verifyBoardInformation
     };
 };

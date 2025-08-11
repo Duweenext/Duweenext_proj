@@ -11,6 +11,7 @@ interface ButtonCardProps {
   filledColor?: string;
   textColor?: string;
   onPress?: (event: GestureResponderEvent) => void;
+  round?: number;
 }
 
 const ButtonCard: React.FC<ButtonCardProps> = ({
@@ -18,12 +19,13 @@ const ButtonCard: React.FC<ButtonCardProps> = ({
   filledColor = '#000000',
   textColor = '#FFFFFF',
   onPress = () => {},
+  round = 5,
 }) => {
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        { backgroundColor: filledColor },
+        { backgroundColor: filledColor, borderRadius: round },
       ]}
       activeOpacity={0.85}
       onPress={onPress}
@@ -37,7 +39,6 @@ const styles = StyleSheet.create({
   button: {
     width: 97,
     height: 26,
-    borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 4,

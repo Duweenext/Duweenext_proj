@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ButtonModalXL from '@/component-v2/Buttons/ButtonModalXL';
-import { theme } from '@/src/theme';
+import { theme } from '@/theme';
 
 interface AddBoardModalProps {
     visible: boolean;
@@ -39,33 +39,29 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({
                     <View style={styles.container_content}>
                         {/* <Text style={styles.subtitle}>Choose a mode to add a board.</Text> */}
                         <View style={styles.content}>
-                            <Text style={styles.description}>Manual mode requires a Board ID.</Text>
 
-                            {/* Manual Button */}
-                            <View style={styles.buttonContainer}>
-                                <ButtonModalXL
-                                    text="Manual"
-                                    filledColor="#2c5f54"
-                                    textColor="white"
-                                    onPress={onSelectManual}
-                                    size='2XL'
-                                />
-                            </View>
+                            <Text style={styles.description}>Manual mode requires a Board ID.</Text>
+                            <ButtonModalXL
+                                text="Manual"
+                                filledColor="#2c5f54"
+                                textColor="white"
+                                onPress={onSelectManual}
+                                size='2XL'
+                            />
                         </View>
 
                         <View style={styles.content}>
-                            <Text style={styles.description}>BLE mode scans nearby devices.</Text>
 
                             {/* BLE Button */}
-                            <View style={styles.buttonContainer}>
-                                <ButtonModalXL
-                                    text="BLE"
-                                    filledColor="#2c5f54"
-                                    textColor="white"
-                                    onPress={onSelectBLE}
-                                    size='2XL'
-                                />
-                            </View>
+
+                            <Text style={styles.description}>BLE mode scans nearby devices.</Text>
+                            <ButtonModalXL
+                                text="BLE"
+                                filledColor="#2c5f54"
+                                textColor="white"
+                                onPress={onSelectBLE}
+                                size='2XL'
+                            />
                         </View>
 
 
@@ -80,7 +76,7 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({
                             <Text style={styles.instructionItem}>4. To register the board you must use BLE options</Text>
                         </View>
                     </View>
-                        {/* Instructions Section */}
+                    {/* Instructions Section */}
                 </View>
             </View>
         </Modal>
@@ -128,13 +124,11 @@ const styles = StyleSheet.create({
     container_content: {
         flexDirection: 'column',
         paddingVertical: 20,
-        gap: 20,
+        alignItems: 'center',
     },
     content: {
         paddingHorizontal: 20,
-        // paddingVertical: -10,
-        // gap: -5,
-        // alignItems: 'center',
+        marginBottom: 20,
     },
     subtitle: {
         fontSize: theme.fontSize.description,
@@ -147,18 +141,11 @@ const styles = StyleSheet.create({
         fontSize: theme.fontSize.xs,
         fontFamily: theme.fontFamily.regular,
         color: '#b4b8bfff',
-        // textAlign: 'start',
-        paddingHorizontal: 20,
-    },
-    buttonContainer: {
-        alignItems: 'center',
-        width: '100%',
     },
     instructionsOuterContainer: {
         paddingHorizontal: 24,
     },
     instructionsContainer: {
-        // marginTop: 20,
         paddingVertical: 16,
         borderTopWidth: 1,
         borderTopColor: '#e5e7eb',
@@ -175,7 +162,7 @@ const styles = StyleSheet.create({
         fontFamily: theme.fontFamily.regular,
         color: '#ef4444',
         marginBottom: 4,
-        paddingLeft: 8,
+        // paddingLeft: 8,
     },
 });
 

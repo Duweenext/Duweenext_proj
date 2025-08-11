@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
 import { Board } from '@/src/interfaces/board';
 import CardBoardExpanded from './CardboardExpand';
-import MeasurementDashboard from './CardboardExpand';
 import ButtonCard from '@/component-v2/Buttons/ButtonCard';
 
 type Mode = 'connected' | 'failed' | 'disconnected';
@@ -145,7 +144,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
             </View>
 
             {expanded && (
-                <MeasurementDashboard
+                <CardBoardExpanded
                 />
             )}
         </TouchableOpacity>
@@ -202,7 +201,7 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'flex-end',
-        height: '100%',
+        // height: '100%',
         marginBottom: 8, // to align with content
     }
 });

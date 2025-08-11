@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ButtonModalXL from '@/component-v2/Buttons/ButtonModalXL';
+import { theme } from '@/src/theme';
 
 interface AddBoardModalProps {
     visible: boolean;
@@ -111,11 +112,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     title: {
-        fontSize: 20,
-        fontWeight: '600',
+        fontSize: theme.fontSize.header2,
+        fontFamily: theme.fontFamily.semibold,
         color: 'white',
         textAlign: 'center',
-
     },
     closeButton: {
         width: 32,
@@ -137,13 +137,15 @@ const styles = StyleSheet.create({
         // alignItems: 'center',
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: theme.fontSize.description,
+        fontFamily: theme.fontFamily.regular,
         color: '#6b7280',
         marginBottom: 8,
         textAlign: 'center',
     },
     description: {
-        fontSize: 12,
+        fontSize: theme.fontSize.xs,
+        fontFamily: theme.fontFamily.regular,
         color: '#b4b8bfff',
         // textAlign: 'start',
         paddingHorizontal: 20,
@@ -163,13 +165,14 @@ const styles = StyleSheet.create({
         alignSelf: 'stretch',
     },
     instructionsTitle: {
-        fontSize: 14,
+        fontSize: theme.fontSize.data_text,
+        fontFamily: theme.fontFamily.semibold,
         color: '#ef4444',
-        fontWeight: '600',
         marginBottom: 8,
     },
     instructionItem: {
-        fontSize: 12,
+        fontSize: theme.fontSize.xs,
+        fontFamily: theme.fontFamily.regular,
         color: '#ef4444',
         marginBottom: 4,
         paddingLeft: 8,

@@ -9,10 +9,7 @@ type Props = {
 const MyComponent: React.FC<Props> = ({ title, subtitle }) => {
   return (
     <View style={{ padding: 16, backgroundColor: '#f3f4f6' }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{title}</Text>
-      {subtitle && (
-        <Text style={{ fontSize: 14, color: '#6b7280' }}>{subtitle}</Text>
-      )}
+      ddd
     </View>
   );
 };

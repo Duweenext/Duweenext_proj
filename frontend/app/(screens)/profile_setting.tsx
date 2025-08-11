@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 // ---- reuse your components ----
 import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
 import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
@@ -8,7 +8,7 @@ import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
 
-import { themeStyle } from './theme';
+import { themeStyle } from '../../src/theme';
 
 type Props = {
   title: string;
@@ -35,7 +35,7 @@ const profile_setting: React.FC<Props> = ({ title }) => {
     setVerifyError(undefined);
     setModalVisible(true);
   };
-  
+  console.log(themeStyle.fontFamily.bold);
 
   const onConfirmChangePassword = () => {
     // TODO: validation + API call
@@ -76,7 +76,6 @@ const profile_setting: React.FC<Props> = ({ title }) => {
       contentContainerStyle={{
         flexGrow: 1,
         padding: 16,
-        backgroundColor: themeStyle.colors.black,
       }}
   >
       {/* ---- Change Account Information ---- */}

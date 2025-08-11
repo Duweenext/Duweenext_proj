@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput } from 'react-native';
-import { themeStyle } from '../../app/theme';
+import { themeStyle } from '../../src/theme';
 import { validateText } from '../../src/utlis/input';
 
 type Props = {

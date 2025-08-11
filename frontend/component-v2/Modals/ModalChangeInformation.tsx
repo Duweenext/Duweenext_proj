@@ -1,5 +1,5 @@
 import React from 'react';
-import { themeStyle } from '../../app/theme';
+import { themeStyle } from '../../src/theme';
 import {
   View,
   Text,

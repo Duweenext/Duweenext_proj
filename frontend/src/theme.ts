@@ -12,6 +12,7 @@ export const themeStyle = {
     xs: 12,
     data_text: 14,
     description: 16,
+    descriptionL: 18,
     header2: 20,
     header1: 24,
     "2xl": 28,

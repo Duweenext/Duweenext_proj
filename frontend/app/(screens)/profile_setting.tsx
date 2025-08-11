@@ -1,300 +1,399 @@
 import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
-// ---- reuse your components ----
+import { View, Text, ScrollView, Alert } from 'react-native';
 import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
 import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
 import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
 import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
-
+import ForgotPasswordFlow from '../../src/flows/ForgotPasswordFlow';
+import DeleteAccountFlow from '../../src/flows/DeleteAccountFlow';
 import { themeStyle } from '../../src/theme';
 
-type Props = {
-  title: string;
-  subtitle?: string;
-};
+const TAKEN_USERNAMES = new Set(['admin', 'jane', 'john', 'taken_user']);
+const TAKEN_EMAILS = new Set(['taken@example.com', 'exists@gmail.com']);
 
-const profile_setting: React.FC<Props> = ({ title }) => {
-  // demo user data — replace with your store/context
+// temp current password for demo paths (remember-old, delete flow password)
+const TEMP_CURRENT_PASSWORD = 'Test@1234';
+
+type Props = { title: string; subtitle?: string };
+type Step = 'verifyPassword' | 'verifyCode' | 'editProfile' | null;
+
+type DeletionBanner = 'idle' | 'locked' | 'pending'; // UI state for the bottom section
+
+const ProfileSetting: React.FC<Props> = () => {
   const [username, setUsername] = React.useState('Jo Mama');
   const [email, setEmail] = React.useState('Kingkonbazuna1@gmail.com');
 
-  // change password state
+  // change password (user remembers old)
   const [oldPw, setOldPw] = React.useState('');
   const [newPw, setNewPw] = React.useState('');
   const [confirmPw, setConfirmPw] = React.useState('');
 
-  // modal controls
+  const [oldPwError, setOldPwError] = React.useState<string | undefined>();
+  const [newPwError, setNewPwError] = React.useState<string | undefined>();
+  const [confirmPwError, setConfirmPwError] = React.useState<string | undefined>();
+
+  // edit information flow
   const [modalVisible, setModalVisible] = React.useState(false);
+  const [step, setStep] = React.useState<Step>(null);
+
+  // shared flows
+  const [forgotOpen, setForgotOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+
+  // bottom delete/recovery banner state
+  const [deletionBanner, setDeletionBanner] = React.useState<DeletionBanner>('idle');
+
   const [verifyPassword, setVerifyPassword] = React.useState('');
   const [verifyError, setVerifyError] = React.useState<string | undefined>();
+  const [code, setCode] = React.useState('');
+  const [codeError, setCodeError] = React.useState<string | undefined>();
+  const [editName, setEditName] = React.useState('');
+  const [editEmail, setEditEmail] = React.useState('');
+  const [editError, setEditError] = React.useState<string | undefined>();
 
   const onEditInfo = () => {
     setVerifyPassword('');
     setVerifyError(undefined);
+    setStep('verifyPassword');
     setModalVisible(true);
   };
-  console.log(themeStyle.fontFamily.bold);
 
+  // password policy helper
+  const isStrongEnough = (pwd: string) => {
+    const lenOK = pwd.length >= 8;
+    const hasLower = /[a-z]/.test(pwd);
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasNum   = /\d/.test(pwd);
+    const hasSym   = /[^A-Za-z0-9]/.test(pwd);
+    const score = [hasLower, hasUpper, hasNum, hasSym].filter(Boolean).length;
+    return lenOK && score >= 3;
+  };
+
+  // submit change password (remembers old)
   const onConfirmChangePassword = () => {
-    // TODO: validation + API call
-    if (!oldPw || !newPw || newPw !== confirmPw) {
-      // add your error UI if you like
-      return;
-    }
+    setOldPwError(undefined); setNewPwError(undefined); setConfirmPwError(undefined);
+    if (!oldPw) setOldPwError('Required');
+    if (!newPw) setNewPwError('Required');
+    if (!confirmPw) setConfirmPwError('Required');
+    if (!oldPw || !newPw || !confirmPw) return;
+
+    if (oldPw !== TEMP_CURRENT_PASSWORD) { setOldPwError('Incorrect password'); return; }
+    if (newPw === oldPw) { setNewPwError('New password must be different from old password'); return; }
+    if (!isStrongEnough(newPw)) { setNewPwError('Password too weak (min 8, use 3 of upper/lower/number/symbol).'); return; }
+    if (newPw !== confirmPw) { setConfirmPwError('Passwords do not match'); return; }
+
     console.log('Change password ->', { oldPw, newPw });
+    setOldPw(''); setNewPw(''); setConfirmPw('');
+    Alert.alert('Password changed', 'Your password has been updated.');
   };
 
-  const handleVerifyNext = () => {
-    // Example: simple validation
-    if (!verifyPassword) {
-      setVerifyError('Password required');
-      return;
-    }
+  // ====== existing edit info flow ======
+  const handleNextFromPassword = () => {
+    if (!verifyPassword) { setVerifyError('Password required'); return; }
     setVerifyError(undefined);
+    setCode(''); setCodeError(undefined);
+    setStep('verifyCode');
+  };
+
+  const handleConfirmCode = () => {
+    if (!code) { setCodeError('Code required'); return; }
+    if (code !== '123456') { setCodeError('Incorrect code'); return; }
+    setCodeError(undefined);
+    setEditName(username);
+    setEditEmail(email);
+    setEditError(undefined);
+    setStep('editProfile');
+  };
+
+  const handleSubmitEditProfile = () => {
+    const nameTrim = editName.trim();
+    const emailTrim = editEmail.trim().toLowerCase();
+    const curEmailTrim = email.trim().toLowerCase();
+
+    if (!nameTrim || !emailTrim) { setEditError('All fields are required'); return; }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim);
+    if (!emailOk) { setEditError('Invalid email address'); return; }
+
+    const nameChanged = nameTrim.toLowerCase() !== username.trim().toLowerCase();
+    const emailChanged = emailTrim !== curEmailTrim;
+
+    if (nameChanged && TAKEN_USERNAMES.has(nameTrim.toLowerCase())) { setEditError('Username already exists'); return; }
+    if (emailChanged && TAKEN_EMAILS.has(emailTrim)) { setEditError('Email already exists'); return; }
+
+    setUsername(nameTrim);
+    setEmail(editEmail.trim());
+    setEditError(undefined);
     setModalVisible(false);
-    // Navigate to “edit info” form or open another modal if you want
-    console.log('Verified. Proceed to edit information…');
+    setStep(null);
+    Alert.alert('Profile updated', 'Your profile information has been saved.');
   };
 
-  const onSendAgain = () => {
-    console.log('Resend verification…');
-  };
+  const renderModal = () => {
+    if (!modalVisible || !step) return null;
 
-  const onLogout = () => {
-    console.log('Logout');
-  };
-
-  const onDeleteAccount = () => {
-    console.log('Delete account');
-  };
-  
-
-  return (
-  <ScrollView
-      contentContainerStyle={{
-        flexGrow: 1,
-        padding: 16,
-      }}
-  >
-      {/* ---- Change Account Information ---- */}
-      <Text style={{
-        fontFamily: themeStyle.fontFamily.bold,
-        fontSize: themeStyle.fontSize.header1,
-        color: themeStyle.colors.white,
-        paddingBottom: 10,
-      }}>
-        Change Account Information
-      </Text>
-      <View style={{
-            maxWidth: 325,
-            backgroundColor: themeStyle.colors.white,
-            borderRadius: 10,
-            padding: 15,
-            marginBottom: 20,
-            left: 15,
-        }}
-      >
-          <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginBottom: 15,
+    if (step === 'verifyPassword') {
+      return (
+        <ModalChangeInformation
+          visible
+          title="Change email"
+          titleColor={themeStyle.colors.fail}
+          descriptionText="To perform email change please verify yourself. Your current email is"
+          instructionText="Enter password below"
+          email={email}
+          errorMessage={verifyError}
+          fields={[
+            {
+              type: 'password',
+              mode: 'password-old',
+              placeholder: 'Enter your password',
+              value: verifyPassword,
+              onChangeText: setVerifyPassword,
+            },
+          ]}
+          underlineButton={{
+            text: 'Forgot password',
+            onPress: () => {
+              setModalVisible(false);
+              setStep(null);
+              setForgotOpen(true);
+            },
           }}
-          >
-                  <Text style={{
-                    fontFamily: themeStyle.fontFamily.semibold, 
-                    fontSize: themeStyle.fontSize.description,
-                  }}>
-                    Username:
-                  </Text>
-                  <Text style={{
-                    alignItems: 'center',
-                    justifyContent: 'flex-start',
-                    width: '70%',
-                  }}>
-                    {username}
-                  </Text>
-          </View>
-
-          <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              paddingBottom: 15,
-          }}>
-                <Text style={{
-                  fontFamily: themeStyle.fontFamily.semibold, 
-                    fontSize: themeStyle.fontSize.description,
-                    }}>
-                      Email: 
-                </Text>
-                <Text style={{
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  width: '70%',
-
-                }}>
-                  {email}
-                </Text>
-          </View>
-
-        <View  style={{
-          
-          width: '100%',             // match card width
-          alignItems: 'flex-end',    // push child to right
-          right: 10,                 // distance from right edge of card
-        }}>
-          <ButtonModalL
-          text="Edit Information"
-          filledColor={themeStyle.colors.primary}
-          textColor={themeStyle.colors.white}
-          onPress={onEditInfo}
+          button={{
+            text: 'Next',
+            onPress: handleNextFromPassword,
+            filledColor: themeStyle.colors.primary,
+            textColor: themeStyle.colors.white,
+          }}
+          onClose={() => { setModalVisible(false); setStep(null); }}
         />
-        </View>
-      </View>
+      );
+    }
 
-      {/* ---- Change Password ---- */}
-      <View style={{
-        flexDirection: 'column', 
-      }}>
-        <Text style={{
-        fontFamily: themeStyle.fontFamily.bold,
-        fontSize: themeStyle.fontSize.header1,
-        color: themeStyle.colors.white,
-        paddingBottom: 10,
-      }}>
-        Change Password
-      </Text>
+    if (step === 'verifyCode') {
+      return (
+        <ModalChangeInformation
+          visible
+          title="Change email"
+          titleColor={themeStyle.colors.fail}
+          descriptionText="The verification code has been sent to"
+          email={email}
+          errorMessage={codeError}
+          fields={[{ type: 'code', placeholder: '', value: code, onChangeText: setCode }]}
+          underlineButton={{ text: 'Send again', onPress: () => console.log('Resend verification code…') }}
+          button={{
+            text: 'Confirm',
+            onPress: handleConfirmCode,
+            filledColor: themeStyle.colors.primary,
+            textColor: themeStyle.colors.white,
+          }}
+          onClose={() => { setModalVisible(false); setStep(null); }}
+        />
+      );
+    }
 
-        <View>
-          <TextFieldPrimary
-            name="Enter old password"
-            type="password"
-            passwordVariant="old"
-            placeholder="••••••••••••"
-            value={oldPw}
-            onChangeText={setOldPw}
-          />
-        </View>
+    return (
+      <ModalChangeInformation
+        visible
+        title="Edit Profile"
+        titleColor={themeStyle.colors.fail}
+        descriptionText="To perform password change please enter information below"
+        errorMessage={editError}
+        fields={[
+          {
+            type: 'text',
+            mode: 'text',
+            inputKind: 'letters',
+            name: 'New username',
+            placeholder: 'Your new username',
+            value: editName,
+            onChangeText: setEditName,
+          },
+          {
+            type: 'text',
+            mode: 'text',
+            inputKind: 'email',
+            name: 'New email',
+            placeholder: 'your@email.com',
+            value: editEmail,
+            onChangeText: setEditEmail,
+          },
+        ]}
+        button={{
+          text: 'Submit',
+          onPress: handleSubmitEditProfile,
+          filledColor: themeStyle.colors.primary,
+          textColor: themeStyle.colors.white,
+        }}
+        onClose={() => { setModalVisible(false); setStep(null); }}
+      />
+    );
+  };
 
-        <View>
-          <TextFieldPrimary
-             name="Enter new password"
-            type="password"
-            passwordVariant="default"
-            placeholder="••••••••••••"
-            value={newPw}
-            onChangeText={setNewPw}   
-          />
-        </View>
-
-        <View>
-          <TextFieldPrimary
-            name="Confirm new password"
-            type="password"
-            passwordVariant="confirm"
-            confirmWith={newPw}
-            placeholder="••••••••••••"
-            value={confirmPw}
-            onChangeText={setConfirmPw}       
-          />
-       </View>
-       <View 
-       style={{
-        marginTop: -5,
-        left: 20,
-       }}>
-        <ButtonUnderline text="Forgot password" onPress={() => console.log('Forgot password')} />
-        </View>
-    
-        <View style={{ 
-          marginTop: 12,
-          alignItems: 'flex-start',    // push child to right
-          left: 128,
-          }}>
+  // banner helpers
+  const renderDeleteAction = () => {
+    if (deletionBanner === 'pending') {
+      return (
+        <>
           <ButtonPrimary
-            text="Change password"
-            filledColor= {themeStyle.colors.primary}
-            borderColor={themeStyle.colors.white}
-            textColor={themeStyle.colors.white}
-            onPress={onConfirmChangePassword}
+            text="Recovery"
+            filledColor={themeStyle.colors.white}
+            textColor={themeStyle.colors.fail}
+            onPress={() => {
+              // dev-only: cancel pending deletion locally
+              setDeletionBanner('idle');
+              Alert.alert('Recovery requested', 'Your account has been restored.');
+            }}
           />
-        
-        </View>
-      </View>
+          <Text
+            style={{
+              marginTop: 10,
+              color: themeStyle.colors.warning,
+              fontFamily: themeStyle.fontFamily.medium,
+              fontSize: themeStyle.fontSize.description,
+            }}
+          >
+            Your account will be delete within 7 days
+          </Text>
+        </>
+      );
+    }
 
-      {/* ---- Linked Accounts ---- */}
-      <View style={{
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        marginTop: 15,
-      }}>
-        <Text style={{fontFamily: themeStyle.fontFamily.bold,
-        fontSize: themeStyle.fontSize.header1,
-        color: themeStyle.colors.white,
-        paddingBottom: 10,}}>Linked Accounts</Text>
-      </View>
-      <View style={{ 
-        marginTop: 5,
-        marginBottom: 12,
-        flexDirection: 'column',
-        justifyContent: 'flex-start',
-        width: 240,
-        paddingBottom: 20,
-        left: 10,
-      }}>
-        
-        <ButtonGoogle
-            text="Google"
-            borderColor={themeStyle.colors.primary}
-            onPress={() => console.log('Google link')}
-            width={220}
-        />
-
-        <ButtonPrimary
-            text="Logout"
-            filledColor= {themeStyle.colors.white}
-            textColor={themeStyle.colors.black}
-            onPress={onLogout}
-        />
+    // idle or locked → Delete Account button
+    return (
+      <>
         <ButtonPrimary
           text="Delete Account"
           filledColor={themeStyle.colors.white}
           textColor={themeStyle.colors.fail}
-          onPress={onDeleteAccount}
+          onPress={() => setDeleteOpen(true)}
         />
-       </View>
-      {/* ---- Verify Modal (reused template) ---- */}
-      <ModalChangeInformation
-        visible={modalVisible}
-        title="Change email"
-        titleColor={themeStyle.colors.fail}
-        descriptionText="To perform email change please verify yourself. Your current email is"
-        instructionText="Enter password below"
-        email={email} // we added support for dynamic email previously
-        errorMessage={verifyError}
-        fields={[
-          {
-            type: 'password',
-            placeholder: 'Enter your password',
-            value: verifyPassword,
-            onChangeText: setVerifyPassword,
-          },
-        ]}
-        button={{
-          text: 'Next',
-          onPress: handleVerifyNext,
-          filledColor: '#000000',
-          textColor: '#FFFFFF',
+        {deletionBanner === 'locked' && (
+          <Text
+            style={{
+              marginTop: 10,
+              color: themeStyle.colors.warning,
+              fontFamily: themeStyle.fontFamily.medium,
+              fontSize: themeStyle.fontSize.description,
+            }}
+          >
+            You are unable to perform delete account for 24 hours
+          </Text>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
+      {/* ---- Change Account Information ---- */}
+      <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 8 }}>
+        Change Account Information
+      </Text>
+
+      <View style={{ maxWidth: 325, backgroundColor: themeStyle.colors.white, borderRadius: 10, padding: 15, marginBottom: 15, left: 15 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }}>
+          <Text style={{ fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.description }}>Username:</Text>
+          <Text style={{ width: '70%' }}>{username}</Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 15 }}>
+          <Text style={{ fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.description }}>Email:</Text>
+          <Text style={{ width: '70%' }}>{email}</Text>
+        </View>
+
+        <View style={{ width: '100%', alignItems: 'flex-start', left: 150, marginBottom: -10 }}>
+          <ButtonModalL
+            text="Edit Information"
+            filledColor={themeStyle.colors.primary}
+            textColor={themeStyle.colors.white}
+            onPress={onEditInfo}
+            size="L"
+          />
+        </View>
+      </View>
+
+      {/* ---- Change Password (user knows old) ---- */}
+      <View style={{ flexDirection: 'column' }}>
+        <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10 }}>
+          Change Password
+        </Text>
+
+        <View>
+          <TextFieldPrimary name="Enter old password" type="password" passwordVariant="old" placeholder="••••••••••••" value={oldPw} onChangeText={(t) => { setOldPw(t); setOldPwError(undefined); }} />
+          {oldPwError ? <Text style={{ marginTop: 6, color: themeStyle.colors.fail, fontFamily: themeStyle.fontFamily.medium, fontSize: themeStyle.fontSize.data_text }}>{oldPwError}</Text> : null}
+        </View>
+
+        <View>
+          <TextFieldPrimary name="Enter new password" type="password" passwordVariant="default" placeholder="••••••••••••" value={newPw} onChangeText={(t) => { setNewPw(t); setNewPwError(undefined); }} />
+          {newPwError ? <Text style={{ marginTop: 6, color: themeStyle.colors.fail, fontFamily: themeStyle.fontFamily.medium, fontSize: themeStyle.fontSize.data_text }}>{newPwError}</Text> : null}
+        </View>
+
+        <View>
+          <TextFieldPrimary name="Confirm new password" type="password" passwordVariant="confirm" confirmWith={newPw} placeholder="••••••••••••" value={confirmPw} onChangeText={(t) => { setConfirmPw(t); setConfirmPwError(undefined); }} />
+          {confirmPwError ? <Text style={{ marginTop: 6, color: themeStyle.colors.fail, fontFamily: themeStyle.fontFamily.medium, fontSize: themeStyle.fontSize.data_text }}>{confirmPwError}</Text> : null}
+        </View>
+
+        <View style={{ marginTop: -5, left: 20 }}>
+          <ButtonUnderline text="Forgot password" onPress={() => setForgotOpen(true)} />
+        </View>
+
+        <View style={{ marginTop: 12, alignItems: 'flex-start', left: 128 }}>
+          <ButtonPrimary
+            text="Change password"
+            filledColor={themeStyle.colors.primary}
+            borderColor={themeStyle.colors.white}
+            textColor={themeStyle.colors.white}
+            onPress={onConfirmChangePassword}
+          />
+        </View>
+      </View>
+
+      {/* ---- Linked Accounts ---- */}
+      <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 15 }}>
+        <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10 }}>
+          Linked Accounts
+        </Text>
+      </View>
+      <View style={{ marginTop: 5, marginBottom: 12, flexDirection: 'column', justifyContent: 'flex-start', width: 240, paddingBottom: 20, left: 10 }}>
+        <ButtonGoogle text="Google" borderColor={themeStyle.colors.primary} onPress={() => console.log('Google link')} width={220} />
+        <ButtonPrimary text="Logout" filledColor={themeStyle.colors.white} textColor={themeStyle.colors.black} onPress={() => console.log('Logout')} />
+        
+        {/* Danger zone / Recovery UI */}
+        {renderDeleteAction()}
+      </View>
+
+      {/* Existing edit info modal */}
+      {renderModal()}
+
+      {/* Shared Forgot Password flow */}
+      <ForgotPasswordFlow
+        visible={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        initialEmail={email}
+        startAtVerify
+      />
+
+      {/* Account deletion flow */}
+      <DeleteAccountFlow
+        visible={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        email={email}
+        onForgotPassword={() => {
+          setDeleteOpen(false);
+          setForgotOpen(true);
         }}
-        underlineButton={{
-          text: 'Send again',
-          onPress: onSendAgain,
+        tempCurrentPassword={TEMP_CURRENT_PASSWORD}
+        onFinished={(result) => {
+          setDeleteOpen(false);
+          if (result === 'completed') setDeletionBanner('pending');
+          else if (result === 'locked') setDeletionBanner('locked');
+          // 'cancel' → leave as-is
         }}
-        onClose={() => setModalVisible(false)}
       />
     </ScrollView>
   );
 };
 
-export default profile_setting;
+export default ProfileSetting;

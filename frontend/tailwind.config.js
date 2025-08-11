@@ -19,7 +19,7 @@ module.exports = {
       },
 
       fontSize: Object.fromEntries(
-        Object.entries(tokens.fontSize).map(([k, v]) => [k, `${v}px`])
+        Object.entries(tokens.fontSize).map(([k, v]) => [k, v])
       ),
       spacing: tokens.spacing,
       borderRadius: tokens.borderRadius,

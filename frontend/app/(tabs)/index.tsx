@@ -4,16 +4,28 @@ import { router } from "expo-router";
 import LineChartExample from "@/components/LineChartExample";
 import TabBox from "@/components/TabBox";
 import { icons } from "@/constants/icons";
+import { useTranslation } from "react-i18next";
 
 
 
 export default function Index() {
+  const {t, i18n} = useTranslation();
+
+  const changeLanguage = () => {
+    if(i18n.language === 'en')
+    {
+      i18n.changeLanguage('th');
+    } else {
+      i18n.changeLanguage('en');
+    }
+  }
 
   return (
     <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 100 }}>
         
         {/* Header */}
+                
         <View style={{
           backgroundColor: '#ffffff',
           borderRadius: 12,
@@ -31,7 +43,7 @@ export default function Index() {
             color: '#1f2937',
             textAlign: 'center',
           }}>
-            Homepage
+            {t('home')}
           </Text>
         </View>
 
@@ -74,21 +86,6 @@ export default function Index() {
           }}>
             Activity Overview
           </Text>
-
-
-
-          {/* Chart */}
-          {/* <View style={{
-            backgroundColor: '#ffffff',
-            borderRadius: 8,
-            padding: 24,
-            minHeight: 120,
-            
-          }}> */}
-          {/* Alert Items */}
-          
-            {/* <LineChartExample /> */}
-          {/* </View> */}
         </View>
 
       </View>

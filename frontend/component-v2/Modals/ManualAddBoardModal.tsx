@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
+import { theme } from '@/theme';
+import TextFieldModal from '../TextFields/TextFieldModal';
 
 interface ManualAddBoardModalProps {
   visible: boolean;
@@ -52,16 +54,13 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
             </Text>
             
             {/* Board ID Input */}
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter board ID"
-              placeholderTextColor="#9ca3af"
+            <TextFieldModal
               value={boardId}
               onChangeText={setBoardId}
-              autoCapitalize="none"
-              autoCorrect={false}
+              placeholder="Enter board ID"
+              textColor={theme.colors.black}
+              borderColor={theme.colors.black}
             />
-            
             {/* Submit Button */}
             <View style={styles.buttonContainer}>
               <ButtonModalL
@@ -103,8 +102,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: theme.fontSize.header2,
+    fontFamily: theme.fontFamily.bold,
     color: 'white',
   },
   closeButton: {
@@ -120,7 +119,8 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   description: {
-    fontSize: 16,
+    fontSize: theme.fontSize.description,
+    fontFamily: theme.fontFamily.regular,
     color: '#6b7280',
     textAlign: 'center',
     lineHeight: 22,

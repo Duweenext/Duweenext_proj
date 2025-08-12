@@ -60,7 +60,7 @@ const getSizeStyles = (size: ButtonSize) => {
       };
     case '2XL':
       return {
-        width: 320,
+        width: 300,
         height: 56,
         paddingVertical: 16,
         paddingHorizontal: 20,

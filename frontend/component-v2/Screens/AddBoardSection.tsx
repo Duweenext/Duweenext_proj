@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AddBoardModal from '@/component-v2/Modals/AddBoardModal';
 import ManualAddBoardModal from '@/component-v2/Modals/ManualAddBoardModal';
-import BleConfigModal from '@/components/modal/sensor/bleModal';
+import BleConfigModal from '@/component-v2/Modals/bleModal';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -35,15 +35,14 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     onSelectBLE?.();
   };
 
-  // const handleCloseManualModal = () => {
-  //   // setManualModalVisible(false);
-  // };
-
   const handleManualSubmit = (boardId: string) => {
     // setManualModalVisible(false);
     setModalVisible("");
     onManualSubmit?.(boardId);
   };
+
+  console.log(modalVisible);
+  
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>

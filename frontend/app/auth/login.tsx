@@ -13,6 +13,7 @@ import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
 
+// simple email check so we can prefill initialEmail if present
 const looksLikeEmail = (s: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
 
@@ -93,11 +94,16 @@ const Login: React.FC = () => {
             />
           </Animated.View>
 
-          {/* Forgot password */}
-          <View style={{ alignSelf: 'stretch', paddingHorizontal: 16, marginTop: -6, left: 55 }}>
+          {/* Forgot password -> skip email step, go straight to verification */}
+          <View style={{ paddingHorizontal: 16, marginTop: -6, alignItems: 'center', right: 100 }}>
             <ButtonUnderline text="Forgot password" onPress={() => setForgotOpen(true)} />
           </View>
+          <View style={{ maxWidth: 325}}>
+          <Text style={{color:'white'}}>To continue with password reset, 
+            you need to input email first.</Text>
+          </View>
 
+            
           {/* Login button */}
           <Animated.View
             entering={FadeInDown.delay(200).duration(500)}
@@ -166,13 +172,15 @@ const Login: React.FC = () => {
         </View>
       </View>
 
-      {/* Shared Forgot Password flow */}
-      <ForgotPasswordFlow
+      {/* Forgot Password flow: force verification step first */}
+     <ForgotPasswordFlow
         visible={forgotOpen}
         onClose={() => setForgotOpen(false)}
-        initialEmail={looksLikeEmail(identifier) ? identifier.trim() : undefined}
-        startAtVerify={looksLikeEmail(identifier)}
-      />
+        initialEmail={identifier}   // from Email TextField
+        startStep="verify"          // force verification UI
+     />
+
+
     </SafeAreaView>
   );
 };

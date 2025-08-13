@@ -4,18 +4,22 @@ import { Ionicons } from '@expo/vector-icons';
 import AddBoardModal from '@/component-v2/Modals/AddBoardModal';
 import ManualAddBoardModal from '@/component-v2/Modals/ManualAddBoardModal';
 import BleConfigModal from '@/component-v2/Modals/bleModal';
+import WifiConfigModal from '../Modals/wificonfigModal';
+import { useBoard } from '@/src/api/useBoard';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
   onManualSubmit?: (boardId: string) => void;
 }
 
-const AddBoardSection: React.FC<AddBoardSectionProps> = ({ 
+const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   onSelectBLE,
   onManualSubmit
 }) => {
-  const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "">("");
-  // const [manualModalVisible, setManualModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "">("");
+  const { loading, verifyBoardInformation } = useBoard();
+  const [selectedBoardId, setSelectedBoardId] = useState<string>("");
+  const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
   const handleAddBoard = () => {
     setModalVisible("option");
@@ -41,8 +45,41 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     onManualSubmit?.(boardId);
   };
 
+  const onSelectDevice = (boardId: string) => {
+  }
+
+  const handleWifiConfigModal = () => {
+    setModalVisible("wifi-config");
+  };
+
+  const handleConnectBoard = async (boardId: string) => {
+    const res = await verifyBoardInformation(
+      boardId as unknown as number
+    );
+
+    if (res) {
+      setSelectedBoardId(boardId);
+      handleWifiConfigModal();
+      // handleCloseModal()
+    } else {
+      setSelectedBoardId(boardId);
+    }
+  }
+
+  const handleWifiSubmit = async (values: { ssid: string; wifiPassword: string; connectionPassword: string }) => {
+    setWifiSubmitting(true);
+    try {
+      setModalVisible("");
+      onSelectDevice?.(selectedBoardId);
+    } catch (err) {
+      console.warn("Sending WiFi credentials failed:", err);
+    } finally {
+      setWifiSubmitting(false);
+    }
+  };
+
   console.log(modalVisible);
-  
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -51,7 +88,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
           <Ionicons name="help-circle-outline" size={20} color="white" />
         </TouchableOpacity>
       </View>
-      
+
       <TouchableOpacity style={styles.addButton} onPress={handleAddBoard} activeOpacity={0.8}>
         <Ionicons name="add" size={32} color="#000" />
       </TouchableOpacity>
@@ -65,14 +102,25 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
 
       <BleConfigModal
         visible={modalVisible === "ble"}
+        wifiModalVisible={modalVisible === "wifi-config"}
         onClose={handleCloseModal}
-        onSelectDevice={() => {}}
+        onSelectDevice={onSelectDevice}
+        handleConnectBoard={handleConnectBoard}
+        loading={loading}
       />
 
       <ManualAddBoardModal
         visible={modalVisible === "manual"}
         onClose={handleCloseModal}
         onSubmit={handleManualSubmit}
+      />
+
+      <WifiConfigModal
+        visible={modalVisible === "wifi-config"}
+        onClose={handleCloseModal}
+        onSubmit={handleWifiSubmit}
+        boardId={selectedBoardId}
+        submitting={wifiSubmitting}
       />
     </View>
   );

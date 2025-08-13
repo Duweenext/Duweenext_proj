@@ -8,10 +8,6 @@ import AddBoardSection from '@/component-v2/Screens/AddBoardSection';
 import BoardSectionHeader from '@/component-v2/Screens/BoardSectionHeader';
 import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrimary';
 
-// Modals
-import BleConfigModal from '@/component-v2/Modals/bleModal';
-import WifiConfigModal, { WifiFormData } from '@/component-v2/Modals/wificonfigModal';
-
 // Data
 import { mockBoards, formatRunningTime, type ExtendedBoardData } from '@/component-v2/Screens/mockBoardData';
 import { CardBoardModal } from '@/component-v2/Card/CardBoardModal';

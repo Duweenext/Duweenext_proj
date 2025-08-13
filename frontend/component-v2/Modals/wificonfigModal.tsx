@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { theme } from '@/theme';
 
 const wifiSchema = z.object({
   ssid: z.string().min(1, 'Wifi name (SSID) is required'),
@@ -32,7 +33,7 @@ interface WifiConfigModalProps {
 }
 
 const COLORS = {
-  overlay: 'rgba(2, 62, 62, 0.85)',
+  overlay: theme.colors.overlayBackground,
   cardBg: '#ffffff',
   headerText: '#0b3a35',
   border: '#111111',

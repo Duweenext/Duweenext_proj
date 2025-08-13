@@ -5,7 +5,7 @@ export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
 
-    const verifyBoardInformation = useCallback(async (boardId : number) => {
+    const verifyBoardInformation = useCallback(async (boardId: number) => {
         setLoading(true);
         setError(null);
 
@@ -59,12 +59,34 @@ export const useBoard = () => {
             setLoading(false);
         }
     }, []);
-    
+
+    const setConnectionPassword = useCallback(
+        async (values: { connectionPassword: string, selectedBoardId: string }) => {
+            setLoading(true);
+            setError(null);
+            if (!values.selectedBoardId) return;
+
+            try {
+
+                const res = await axiosInstance.post(`/admin/boards/${values.selectedBoardId}/set-connection-password`, {
+                    connectionPassword: values.connectionPassword
+                });
+            } catch (err) {
+                setError(err);
+                throw err;
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    );
+
     return {
         loading,
         error,
         forPatching,
         forPatchingwithForm,
-        verifyBoardInformation
+        verifyBoardInformation,
+        setConnectionPassword
     };
 };

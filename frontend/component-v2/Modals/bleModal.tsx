@@ -3,7 +3,6 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-  useState,
 } from "react";
 import {
   Modal,
@@ -18,29 +17,37 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { CardBoardModal } from "@/component-v2/Card/CardBoardModal";
 import { theme } from "@/theme";
-import { useBoard } from "@/src/api/useBoard";
 import LoadingSpinner from "../Others/LoadingIndicator";
 import { useBle } from "@/src/ble/useBle.native";
 import WifiConfigModal from "./wificonfigModal";
 
 type BleConfigModalProp = {
   visible: boolean;
+  wifiModalVisible: boolean;
   onClose: () => void;
   onSelectDevice: (boardId: string) => void;
+  handleConnectBoard: (boardId: string) => void;
+  loading?: boolean;
 };
 
 type DeviceRow = {
-  id: string;
+  id: string;                  // MAC (Android) or UUID (iOS surrogate)
   name: string | null;
   rssi?: number | null;
+  isConnectable?: boolean;     // expose from your BLE lib if available
+  serviceUuids?: string[];     // from advertisement
+  manufacturerId?: number;     // optional
 };
 
 const BleConfigModal = ({
   visible,
+  wifiModalVisible,
   onClose,
   onSelectDevice,
+  handleConnectBoard,
+  loading = false,
 }: BleConfigModalProp) => {
-  const { loading, verifyBoardInformation } = useBoard();
+  
   const { isScanning, devices, startScan, stopScan, connect } = useBle();
 
 
@@ -70,62 +77,10 @@ const BleConfigModal = ({
     });
   }, [devices]);
 
-  const handleConnectBoard = useCallback(
-    async (boardId: string) => {
-      try {
-        // 1) Connect via BLE first (optional depending on your flow)
-        await connect(boardId);
-      } catch (err) {
-        console.warn("BLE connect failed:", err);
-      }
 
-      try {
-        // 2) Verify with backend. Treat any truthy response as "verified"
-        const res = await verifyBoardInformation(
-          // adjust casting if your API expects numeric board IDs
-          boardId as unknown as number
-        );
-
-        // If verified, show Wifi config modal
-        if (res) {
-          setSelectedBoardId(boardId);
-          setWifiModalVisible(true);
-          onClose();
-        } else {
-          // Not verified → still propagate selection (or show error/toast)
-          onSelectDevice?.(boardId);
-        }
-
-        console.log("verifyBoardInformation response:", res);
-      } catch (e) {
-        console.warn("verifyBoardInformation failed:", e);
-        // Fallback behavior if verify fails
-        onSelectDevice?.(boardId);
-      }
-    },
-    [connect, onSelectDevice, verifyBoardInformation]
-  );
 
   // Submit from WifiConfigModal
-  const handleWifiSubmit = useCallback(
-    async (values: { ssid: string; wifiPassword: string; connectionPassword: string }) => {
-      if (!selectedBoardId) return;
-      setWifiSubmitting(true);
-      try {
-        // TODO: Send credentials to the device (BLE write or API call)
-        // await sendWifiCreds(selectedBoardId, values)
-
-        // You can close both modals or just the WiFi one:
-        setWifiModalVisible(false);
-        onSelectDevice?.(selectedBoardId);
-      } catch (err) {
-        console.warn("Sending WiFi credentials failed:", err);
-      } finally {
-        setWifiSubmitting(false);
-      }
-    },
-    [onSelectDevice, selectedBoardId]
-  );
+  
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<DeviceRow>) => (
@@ -190,15 +145,6 @@ const BleConfigModal = ({
           </View>
         </View>
       </View>
-
-      {/* Wifi Config Modal (opens after verify success) */}
-      <WifiConfigModal
-        visible={wifiModalVisible}
-        onClose={() => setWifiModalVisible(false)}
-        onSubmit={handleWifiSubmit}
-        boardId={selectedBoardId}
-        submitting={wifiSubmitting}
-      />
     </Modal>
   );
 };
@@ -206,7 +152,7 @@ const BleConfigModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: theme.colors.overlayBackground,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,

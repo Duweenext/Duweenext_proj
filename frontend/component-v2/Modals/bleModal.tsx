@@ -20,7 +20,7 @@ import { CardBoardModal } from "@/component-v2/Card/CardBoardModal";
 import { theme } from "@/theme";
 import { useBoard } from "@/src/api/useBoard";
 import LoadingSpinner from "../Others/LoadingIndicator";
-import { useBle } from "@/src/ble/useBle";
+import { useBle } from "@/src/ble/useBle.native";
 import WifiConfigModal from "./wificonfigModal";
 
 type BleConfigModalProp = {
@@ -42,6 +42,8 @@ const BleConfigModal = ({
 }: BleConfigModalProp) => {
   const { loading, verifyBoardInformation } = useBoard();
   const { isScanning, devices, startScan, stopScan, connect } = useBle();
+
+
 
   // ---- Wifi Config modal state ----
   const [wifiModalVisible, setWifiModalVisible] = useState(false);

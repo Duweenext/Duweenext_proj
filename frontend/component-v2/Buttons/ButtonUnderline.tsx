@@ -25,7 +25,7 @@ const ButtonUnderline: React.FC<ButtonUnderlineProps> = ({
 const styles = StyleSheet.create({
   text: {
     color: '#30C6E1', // Constant color
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     textDecorationLine: 'underline',
     marginVertical: 4,

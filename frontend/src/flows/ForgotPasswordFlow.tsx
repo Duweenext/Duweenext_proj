@@ -101,6 +101,7 @@ const ForgotPasswordFlow: React.FC<Props> = ({
       titleColor={themeStyle.colors.fail}
       descriptionText="To perform password change please enter information below"
       errorMessage={pwdError}
+      
       fields={[
         {
           type: 'password',

@@ -18,8 +18,7 @@ const TEMP_CURRENT_PASSWORD = 'Test@1234';
 
 type Props = { title: string; subtitle?: string };
 type Step = 'verifyPassword' | 'verifyCode' | 'editProfile' | null;
-
-type DeletionBanner = 'idle' | 'locked' | 'pending'; // UI state for the bottom section
+type DeletionBanner = 'idle' | 'locked' | 'pending';
 
 const ProfileSetting: React.FC<Props> = () => {
   const [username, setUsername] = React.useState('Jo Mama');
@@ -45,6 +44,7 @@ const ProfileSetting: React.FC<Props> = () => {
   // bottom delete/recovery banner state
   const [deletionBanner, setDeletionBanner] = React.useState<DeletionBanner>('idle');
 
+  // verify/change info modal state
   const [verifyPassword, setVerifyPassword] = React.useState('');
   const [verifyError, setVerifyError] = React.useState<string | undefined>();
   const [code, setCode] = React.useState('');
@@ -74,6 +74,7 @@ const ProfileSetting: React.FC<Props> = () => {
   // submit change password (remembers old)
   const onConfirmChangePassword = () => {
     setOldPwError(undefined); setNewPwError(undefined); setConfirmPwError(undefined);
+
     if (!oldPw) setOldPwError('Required');
     if (!newPw) setNewPwError('Required');
     if (!confirmPw) setConfirmPwError('Required');
@@ -205,7 +206,7 @@ const ProfileSetting: React.FC<Props> = () => {
             type: 'text',
             mode: 'text',
             inputKind: 'letters',
-            name: 'New username',
+            name: 'New Username',
             placeholder: 'Your new username',
             value: editName,
             onChangeText: setEditName,
@@ -214,7 +215,7 @@ const ProfileSetting: React.FC<Props> = () => {
             type: 'text',
             mode: 'text',
             inputKind: 'email',
-            name: 'New email',
+            name: 'New Email',
             placeholder: 'your@email.com',
             value: editEmail,
             onChangeText: setEditEmail,
@@ -321,18 +322,43 @@ const ProfileSetting: React.FC<Props> = () => {
         </Text>
 
         <View>
-          <TextFieldPrimary name="Enter old password" type="password" passwordVariant="old" placeholder="••••••••••••" value={oldPw} onChangeText={(t) => { setOldPw(t); setOldPwError(undefined); }} />
-          {oldPwError ? <Text style={{ marginTop: 6, color: themeStyle.colors.fail, fontFamily: themeStyle.fontFamily.medium, fontSize: themeStyle.fontSize.data_text }}>{oldPwError}</Text> : null}
+          <TextFieldPrimary
+            name="Enter old password"
+            type="password"
+            passwordVariant="old"
+            placeholder="••••••••••••"
+            value={oldPw}
+            onChangeText={(t) => { setOldPw(t); setOldPwError(undefined); }}
+            errorPlacement="topRight"
+            externalError={oldPwError}
+          />
         </View>
 
         <View>
-          <TextFieldPrimary name="Enter new password" type="password" passwordVariant="default" placeholder="••••••••••••" value={newPw} onChangeText={(t) => { setNewPw(t); setNewPwError(undefined); }} />
-          {newPwError ? <Text style={{ marginTop: 6, color: themeStyle.colors.fail, fontFamily: themeStyle.fontFamily.medium, fontSize: themeStyle.fontSize.data_text }}>{newPwError}</Text> : null}
+          <TextFieldPrimary
+            name="Enter new password"
+            type="password"
+            passwordVariant="default"
+            placeholder="••••••••••••"
+            value={newPw}
+            onChangeText={(t) => { setNewPw(t); setNewPwError(undefined); }}
+            errorPlacement="topRight"
+            externalError={newPwError}
+          />
         </View>
 
         <View>
-          <TextFieldPrimary name="Confirm new password" type="password" passwordVariant="confirm" confirmWith={newPw} placeholder="••••••••••••" value={confirmPw} onChangeText={(t) => { setConfirmPw(t); setConfirmPwError(undefined); }} />
-          {confirmPwError ? <Text style={{ marginTop: 6, color: themeStyle.colors.fail, fontFamily: themeStyle.fontFamily.medium, fontSize: themeStyle.fontSize.data_text }}>{confirmPwError}</Text> : null}
+          <TextFieldPrimary
+            name="Confirm new password"
+            type="password"
+            passwordVariant="confirm"
+            confirmWith={newPw}
+            placeholder="••••••••••••"
+            value={confirmPw}
+            onChangeText={(t) => { setConfirmPw(t); setConfirmPwError(undefined); }}
+            errorPlacement="topRight"
+            externalError={confirmPwError}
+          />
         </View>
 
         <View style={{ marginTop: -5, left: 20 }}>
@@ -359,7 +385,7 @@ const ProfileSetting: React.FC<Props> = () => {
       <View style={{ marginTop: 5, marginBottom: 12, flexDirection: 'column', justifyContent: 'flex-start', width: 240, paddingBottom: 20, left: 10 }}>
         <ButtonGoogle text="Google" borderColor={themeStyle.colors.primary} onPress={() => console.log('Google link')} width={220} />
         <ButtonPrimary text="Logout" filledColor={themeStyle.colors.white} textColor={themeStyle.colors.black} onPress={() => console.log('Logout')} />
-        
+
         {/* Danger zone / Recovery UI */}
         {renderDeleteAction()}
       </View>

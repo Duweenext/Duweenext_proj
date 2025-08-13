@@ -1,252 +1,174 @@
+// app/auth/signup.tsx (or your route file)
+import React from 'react';
+import { View, Text, SafeAreaView, StatusBar, ImageBackground } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 
-import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { themeStyle } from '@/src/theme';
 import { images } from '@/constants/images';
-import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAnimatedStyle, withTiming, FadeOutDown, FadeInRight, FadeOutRight, } from 'react-native-reanimated';
-import { router, useRouter } from 'expo-router';
-import { icons } from '@/constants/icons';
-import { useForm, Controller } from 'react-hook-form';
-import { signUpSchema, SignUpSchemaType } from '@/src/auth/validation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { getPasswordStrength } from '@/src/utlis/passwordStrength';
-import { user_register } from '@/src/auth/auth';
-import { useAuth } from '@/src/auth/context/auth_context';
 
-const SingUp = () => {
-    // const { login, session } = useAuth();
+import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
+import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
+import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
+import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<SignUpSchemaType>({
-        resolver: zodResolver(signUpSchema),
-    });
-    const [password, setPassword] = useState('');
-    const passwordStrength = getPasswordStrength(password);
+const SignUpScreen: React.FC = () => {
+  const router = useRouter();
 
-    const [isPasswordVisbile, setIsPasswordVisible] = useState(true);
-    const navigation = useRouter();
+  // local form state
+  const [username, setUsername] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
-    const onSubmit = (data: SignUpSchemaType) => {
-        console.log('Form Data:', data);
-    };
+  // simple submit (wire to your API later)
+  const onRegister = () => {
+    // TODO: replace with your real submit
+    console.log('Register ->', { username, email, password });
+  };
 
-    const handleRegister = async () => {
-        const response = await user_register({
-            username: 'Hello_test23',
-            email: 'Johndoe32_notest@gmail.com',
-            password: 'admin',
-        });
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeStyle.colors.black }}>
+      {/* Background (remove if you already provide this globally) */}
+      <ImageBackground
+        source={require('../../assets/images/background.png')}
+        style={{ position: 'absolute', width: '100%', height: '100%' }}
+        resizeMode="cover"
+      />
+      <StatusBar barStyle="light-content" />
 
-        if (response.success) {
-            // login(response.data.token);
-        } else {
+      <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 200 }}>
+        {/* Logo */}
+        <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 6 }}>
+          <Animated.Image
+            entering={FadeIn.duration(600)}
+            source={images.logo}
+            style={{ width: 280, height: 280, borderRadius: 130 }}
+          />
+        </View>
 
-        }
-    }
+        {/* Fields */}
+        <View style={{ gap: 12, alignItems: 'center' }}>
+          <Animated.View entering={FadeInDown.duration(500)}>
+            <TextFieldPrimary
+              name="Username"
+              type="text"
+              // letters-only is enforced by your TextFieldPrimary (validateText)
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              // turn off strength UI for text input
+              strengthIndicator={false}
+              showStrengthRules={false}
+            />
+          </Animated.View>
 
-    const strengthBarWidth = useSharedValue(0);
+          <Animated.View entering={FadeInDown.delay(60).duration(500)}>
+            <TextFieldPrimary
+              name="Email"
+              type="email"
+              placeholder="example@gmail.com"
+              value={email}
+              onChangeText={setEmail}
+              strengthIndicator={false}
+              showStrengthRules={false}
+            />
+          </Animated.View>
 
-    useEffect(() => {
-        if (passwordStrength === 'Strong') {
-            strengthBarWidth.value = withTiming(220, { duration: 300 });
-        } else if (passwordStrength === 'Medium') {
-            strengthBarWidth.value = withTiming(150, { duration: 300 });
-        } else {
-            strengthBarWidth.value = withTiming(60, { duration: 300 });
-        }
+          <Animated.View entering={FadeInDown.delay(120).duration(500)}>
+            <TextFieldPrimary
+              name="Password"
+              type="password"
+              passwordVariant="default"          // no strength meter (matches your screenshot)
+              placeholder="••••••••••••"
+              value={password}
+              onChangeText={setPassword}
+              strengthIndicator={true}
+              showStrengthRules={true}
+            />
+          </Animated.View>
+        </View>
 
-        // if (session) {
-        //     router.replace('/(tabs)');
-        // }
-    }, [passwordStrength]);
+        {/* Primary button */}
+        <View style={{ alignItems: 'center', marginTop: 50 }}>
+          <Animated.View entering={FadeInDown.delay(180).duration(500)}>
+            <ButtonPrimary
+              text="Register"
+              filledColor={themeStyle.colors.primary}
+              borderColor={themeStyle.colors.white}
+              textColor={themeStyle.colors.white}
+              width={240}
+              onPress={onRegister}
+            />
+          </Animated.View>
+        </View>
 
-    const animatedBarStyle = useAnimatedStyle(() => ({
-        width: strengthBarWidth.value,
-    }));
-
-
-    return (
-        <KeyboardAvoidingView
-            className='flex-1'
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        {/* Inline login link */}
+        <Animated.View
+          entering={FadeInDown.delay(220).duration(500)}
+          style={{
+            marginTop: 6,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
         >
-            <ScrollView
-                contentContainerStyle={{ flexGrow: 1 }}
-                keyboardShouldPersistTaps="handled"
-            >
-                <View className='flex-1'>
-                    <Image source={images.background} className='h-full absolute' />
-                    <View className='flex-col h-full w-full justify-around '>
-                        <View className='flex-col items-start gap-5 px-11 py-5' >
-                            {/* logo section */}
-                            <Animated.Image
-                                entering={FadeInUp.delay(200).duration(1000).springify()}
-                                source={images.logo}
-                                className='self-center w-[250px] h-[250px] rounded-full mb-2'
-                            />
+          <Text
+            style={{
+              color: themeStyle.colors.white,
+              fontFamily: themeStyle.fontFamily.regular,
+              fontSize: themeStyle.fontSize.data_text,
+              marginRight: 4,
+            }}
+          >
+            Already have an account?
+          </Text>
+          <ButtonUnderline
+            text="Log In"
+            onPress={() => router.push('/auth/login')}
+          />
+          <Text
+            style={{
+              color: themeStyle.colors.white,
+              fontFamily: themeStyle.fontFamily.regular,
+              fontSize: themeStyle.fontSize.data_text,
+              marginLeft: 4,
+            }}
+          >
+            here.
+          </Text>
+        </Animated.View>
 
-                            {/* input section */}
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <View className='flex-row justify-between items-center'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Username</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.username &&
-                                        <Text className='color-red-500 self-center'>{errors.username.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.username && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="username"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='John Doe'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
+        {/* Divider */}
+        <Animated.Text
+          entering={FadeInDown.delay(260).duration(500)}
+          style={{
+            marginTop: 20,
+            textAlign: 'center',
+            color: themeStyle.colors.white,
+            fontFamily: themeStyle.fontFamily.regular,
+            fontSize: themeStyle.fontSize.description,
+            opacity: 0.9,
+          }}
+        >
+          ——————————— or ———————————
+        </Animated.Text>
 
-                                </View>
+        {/* Google button */}
+        <View style={{ alignItems: 'center', marginTop: 30 }}>
+          <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+            <ButtonGoogle
+              text="Sign up with Google"
+              width={280}
+              onPress={() => console.log('Google sign up')}
+            />
+          </Animated.View>
+        </View>
 
-                            </Animated.View>
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <View className='flex-row justify-between'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Email</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.email &&
-                                        <Text className='color-red-500 self-center'>{errors.email.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.email && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="email"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='example@gmail.com'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
+        {/* bottom spacer */}
+        <View style={{ height: 16 }} />
+      </View>
+    </SafeAreaView>
+  );
+};
 
-                                </View>
-                            </Animated.View>
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <View className='flex-row justify-between'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Password</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.password &&
-                                        <Text className='color-red-500 self-center'>{errors.password.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.password && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="password"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='password'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                secureTextEntry={isPasswordVisbile}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={(text) => {
-                                                    setPassword(text);      // local state for strength
-                                                    onChange(text);         // form state for zod + validation
-                                                }}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
-
-                                    <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisbile)}>
-                                        <Image source={isPasswordVisbile ? icons.password_invisible : icons.password_visible} className='w-[25px] h-[25px]' />
-                                    </TouchableOpacity>
-                                </View>
-
-                                {password &&
-                                    <Animated.View
-                                        entering={FadeInRight.delay(200).duration(400).springify()}
-                                        exiting={FadeOutRight.delay(50).duration(400).springify()}
-                                        className="mt-1 mx-1 flex-row justify-between"
-                                    >
-                                        <View className="h-[8px] rounded-full bg-gray-300 mt-2 overflow-hidden">
-                                            <Animated.View
-                                                style={animatedBarStyle}
-                                                className={`h-full ${passwordStrength === 'Strong'
-                                                    ? 'bg-good'
-                                                    : passwordStrength === 'Medium'
-                                                        ? 'bg-warning'
-                                                        : 'bg-failed'
-                                                    }`}
-                                            />
-                                        </View>
-                                        <Text
-                                            className={
-                                                `text-lg font-medium ${passwordStrength === 'Strong'
-                                                    ? 'text-good'
-                                                    : passwordStrength === 'Medium'
-                                                        ? 'text-warning'
-                                                        : 'text-failed'}`
-                                            }
-                                        >
-                                            {passwordStrength}
-                                        </Text>
-                                    </Animated.View>}
-                            </Animated.View>
-
-                            {/* button section */}
-                            <View className='self-center mt-2 items-center gap-5'>
-                                <TouchableOpacity onPress={handleRegister}>
-                                    <Animated.View
-                                        entering={FadeInDown.delay(400).duration(1000).springify()}
-                                        className='bg-[#1A736A] border-white border-2 rounded-xl py-3 px-[60px]'
-                                    >
-                                        <Text className='font-bold color-white'>Register</Text>
-                                    </Animated.View>
-                                </TouchableOpacity>
-                                <Animated.View entering={FadeInDown.delay(400).duration(1000).springify()} className='flex-row justify-center'>
-                                    <Text className='font-normal color-white text-[15px]'>Already have an account? </Text>
-                                    <TouchableOpacity onPress={() => navigation.push('/auth/login')}>
-                                        <Text className='font-medium text-[15px] color-[#48CAE4] underline'>Login</Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-                            </View>
-
-                            {/* other option section  */}
-                            <Animated.View entering={FadeInDown.delay(600).duration(1000).springify()} className='self-center items-center gap-4'>
-                                <Text className='font-normal color-white text-[15px]'>___________________or___________________ </Text>
-                                <TouchableOpacity>
-                                    <Animated.View
-                                        entering={FadeInDown.delay(800).duration(1000).springify()}
-                                        className='bg-white border-black border-1 rounded-sm py-3 px-[90px]'
-                                    >
-                                        <View className='flex-row gap-[10px]'>
-                                            <Image className='w-[20px] h-[20px]' source={icons.google} />
-                                            <Text className='font-bold color-black'>Signup with Google</Text>
-                                        </View>
-                                    </Animated.View>
-                                </TouchableOpacity>
-                            </Animated.View>
-                        </View>
-                    </View>
-                </View >
-            </ScrollView>
-        </KeyboardAvoidingView>
-    )
-}
-
-export default SingUp
+export default SignUpScreen;

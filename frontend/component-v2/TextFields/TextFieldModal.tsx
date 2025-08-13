@@ -6,6 +6,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 
 type Mode = 'text' | 'password-old' | 'password-new' | 'password-confirm';
 type InputKind = 'none' | 'letters' | 'email';
+type ErrorPlacement = 'above' | 'below';
 
 type Props = {
   mode?: Mode;
@@ -19,9 +20,12 @@ type Props = {
   confirmAgainst?: string;
   oldPasswordError?: string;
   secureToggle?: boolean;
+  /** NEW: where to show error text relative to the input (default 'below') */
+  errorPlacement?: ErrorPlacement;
+  /** NEW: allow parent to force an error string for this field */
+  externalError?: string;
 };
 
-// hex -> rgba
 const hexToRgba = (hex: string, alpha: number) => {
   const clean = hex.replace('#', '');
   const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
@@ -30,22 +34,22 @@ const hexToRgba = (hex: string, alpha: number) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// Strength calc → label, color, percent (for bar)
-const calcStrength = (pwd: string) => {
-  if (!pwd) return { label: '', color: '', percent: 0 };
+const getStrength = (pwd: string) => {
+  if (!pwd) return { label: '', color: '', ratio: 0 };
   const hasLower = /[a-z]/.test(pwd);
   const hasUpper = /[A-Z]/.test(pwd);
   const hasNum   = /\d/.test(pwd);
   const hasSym   = /[^A-Za-z0-9]/.test(pwd);
   const long8    = pwd.length >= 8;
-  const score = [hasLower, hasUpper, hasNum, hasSym, long8].filter(Boolean).length; // 0..5
+  const scoreArr = [hasLower, hasUpper, hasNum, hasSym, long8];
+  const score = scoreArr.filter(Boolean).length;
+  const ratio = score / scoreArr.length;
 
-  if (score <= 2) return { label: 'Weak',   color: themeStyle.colors.fail,    percent: 33 };
-  if (score <= 4) return { label: 'Medium', color: themeStyle.colors.warning, percent: 66 };
-  return              { label: 'Strong', color: themeStyle.colors.success, percent: 100 };
+  if (score <= 2) return { label: 'Weak',   color: themeStyle.colors.fail,    ratio };
+  if (score <= 4) return { label: 'Medium', color: themeStyle.colors.warning, ratio };
+  return            { label: 'Strong', color: themeStyle.colors.success, ratio };
 };
 
-// email validator
 const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
 const TextFieldModal: React.FC<Props> = ({
@@ -60,6 +64,8 @@ const TextFieldModal: React.FC<Props> = ({
   confirmAgainst,
   oldPasswordError,
   secureToggle = true,
+  errorPlacement = 'below',
+  externalError,
 }) => {
   const [touched, setTouched] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -67,21 +73,29 @@ const TextFieldModal: React.FC<Props> = ({
   const isPasswordMode =
     mode === 'password-old' || mode === 'password-new' || mode === 'password-confirm';
 
-  // Input sanitization for text kinds
   const handleChange = (text: string) => {
-    if (isPasswordMode) { onChangeText(text); return; }
-    if (inputKind === 'letters') { onChangeText(text.replace(/[^A-Za-z\s]/g, '')); return; }
-    if (inputKind === 'email') { onChangeText(text.replace(/\s+/g, ' ').trimStart()); return; }
+    if (isPasswordMode) {
+      onChangeText(text);
+      return;
+    }
+    if (inputKind === 'letters') {
+      onChangeText(text.replace(/[^A-Za-z\s]/g, ''));
+      return;
+    }
+    if (inputKind === 'email') {
+      onChangeText(text.replace(/\s+/g, ' ').trimStart());
+      return;
+    }
     onChangeText(text);
   };
 
-  // Validation
+  // derive internal error
   let liveError = '';
   if (mode === 'text') {
     if (inputKind === 'email') {
       liveError = value && !isValidEmail(value.trim()) ? 'Invalid email address' : '';
     } else if (inputKind === 'letters') {
-      liveError = ''; // sanitized already
+      liveError = ''; // sanitized; parent can require non-empty
     } else {
       liveError = validateText(value) || '';
     }
@@ -94,17 +108,62 @@ const TextFieldModal: React.FC<Props> = ({
       ? 'Please enter your current password'
       : '';
 
-  const combinedOldPwdError = oldPasswordError || oldPwdSkipError;
-  const errorMessage = (mode === 'password-old' ? combinedOldPwdError : liveError) || '';
-
   const strength = useMemo(
-    () => (mode === 'password-new' && value ? calcStrength(value) : { label: '', color: '', percent: 0 }),
+    () => (mode === 'password-new' && value ? getStrength(value) : { label: '', color: '', ratio: 0 }),
     [mode, value]
   );
 
-  const resolvedBorderColor = errorMessage
-    ? themeStyle.colors.fail
-    : (borderColor ?? themeStyle.colors.primary);
+  const computedError =
+    externalError ||
+    (mode === 'password-old' ? (oldPasswordError || oldPwdSkipError) : liveError) ||
+    '';
+
+  const resolvedBorderColor =
+    computedError ? themeStyle.colors.fail : (borderColor ?? themeStyle.colors.primary);
+
+  // small strength bar (kept below input)
+  const StrengthBar = () =>
+    mode === 'password-new' && strength.label ? (
+      <>
+        <View
+          style={{
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: hexToRgba(themeStyle.colors.black, 0.15),
+            marginTop: 8,
+            overflow: 'hidden',
+          }}
+        >
+          <View style={{ width: `${Math.floor(strength.ratio * 100)}%`, height: '100%', backgroundColor: strength.color }} />
+        </View>
+        <Text
+          style={{
+            marginTop: 4,
+            color: strength.color,
+            fontSize: themeStyle.fontSize.data_text,
+            fontFamily: themeStyle.fontFamily.medium,
+          }}
+        >
+          {strength.label}
+        </Text>
+      </>
+    ) : null;
+
+  // reusable error text
+  const ErrorText = () =>
+    computedError ? (
+      <Text
+        style={{
+          marginTop: errorPlacement === 'below' ? 4 : 0,
+          marginBottom: errorPlacement === 'above' ? 6 : 0,
+          color: themeStyle.colors.fail,
+          fontSize: themeStyle.fontSize.data_text,
+          fontFamily: themeStyle.fontFamily.medium,
+        }}
+      >
+        {computedError}
+      </Text>
+    ) : null;
 
   return (
     <View style={{ width: '100%' }}>
@@ -121,6 +180,9 @@ const TextFieldModal: React.FC<Props> = ({
         </Text>
       )}
 
+      {/* error ABOVE input */}
+      {errorPlacement === 'above' ? <ErrorText /> : null}
+
       <View style={{ position: 'relative' }}>
         <TextInput
           placeholder={placeholder}
@@ -133,7 +195,7 @@ const TextFieldModal: React.FC<Props> = ({
           keyboardType={inputKind === 'email' ? 'email-address' : 'default'}
           style={{
             height: 49,
-            borderRadius: 12,
+            borderRadius: 8,
             borderWidth: 1,
             paddingHorizontal: 12,
             backgroundColor: themeStyle.colors.white,
@@ -156,68 +218,19 @@ const TextFieldModal: React.FC<Props> = ({
               bottom: 0,
               justifyContent: 'center',
               alignItems: 'center',
-              width: 32,
+              width: 28,
             }}
-            accessibilityRole="button"
-            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
           >
-            {showPassword ? <EyeOff size={24} color={hexToRgba(themeStyle.colors.black, 0.6)} /> :
-                            <Eye    size={24} color={hexToRgba(themeStyle.colors.black, 0.6)} />}
+            {showPassword ? <EyeOff size={22} color="grey" /> : <Eye size={22} color="grey" />}
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Error (for old/confirm/email) */}
-      {errorMessage ? (
-        <Text
-          style={{
-            marginTop: 6,
-            color: themeStyle.colors.fail,
-            fontSize: themeStyle.fontSize.data_text,
-            fontFamily: themeStyle.fontFamily.medium,
-          }}
-        >
-          {errorMessage}
-        </Text>
-      ) : null}
+      {/* error BELOW input */}
+      {errorPlacement === 'below' ? <ErrorText /> : null}
 
-      {/* Password strength meter (only password-new) */}
-      {mode === 'password-new' && value ? (
-        <View style={{ marginTop: 10 }}>
-          {/* Track */}
-          <View
-            style={{
-              height: 10,
-              width: '100%',
-              borderRadius: 999,
-              backgroundColor: hexToRgba(themeStyle.colors.black, 0.15),
-              overflow: 'hidden',
-            }}
-          >
-            {/* Fill */}
-            <View
-              style={{
-                height: '100%',
-                width: `${strength.percent}%`,
-                backgroundColor: strength.color || themeStyle.colors.fail,
-                borderRadius: 999,
-              }}
-            />
-          </View>
-
-          {/* Label */}
-          <Text
-            style={{
-              marginTop: 6,
-              color: strength.color || themeStyle.colors.fail,
-              fontSize: themeStyle.fontSize.data_text,
-              fontFamily: themeStyle.fontFamily.bold,
-            }}
-          >
-            {strength.label}
-          </Text>
-        </View>
-      ) : null}
+      {/* strength meter always below input */}
+      <StrengthBar />
     </View>
   );
 };

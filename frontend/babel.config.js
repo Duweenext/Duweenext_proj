@@ -4,8 +4,8 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'expo-router/babel',
-      'nativewind/babel',
+      'expo-router/babel',               // keep as plugin
+      'react-native-reanimated/plugin',  // MUST be last
     ],
   };
 };

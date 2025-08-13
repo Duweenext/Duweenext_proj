@@ -1,174 +1,180 @@
-import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native'
-import React, { useEffect, useState } from 'react'
+// app/auth/login.tsx
+import React from 'react';
+import { View, Text, SafeAreaView, StatusBar, Alert, ImageBackground } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
+
+import { themeStyle } from '@/src/theme';
 import { images } from '@/constants/images';
-import Animated, {FadeInDown} from 'react-native-reanimated';
-import { router, useRouter } from 'expo-router';
-import { icons } from '@/constants/icons';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchemaType, loginSchema } from '@/src/auth/validation';
-import { user_login } from '@/src/auth/auth';
-import { useAuth } from '@/src/auth/context/auth_context';
 
-const Login = () => {
-    // const { login, session } = useAuth();
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<LoginSchemaType>({
-        resolver: zodResolver(loginSchema),
-    });
-    const [text, setText] = useState('');
-    const [isPasswordVisbile, setIsPasswordVisible] = useState(true);
-    const navigation = useRouter();
+import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
+import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
+import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
+import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
+import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
 
-    const onSubmit = (data: LoginSchemaType) => {
-        console.log('Form Data:', data);
-    };
+const looksLikeEmail = (s: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
 
-    const handleLogin = async () => {
-        const response = await user_login({
-            username: 'XD22',
-            email: 'Johndoe22@gmail.com',
-            password: 'admin',
-        });
+const Login: React.FC = () => {
+  const router = useRouter();
 
-        if (response.success) {
-            // login(response.data.token);
-        } else {
+  const [identifier, setIdentifier] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
-        }
-    }
-    // useEffect(() => {
-    //     if (session) {
-    //         router.replace('/(tabs)');
-    //     }
-    // }, [session]);
+  const [idError, setIdError] = React.useState<string | undefined>();
+  const [pwdError, setPwdError] = React.useState<string | undefined>();
 
-    return (
-        <KeyboardAvoidingView
-            className='flex-1'
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-            <ScrollView
-                contentContainerStyle={{ flexGrow: 1 }}
-                keyboardShouldPersistTaps="handled"
+  const [forgotOpen, setForgotOpen] = React.useState(false);
+
+  const onLogin = () => {
+    setIdError(undefined);
+    setPwdError(undefined);
+
+    if (!identifier.trim()) setIdError('Required');
+    if (!password.trim()) setPwdError('Required');
+    if (!identifier.trim() || !password.trim()) return;
+
+    Alert.alert('Login', 'Logged in (mock).');
+    // router.replace('/(tabs)');
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeStyle.colors.black }}>
+      <ImageBackground
+        source={require('../../assets/images/background.png')}
+        style={{ position: 'absolute', width: '100%', height: '100%' }}
+        resizeMode="cover"
+      />
+      <StatusBar barStyle="light-content" />
+
+      <View style={{ flex: 1, paddingHorizontal: 18, paddingTop: 220 }}>
+        {/* Logo */}
+        <View style={{ alignItems: 'center', marginBottom: 12 }}>
+          <Animated.Image
+            entering={FadeIn.duration(500)}
+            source={images.logo}
+            style={{ width: 260, height: 260, borderRadius: 120 }}
+          />
+        </View>
+
+        {/* Form */}
+        <View style={{ gap: 12, alignItems: 'center' }}>
+          {/* Username / Email */}
+          <Animated.View entering={FadeInDown.delay(80).duration(500)}>
+            <TextFieldPrimary
+              name="Email"
+              type="email"
+              placeholder="example@gmail.com"
+              value={identifier}
+              onChangeText={(t) => {
+                setIdentifier(t);
+                if (idError) setIdError(undefined);
+              }}
+              errorPlacement="topRight"
+              externalError={idError}
+            />
+          </Animated.View>
+
+          {/* Password (old variant) */}
+          <Animated.View entering={FadeInDown.delay(140).duration(500)}>
+            <TextFieldPrimary
+              name="Password"
+              type="password"
+              passwordVariant="old"
+              placeholder="••••••••••••"
+              value={password}
+              onChangeText={(t) => {
+                setPassword(t);
+                if (pwdError) setPwdError(undefined);
+              }}
+              errorPlacement="topRight"
+              externalError={pwdError}
+            />
+          </Animated.View>
+
+          {/* Forgot password */}
+          <View style={{ alignSelf: 'stretch', paddingHorizontal: 16, marginTop: -6, left: 55 }}>
+            <ButtonUnderline text="Forgot password" onPress={() => setForgotOpen(true)} />
+          </View>
+
+          {/* Login button */}
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(500)}
+            style={{ alignItems: 'center', marginTop: 80 }}
+          >
+            <ButtonPrimary
+              text="Login"
+              filledColor={themeStyle.colors.primary}
+              borderColor={themeStyle.colors.white}
+              textColor={themeStyle.colors.white}
+              width={230}
+              onPress={onLogin}
+            />
+          </Animated.View>
+
+          {/* Register hint */}
+          <Animated.Text
+            entering={FadeInDown.delay(260).duration(500)}
+            style={{
+              marginTop: 10,
+              color: themeStyle.colors.white,
+              fontFamily: themeStyle.fontFamily.regular,
+              fontSize: themeStyle.fontSize.data_text,
+              textAlign: 'center',
+            }}
+          >
+            Please{' '}
+            <Text
+              onPress={() => router.push('/auth/signup')}
+              style={{
+                color: themeStyle.colors.primary,
+                textDecorationLine: 'underline',
+                fontFamily: themeStyle.fontFamily.medium,
+              }}
             >
-                <View className='flex-1'>
-                    <Image source={images.background} className='h-full absolute' />
-                    {/* <ImageBackground source={images.background} style={{ height: "100%", flex: 1 }}> */}
-                    <View className='flex-col h-full w-full justify-around pt-10 pb-10'>
-                        <View className='flex-col items-start gap-5 p-11' >
-                            {/* logo section */}
-                            <Animated.Image
-                                // entering={FadeInUp.delay(200).duration(1000).springify()}
-                                source={images.logo}
-                                className='self-center w-[250px] h-[250px] rounded-full mb-2'
-                            />
+              register
+            </Text>{' '}
+            if you have not registered.
+          </Animated.Text>
 
-                            {/* input section */}
-                            <Animated.View
-                                entering={FadeInDown.duration(1000).springify()} className='w-full'
-                            >
-                                <View className='flex-row justify-between'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Username or Email</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.identifier &&
-                                        <Text className='color-red-500 self-center'>{errors.identifier.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.identifier && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="identifier"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='example@gmail.com'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
-                                </View>
-                            </Animated.View>
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <View className='flex-row justify-between'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Password</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.password &&
-                                        <Text className='color-red-500 self-center'>{errors.password.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.password && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="password"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='password'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                secureTextEntry={isPasswordVisbile}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
-                                    <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisbile)}>
-                                        <Image source={isPasswordVisbile ? icons.password_invisible : icons.password_visible} className='w-[25px] h-[25px]' />
-                                    </TouchableOpacity>
-                                </View>
-                            </Animated.View>
+          {/* Divider */}
+          <Animated.Text
+            entering={FadeInDown.delay(300).duration(500)}
+            style={{
+              textAlign: 'center',
+              color: themeStyle.colors.white,
+              opacity: 0.8,
+              marginTop: 20,
+            }}
+          >
+            ————————— or —————————
+          </Animated.Text>
 
-                            {/* button section */}
-                            <View className='self-center mt-12 items-center gap-5'>
-                                <TouchableOpacity onPress={handleLogin}>
-                                    <Animated.View
-                                        entering={FadeInDown.delay(200).duration(1000).springify()}
-                                        className='bg-[#1A736A] border-white border-2 rounded-xl py-3 px-[69px]'
-                                    >
-                                        <Text className='font-bold color-white'>Login</Text>
-                                    </Animated.View>
-                                </TouchableOpacity>
-                                <Animated.View entering={FadeInDown.delay(400).duration(1000).springify()} className='flex-row justify-center'>
-                                    <Text className='font-normal color-white text-[15px]'>Don't have an account? </Text>
-                                    <TouchableOpacity onPress={() => navigation.push('/auth/signup')}>
-                                        <Text className='font-medium text-[15px] color-[#48CAE4] underline'>Signup</Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-                            </View>
+          {/* Google button */}
+          <Animated.View
+            entering={FadeInDown.delay(340).duration(500)}
+            style={{ alignItems: 'center', marginTop: 30 }}
+          >
+            <ButtonGoogle
+              text="Sign up with Google"
+              borderColor={themeStyle.colors.black}
+              onPress={() => Alert.alert('Google', 'Google auth (mock)')}
+              width={270}
+            />
+          </Animated.View>
+        </View>
+      </View>
 
-                            {/* other option section  */}
-                            <Animated.View entering={FadeInDown.delay(600).duration(1000).springify()} className='self-center items-center gap-4'>
-                                <Text className='font-normal color-white text-[15px]'>___________________or___________________ </Text>
-                                <TouchableOpacity>
-                                    <Animated.View
-                                        entering={FadeInDown.delay(800).duration(1000).springify()}
-                                        className='bg-white border-black border-1 rounded-sm py-3 px-[90px]'
-                                    >
-                                        <View className='flex-row gap-[10px]'>
-                                            <Image className='w-[20px] h-[20px]' source={icons.google} />
-                                            <Text className='font-bold color-black'>Signup with Google</Text>
-                                        </View>
-                                    </Animated.View>
-                                </TouchableOpacity>
-                            </Animated.View>
-                        </View>
-                    </View>
-                    {/* </ImageBackground > */}
-                </View >
-            </ScrollView>
-        </KeyboardAvoidingView>
-    )
-}
+      {/* Shared Forgot Password flow */}
+      <ForgotPasswordFlow
+        visible={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        initialEmail={looksLikeEmail(identifier) ? identifier.trim() : undefined}
+        startAtVerify={looksLikeEmail(identifier)}
+      />
+    </SafeAreaView>
+  );
+};
 
-
-
-export default Login
+export default Login;

@@ -1,83 +1,119 @@
-import React, { useEffect } from 'react'
+import React from 'react';
+import { View, Text, Image, SafeAreaView, StatusBar, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
-import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
-import TextFieldModal from '@/component-v2/TextFields/TextFieldModal';
-import TextFieldSensorValue from '@/component-v2/TextFields/TextFieldSensorValue';
-import TextFieldVerificationCode from '@/component-v2/TextFields/TextFieldVerificationCode';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import { themeStyle } from '@/src/theme';
+import { images } from '@/constants/images';
 import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
-import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
-import ButtonModalXL from '@/component-v2/Buttons/ButtonModalXL';
-import ButtonCard from '@/component-v2/Buttons/ButtonCard';
-import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
-import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
-import DropDownTemplate from '@/component-v2/Dropdown/DropDownTemplate';
-import TopBar from '@/component-v2/NavBar/TopBar';
-import ButtonAddBoard from '@/component-v2/Buttons/ButtonAddBoard';
-import ModalVerificationComplete from '@/component-v2/Modals/ModalVerificationComplete';
-import CardIcon from '@/component-v2/Card/CardIcon';
-import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrimary';
-import { theme } from '@/theme';
-import { ScrollView, View } from 'react-native';
-import { Board } from '@/src/interfaces/board';
-import { DateDisplayOnCard } from '@/src/utlis/date';
-import { CardBoardModal } from '@/component-v2/Card/CardBoardModal';
-import { CardImageProcessingResult } from '@/component-v2/Card/CardImageProcessingResult';
-import { Ionicons} from '@expo/vector-icons';
-import { CardEducation } from '@/component-v2/Card/CardEducation';
-import { CardImageProcessingHistory } from '@/component-v2/Card/CardImageProcessingHistory';
-import { CardNotification } from '@/component-v2/Card/CardNotification';
-import { SettingCard } from '@/component-v2/Card/SettingCard';
-import { SensorCard } from '@/component-v2/Card/CardSensor';
-import ButtonCamera from '@/component-v2/Buttons/ButtonCamera';
-import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
 
-const SplashScreen = () => {
-  const navigation = useRouter();
-
-  const [boards, setBoards] = React.useState<Board[]>();
-  const [modalVisible, setModalVisible] = React.useState(true); // or false initially
-const [password, setPassword] = React.useState('');
-
-const handleNext = () => {
-  console.log('Next pressed with password:', password);
-};
-
-const handleSendAgain = () => {
-  console.log('Resend verification triggered');
-};
-
-
-  useEffect(() => {
-    setBoards([{
-      board_id: 1,
-      updated_at: DateDisplayOnCard('2023-10-01T11:00:00Z', ''),
-      created_at: DateDisplayOnCard('2023-10-01T12:00:00Z', ''),
-      board_name: 'Board 1',
-      board_status: 'connected',
-      board_register_date: DateDisplayOnCard('2023-10-01T12:00:00Z', ''),
-      deleted_at: null,
-      sensor_id: 1,
-    }])
-  }, [])
+const WelcomeScreen: React.FC = () => {
+  const router = useRouter();
 
   return (
-    <ScrollView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeStyle.colors.black }}>
+      <ImageBackground
+        source={require('../../assets/images/background.png')}
+        style={{ position: 'absolute', width: '100%', height: '100%' }}
+        resizeMode="cover"
+      />
+      <StatusBar barStyle="light-content" />
+
       <View
         style={{
-          justifyContent: 'center',
-          height: 'auto',
-          padding: theme.spacing.md,
+          flex: 1,
+          paddingHorizontal: 15,
+          paddingTop: 300,      // small top inset
+          paddingBottom: 10,
+          justifyContent: 'flex-start', // <-- keep everything toward the top
         }}
       >
-        <CardBoardPrimary 
-          board={boards ? boards[0] : undefined}
-          runningTime="0 hours 0 minutes"
-          onButtonPress={() => console.log('Button pressed')}
-        />
-      </View>
-    </ScrollView>
-  );
-  
-}
+        {/* Logo + titles */}
+        <View style={{ alignItems: 'center', transform: [{ translateY: -20 }] }}>
+          <Animated.Image
+            entering={FadeIn.duration(600)}
+            source={images.logo}
+            style={{ width: 260, height: 260, borderRadius: 130, marginBottom: 6 }}
+          />
 
-export default SplashScreen;
+          <Animated.Text
+            entering={FadeInDown.delay(80).duration(600)}
+            style={{
+              fontSize: 36,
+              lineHeight: 42,
+              color: themeStyle.colors.white,
+              fontFamily: themeStyle.fontFamily.semibold,
+              textAlign: 'center',
+              marginTop: 20,
+            }}
+          >
+            DuweeNext
+          </Animated.Text>
+
+          <Animated.Text
+            entering={FadeInDown.delay(140).duration(600)}
+            style={{
+              marginTop: 4,
+              fontSize: themeStyle.fontSize.description,
+              color: themeStyle.colors.white,
+              fontFamily: themeStyle.fontFamily.regular,
+              opacity: 0.9,
+              textAlign: 'center',
+            }}
+          >
+            Monitor, Prevent & Thrive!
+          </Animated.Text>
+        </View>
+
+        {/* Spacer to control vertical layout (fine-tune by adjusting flex) */}
+        <View style={{ flex: 0.55 }} />
+
+        {/* Buttons */}
+        <View
+          style={{
+            alignItems: 'center',
+            gap: 3,
+            marginBottom: 5,
+            transform: [{ translateY: 15 }], // <-- nudge buttons up
+          }}
+        >
+          <Animated.View entering={FadeInDown.delay(220).duration(600)}>
+            <ButtonPrimary
+              text="Register"
+              filledColor={themeStyle.colors.primary}
+              borderColor={themeStyle.colors.white}
+              textColor={themeStyle.colors.white}
+              width={230}
+              onPress={() => router.push('/auth/signup')}
+            />
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(280).duration(600)}>
+            <ButtonPrimary
+              text="Login"
+              filledColor={themeStyle.colors.white}
+              textColor={themeStyle.colors.black}
+              width={230}
+              onPress={() => router.push('/auth/login')}
+            />
+          </Animated.View>
+
+          <Animated.Text
+            entering={FadeInDown.delay(340).duration(600)}
+            style={{
+              marginTop:-6,
+              color: themeStyle.colors.warning,
+              fontFamily: themeStyle.fontFamily.regular,
+              fontSize: themeStyle.fontSize.data_text,
+              opacity: 0.9,
+              textAlign: 'center',
+            }}
+          >
+            Please register if you do not have an account.
+          </Animated.Text>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+export default WelcomeScreen;

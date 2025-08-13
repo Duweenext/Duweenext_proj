@@ -1,252 +1,323 @@
+// app/auth/signup.tsx
+import React from 'react';
+import { View, Text, SafeAreaView, StatusBar, ImageBackground, Alert } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 
-import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { themeStyle } from '@/src/theme';
 import { images } from '@/constants/images';
-import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAnimatedStyle, withTiming, FadeOutDown, FadeInRight, FadeOutRight, } from 'react-native-reanimated';
-import { router, useRouter } from 'expo-router';
-import { icons } from '@/constants/icons';
-import { useForm, Controller } from 'react-hook-form';
-import { signUpSchema, SignUpSchemaType } from '@/src/auth/validation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { getPasswordStrength } from '@/src/utlis/passwordStrength';
-import { user_register } from '@/src/auth/auth';
-import { useAuth } from '@/src/auth/context/auth_context';
 
-const SingUp = () => {
-    // const { login, session } = useAuth();
+import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
+import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
+import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
+import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
+import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
+import ModalVerificationComplete from '@/component-v2/Modals/ModalVerificationComplete';
 
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<SignUpSchemaType>({
-        resolver: zodResolver(signUpSchema),
-    });
-    const [password, setPassword] = useState('');
-    const passwordStrength = getPasswordStrength(password);
+const looksLikeEmail = (s?: string) =>
+  !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
 
-    const [isPasswordVisbile, setIsPasswordVisible] = useState(true);
-    const navigation = useRouter();
-
-    const onSubmit = (data: SignUpSchemaType) => {
-        console.log('Form Data:', data);
-    };
-
-    const handleRegister = async () => {
-        const response = await user_register({
-            username: 'Hello_test23',
-            email: 'Johndoe32_notest@gmail.com',
-            password: 'admin',
-        });
-
-        if (response.success) {
-            // login(response.data.token);
-        } else {
-
-        }
-    }
-
-    const strengthBarWidth = useSharedValue(0);
-
-    useEffect(() => {
-        if (passwordStrength === 'Strong') {
-            strengthBarWidth.value = withTiming(220, { duration: 300 });
-        } else if (passwordStrength === 'Medium') {
-            strengthBarWidth.value = withTiming(150, { duration: 300 });
-        } else {
-            strengthBarWidth.value = withTiming(60, { duration: 300 });
-        }
-
-        // if (session) {
-        //     router.replace('/(tabs)');
-        // }
-    }, [passwordStrength]);
-
-    const animatedBarStyle = useAnimatedStyle(() => ({
-        width: strengthBarWidth.value,
-    }));
-
-
-    return (
-        <KeyboardAvoidingView
-            className='flex-1'
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-            <ScrollView
-                contentContainerStyle={{ flexGrow: 1 }}
-                keyboardShouldPersistTaps="handled"
-            >
-                <View className='flex-1'>
-                    <Image source={images.background} className='h-full absolute' />
-                    <View className='flex-col h-full w-full justify-around '>
-                        <View className='flex-col items-start gap-5 px-11 py-5' >
-                            {/* logo section */}
-                            <Animated.Image
-                                entering={FadeInUp.delay(200).duration(1000).springify()}
-                                source={images.logo}
-                                className='self-center w-[250px] h-[250px] rounded-full mb-2'
-                            />
-
-                            {/* input section */}
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <View className='flex-row justify-between items-center'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Username</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.username &&
-                                        <Text className='color-red-500 self-center'>{errors.username.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.username && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="username"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='John Doe'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
-
-                                </View>
-
-                            </Animated.View>
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <View className='flex-row justify-between'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Email</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.email &&
-                                        <Text className='color-red-500 self-center'>{errors.email.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.email && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="email"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='example@gmail.com'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={onChange}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
-
-                                </View>
-                            </Animated.View>
-                            <Animated.View entering={FadeInDown.duration(1000).springify()} className='w-full'>
-                                <View className='flex-row justify-between'>
-                                    <View className='flex-row gap-1 items-center p-1'>
-                                        <Text className='font-bold text-xl'>Password</Text>
-                                        <Image source={icons.question_mark} className='w-[17px] h-[17px] color-red' />
-                                    </View>
-                                    {errors.password &&
-                                        <Text className='color-red-500 self-center'>{errors.password.message}</Text>
-                                    }
-                                </View>
-                                <View className={`flex-row justify-between items-center bg-white px-4 py-2 rounded-2xl w-full ${errors.password && 'border-red-400 border-[1.5px]'}`}>
-                                    <Controller
-                                        control={control}
-                                        name="password"
-                                        render={({ field: { onChange, value } }) => (
-                                            <TextInput
-                                                placeholder='password'
-                                                placeholderTextColor={'#C9C9C9'}
-                                                secureTextEntry={isPasswordVisbile}
-                                                className='rounded-xl min-w-[80%]'
-                                                onChangeText={(text) => {
-                                                    setPassword(text);      // local state for strength
-                                                    onChange(text);         // form state for zod + validation
-                                                }}
-                                                value={value}
-                                            />
-                                        )}
-                                    />
-
-                                    <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisbile)}>
-                                        <Image source={isPasswordVisbile ? icons.password_invisible : icons.password_visible} className='w-[25px] h-[25px]' />
-                                    </TouchableOpacity>
-                                </View>
-
-                                {password &&
-                                    <Animated.View
-                                        entering={FadeInRight.delay(200).duration(400).springify()}
-                                        exiting={FadeOutRight.delay(50).duration(400).springify()}
-                                        className="mt-1 mx-1 flex-row justify-between"
-                                    >
-                                        <View className="h-[8px] rounded-full bg-gray-300 mt-2 overflow-hidden">
-                                            <Animated.View
-                                                style={animatedBarStyle}
-                                                className={`h-full ${passwordStrength === 'Strong'
-                                                    ? 'bg-good'
-                                                    : passwordStrength === 'Medium'
-                                                        ? 'bg-warning'
-                                                        : 'bg-failed'
-                                                    }`}
-                                            />
-                                        </View>
-                                        <Text
-                                            className={
-                                                `text-lg font-medium ${passwordStrength === 'Strong'
-                                                    ? 'text-good'
-                                                    : passwordStrength === 'Medium'
-                                                        ? 'text-warning'
-                                                        : 'text-failed'}`
-                                            }
-                                        >
-                                            {passwordStrength}
-                                        </Text>
-                                    </Animated.View>}
-                            </Animated.View>
-
-                            {/* button section */}
-                            <View className='self-center mt-2 items-center gap-5'>
-                                <TouchableOpacity onPress={handleRegister}>
-                                    <Animated.View
-                                        entering={FadeInDown.delay(400).duration(1000).springify()}
-                                        className='bg-[#1A736A] border-white border-2 rounded-xl py-3 px-[60px]'
-                                    >
-                                        <Text className='font-bold color-white'>Register</Text>
-                                    </Animated.View>
-                                </TouchableOpacity>
-                                <Animated.View entering={FadeInDown.delay(400).duration(1000).springify()} className='flex-row justify-center'>
-                                    <Text className='font-normal color-white text-[15px]'>Already have an account? </Text>
-                                    <TouchableOpacity onPress={() => navigation.push('/auth/login')}>
-                                        <Text className='font-medium text-[15px] color-[#48CAE4] underline'>Login</Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-                            </View>
-
-                            {/* other option section  */}
-                            <Animated.View entering={FadeInDown.delay(600).duration(1000).springify()} className='self-center items-center gap-4'>
-                                <Text className='font-normal color-white text-[15px]'>___________________or___________________ </Text>
-                                <TouchableOpacity>
-                                    <Animated.View
-                                        entering={FadeInDown.delay(800).duration(1000).springify()}
-                                        className='bg-white border-black border-1 rounded-sm py-3 px-[90px]'
-                                    >
-                                        <View className='flex-row gap-[10px]'>
-                                            <Image className='w-[20px] h-[20px]' source={icons.google} />
-                                            <Text className='font-bold color-black'>Signup with Google</Text>
-                                        </View>
-                                    </Animated.View>
-                                </TouchableOpacity>
-                            </Animated.View>
-                        </View>
-                    </View>
-                </View >
-            </ScrollView>
-        </KeyboardAvoidingView>
-    )
+// ------- Mock API wiring (replace with your real API) -------
+async function apiRegister(payload: { username: string; email: string; password: string }) {
+  await new Promise((r) => setTimeout(r, 400));
+  return { ok: true };
 }
+async function apiSendVerifyCode(email: string) {
+  await new Promise((r) => setTimeout(r, 400));
+  return { ok: true };
+}
+async function apiVerifyCode(email: string, code: string) {
+  await new Promise((r) => setTimeout(r, 400));
+  const ok = /^\d{6}$/.test(code);
+  if (!ok) throw new Error('Invalid code');
+  return { ok: true };
+}
+// -----------------------------------------------------------
 
-export default SingUp
+const SignUpScreen: React.FC = () => {
+  const router = useRouter();
+
+  // form state
+  const [username, setUsername] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+
+  // errors
+  const [usernameErr, setUsernameErr] = React.useState<string | undefined>();
+  const [emailErr,    setEmailErr]    = React.useState<string | undefined>();
+  const [passwordErr, setPasswordErr] = React.useState<string | undefined>();
+
+  // verification modal state
+  const [verifyOpen, setVerifyOpen] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
+  const [verifyError, setVerifyError] = React.useState<string | undefined>();
+  const [resendIn, setResendIn] = React.useState(0);
+
+  // type-safe timer ref
+  const resendTimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const RESEND_SEC = 30;
+
+  // success modal
+  const [doneOpen, setDoneOpen] = React.useState(false);
+
+  // resend timer
+  const startResendTimer = React.useCallback(() => {
+    setResendIn(RESEND_SEC);
+    if (resendTimerRef.current) {
+      clearInterval(resendTimerRef.current);
+      resendTimerRef.current = null;
+    }
+    resendTimerRef.current = setInterval(() => {
+      setResendIn((s) => {
+        if (s <= 1) {
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
+          }
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (resendTimerRef.current) {
+        clearInterval(resendTimerRef.current);
+        resendTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // validation
+  const validate = () => {
+    let ok = true;
+    setUsernameErr(undefined);
+    setEmailErr(undefined);
+    setPasswordErr(undefined);
+
+    if (!username.trim()) {
+      setUsernameErr('Required');
+      ok = false;
+    }
+    if (!email.trim()) {
+      setEmailErr('Required');
+      ok = false;
+    } else if (!looksLikeEmail(email)) {
+      setEmailErr('Invalid email');
+      ok = false;
+    }
+    if (!password.trim()) {
+      setPasswordErr('Required');
+      ok = false;
+    }
+    return ok;
+  };
+
+  // register -> send code -> open verify modal
+  const onRegister = async () => {
+    if (!validate()) return;
+    try {
+      await apiRegister({ username: username.trim(), email: email.trim(), password });
+      setSending(true);
+      setVerifyError(undefined);
+      await apiSendVerifyCode(email.trim());
+      startResendTimer();
+      setVerifyOpen(true);
+    } catch (e: any) {
+      Alert.alert('Registration failed', e?.message || 'Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // resend handler
+  const onPressResend = async () => {
+    if (resendIn > 0) return;
+    try {
+      setVerifyError(undefined);
+      await apiSendVerifyCode(email.trim());
+      startResendTimer();
+    } catch (e: any) {
+      setVerifyError(e?.message || 'Failed to resend code.');
+    }
+  };
+
+  // confirm code
+  const [code, setCode] = React.useState('');
+  const onConfirmCode = async () => {
+    try {
+      setVerifyError(undefined);
+      await apiVerifyCode(email.trim(), code.trim());
+      setVerifyOpen(false);
+      setDoneOpen(true);
+    } catch (e: any) {
+      setVerifyError(e?.message || 'Invalid code');
+    }
+  };
+
+  // ✅ helper: choose placement based on message (must return 'below', not 'bottom')
+  const getErrorPlacement = (err?: string) => (err === 'Required' ? 'topRight' : 'below');
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeStyle.colors.black }}>
+      <ImageBackground
+        source={require('../../assets/images/background.png')}
+        style={{ position: 'absolute', width: '100%', height: '100%' }}
+        resizeMode="cover"
+      />
+      <StatusBar barStyle="light-content" />
+
+      <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 200 }}>
+        {/* Logo */}
+        <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 6 }}>
+          <Animated.Image
+            entering={FadeIn.duration(600)}
+            source={images.logo}
+            style={{ width: 280, height: 280, borderRadius: 130 }}
+          />
+        </View>
+
+        {/* Fields */}
+        <View style={{ gap: 12, alignItems: 'center' }}>
+          <Animated.View entering={FadeInDown.duration(500)}>
+            <TextFieldPrimary
+              name="Username"
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChangeText={(t) => {
+                setUsername(t);
+                if (usernameErr) setUsernameErr(undefined);
+              }}
+              strengthIndicator={false}
+              showStrengthRules={false}
+              errorPlacement={getErrorPlacement(usernameErr)}
+              externalError={usernameErr}
+            />
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(60).duration(500)}>
+            <TextFieldPrimary
+              name="Email"
+              type="email"
+              placeholder="example@gmail.com"
+              value={email}
+              onChangeText={(t) => {
+                setEmail(t);
+                if (emailErr) setEmailErr(undefined);
+              }}
+              strengthIndicator={false}
+              showStrengthRules={false}
+              errorPlacement={getErrorPlacement(emailErr)}
+              externalError={emailErr}
+            />
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(120).duration(500)}>
+            <TextFieldPrimary
+              name="Password"
+              type="password"
+              passwordVariant="default"
+              placeholder="••••••••••••"
+              value={password}
+              onChangeText={(t) => {
+                setPassword(t);
+                if (passwordErr) setPasswordErr(undefined);
+              }}
+              strengthIndicator={true}
+              showStrengthRules={true}
+              errorPlacement={getErrorPlacement(passwordErr)}
+              externalError={passwordErr}
+            />
+          </Animated.View>
+        </View>
+
+        {/* Register */}
+        <View style={{ alignItems: 'center', marginTop: 50 }}>
+          <Animated.View entering={FadeInDown.delay(180).duration(500)}>
+            <ButtonPrimary
+              text={sending ? 'Sending…' : 'Register'}
+              filledColor={themeStyle.colors.primary}
+              borderColor={themeStyle.colors.white}
+              textColor={themeStyle.colors.white}
+              width={240}
+              onPress={onRegister}
+            />
+          </Animated.View>
+        </View>
+
+        {/* Inline login link */}
+        <Animated.View
+          entering={FadeInDown.delay(220).duration(500)}
+          style={{ marginTop: 6, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text style={{ color: themeStyle.colors.white, marginRight: 4 }}>
+            Already have an account?
+          </Text>
+          <ButtonUnderline text="Log In" onPress={() => router.push('/auth/login')} />
+          <Text style={{ color: themeStyle.colors.white, marginLeft: 4 }}>
+            here.
+          </Text>
+        </Animated.View>
+
+        {/* Divider */}
+        <Animated.Text
+          entering={FadeInDown.delay(260).duration(500)}
+          style={{ marginTop: 20, textAlign: 'center', color: themeStyle.colors.white, opacity: 0.9 }}
+        >
+          ——————————— or ———————————
+        </Animated.Text>
+
+        {/* Google button */}
+        <View style={{ alignItems: 'center', marginTop: 30 }}>
+          <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+            <ButtonGoogle
+              text="Sign up with Google"
+              width={280}
+              onPress={() => console.log('Google sign up')}
+            />
+          </Animated.View>
+        </View>
+
+        <View style={{ height: 16 }} />
+      </View>
+
+      {/* Verification Modal (no email input; uses form email) */}
+      <ModalChangeInformation
+        visible={verifyOpen}
+        onClose={() => setVerifyOpen(false)}
+        title="Verification code"
+        titleColor={themeStyle.colors.primary}
+        descriptionText="We have sent a verification code to"
+        email={email.trim()}
+        errorMessage={verifyError}
+        fields={[{ type: 'code', placeholder: '', value: code, onChangeText: setCode }]}
+        underlineButton={{
+          text: resendIn > 0 ? `Send again (${resendIn}s)` : 'Send again',
+          onPress: resendIn > 0 ? () => {} : onPressResend,
+        }}
+        button={{
+          text: 'Confirm',
+          onPress: onConfirmCode,
+          filledColor: themeStyle.colors.primary,
+          textColor: themeStyle.colors.white,
+        }}
+      />
+
+      {/* Success modal */}
+      <ModalVerificationComplete
+        title='Verification Complete!'
+        subtitle='You will be redirected to Homepage next'
+        visible={doneOpen}
+        onClose={() => {
+          setDoneOpen(false);
+          router.replace('/'); // navigate to home/tabs
+        }}
+      />
+    </SafeAreaView>
+  );
+};
+
+export default SignUpScreen;

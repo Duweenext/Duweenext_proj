@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  GestureResponderEvent,
-} from 'react-native';
-import {theme} from '@/theme';
+import { TouchableOpacity, Text, GestureResponderEvent } from 'react-native';
+import { themeStyle } from '../../src/theme';
 
 type ButtonSize = 'L' | 'XL' | '2XL' | '3XL';
 
@@ -20,9 +15,9 @@ interface ButtonModalLProps {
 
 const ButtonModalL: React.FC<ButtonModalLProps> = ({
   text,
-  filledColor = '#FFFFFF',
-  textColor = '#000000',
-  onPress = () => { },
+  filledColor = themeStyle.colors.white,
+  textColor = themeStyle.colors.black,
+  onPress = () => {},
   marginBottom,
   size = 'L',
 }) => {
@@ -30,22 +25,32 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        sizeStyles,
-        {
-          backgroundColor: filledColor,
-          marginBottom: marginBottom ?? styles.button.marginVertical,
-        },
-      ]}
+      style={{
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 6,
+        backgroundColor: filledColor,
+        marginBottom: marginBottom ?? 6,
+        ...sizeStyles,
+      }}
       activeOpacity={0.85}
       onPress={onPress}
     >
-      <Text style={[styles.text, sizeStyles.text, { color: textColor }]}>{text}</Text>
+      <Text
+        style={{
+          fontFamily: themeStyle.fontFamily.medium,
+          fontSize: sizeStyles.text.fontSize,
+          color: textColor,
+        }}
+      >
+        {text}
+      </Text>
     </TouchableOpacity>
   );
 };
 
+// keep size-specific styles separate
 const getSizeStyles = (size: ButtonSize) => {
   switch (size) {
     case 'L':
@@ -54,7 +59,7 @@ const getSizeStyles = (size: ButtonSize) => {
         height: 36,
         paddingVertical: 8,
         paddingHorizontal: 16,
-        text: { fontSize: 14 },
+        text: { fontSize: themeStyle.fontSize.data_text},
       };
     case 'XL':
       return {
@@ -62,7 +67,7 @@ const getSizeStyles = (size: ButtonSize) => {
         height: 42,
         paddingVertical: 10,
         paddingHorizontal: 20,
-        text: { fontSize: 16 },
+        text: { fontSize: themeStyle.fontSize.description },
       };
     case '2XL':
       return {
@@ -70,7 +75,7 @@ const getSizeStyles = (size: ButtonSize) => {
         height: 48,
         paddingVertical: 12,
         paddingHorizontal: 24,
-        text: { fontSize: 18 },
+        text: { fontSize: themeStyle.fontSize.descriptionL },
       };
     case '3XL':
       return {
@@ -78,7 +83,7 @@ const getSizeStyles = (size: ButtonSize) => {
         height: 54,
         paddingVertical: 14,
         paddingHorizontal: 28,
-        text: { fontSize: 20 },
+        text: { fontSize: themeStyle.fontSize.header2 },
       };
     default:
       return {
@@ -86,21 +91,9 @@ const getSizeStyles = (size: ButtonSize) => {
         height: 36,
         paddingVertical: 8,
         paddingHorizontal: 16,
-        text: { fontSize: 14 },
+        text: { fontSize: themeStyle.fontSize.xs },
       };
   }
 };
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 6,
-  },
-  text: {
-    fontFamily: theme.fontFamily.semibold,
-  },
-});
 
 export default ButtonModalL;

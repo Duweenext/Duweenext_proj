@@ -6,6 +6,7 @@ import {
   GestureResponderEvent,
   ViewStyle,
 } from 'react-native';
+import { themeStyle } from '@/src/theme';
 
 interface ButtonPrimaryProps {
   text: string;
@@ -13,28 +14,53 @@ interface ButtonPrimaryProps {
   borderColor?: string;
   textColor?: string;
   onPress?: (event: GestureResponderEvent) => void;
+  /** NEW: allow sizing/overrides */
+  width?: number;
+  height?: number;
+  style?: ViewStyle;
+  disabled?: boolean;
 }
 
 const ButtonPrimary: React.FC<ButtonPrimaryProps> = ({
   text,
-  filledColor = '#FFFFFF',       // Default: white
-  borderColor = '#000000',        // Default: black
-  textColor = '#000000',          // Default: black
+  filledColor = themeStyle.colors.white,
+  borderColor = themeStyle.colors.black,
+  textColor = themeStyle.colors.black,
   onPress = () => {},
+  width,
+  height,
+  style,
+  disabled = false,
 }) => {
   return (
     <TouchableOpacity
+      activeOpacity={0.85}
+      disabled={disabled}
+      onPress={onPress}
       style={[
         styles.button,
         {
           backgroundColor: filledColor,
-          borderColor: borderColor,
+          borderColor,
+          ...(width ? { width } : null),
+          ...(height ? { height } : null),
+          opacity: disabled ? 0.6 : 1,
         },
+        style,
       ]}
-      activeOpacity={0.8}
-      onPress={onPress}
     >
-      <Text style={[styles.text, { color: textColor }]}>{text}</Text>
+      <Text
+        style={[
+          styles.text,
+          {
+            color: textColor,
+            fontSize: themeStyle.fontSize.description,
+            fontFamily: themeStyle.fontFamily.bold,
+          },
+        ]}
+      >
+        {text}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -44,7 +70,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 8,
@@ -55,7 +81,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   text: {
-    fontSize: 16,
     fontWeight: 'bold',
   },
 });

@@ -22,7 +22,7 @@ const Setting = () => {
                            key={item.id}
                            title={item.title}
                            onPress={() => {item.route ? router.navigate(item.route as any) : null}}
-                       />
+                       />6
                    </View>
                 ))
             }

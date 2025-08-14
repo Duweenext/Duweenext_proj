@@ -289,11 +289,11 @@ const ProfileSetting: React.FC<Props> = () => {
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
       {/* ---- Change Account Information ---- */}
-      <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 8 }}>
+      <Text style={{fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 20, left: 20, paddingTop:30 }}>
         Change Account Information
       </Text>
 
-      <View style={{ maxWidth: 325, backgroundColor: themeStyle.colors.white, borderRadius: 10, padding: 15, marginBottom: 15, left: 15 }}>
+      <View style={{ flexDirection:'column', alignSelf:'center', width:'70%', backgroundColor: themeStyle.colors.white, borderRadius: 10, padding: 15, marginBottom: 25 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }}>
           <Text style={{ fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.description }}>Username:</Text>
           <Text style={{ width: '70%' }}>{username}</Text>
@@ -304,7 +304,7 @@ const ProfileSetting: React.FC<Props> = () => {
           <Text style={{ width: '70%' }}>{email}</Text>
         </View>
 
-        <View style={{ width: '100%', alignItems: 'flex-start', left: 150, marginBottom: -10 }}>
+        <View style={{ width: '100%', alignItems: 'flex-end', right: 20, marginBottom: -10 }}>
           <ButtonModalL
             text="Edit Information"
             filledColor={themeStyle.colors.primary}
@@ -316,10 +316,11 @@ const ProfileSetting: React.FC<Props> = () => {
       </View>
 
       {/* ---- Change Password (user knows old) ---- */}
-      <View style={{ flexDirection: 'column' }}>
-        <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10 }}>
+      <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10, left:20 }}>
           Change Password
         </Text>
+      <View style={{ flexDirection: 'column', alignItems:'center' }}>
+        
 
         <View>
           <TextFieldPrimary
@@ -361,11 +362,11 @@ const ProfileSetting: React.FC<Props> = () => {
           />
         </View>
 
-        <View style={{ marginTop: -5, left: 20 }}>
+        <View style={{ marginTop: -5, left: -100 }}>
           <ButtonUnderline text="Forgot password" onPress={() => setForgotOpen(true)} />
         </View>
 
-        <View style={{ marginTop: 12, alignItems: 'flex-start', left: 128 }}>
+        <View style={{ marginTop: 12, alignItems: 'flex-end', right: -70 }}>
           <ButtonPrimary
             text="Change password"
             filledColor={themeStyle.colors.primary}
@@ -377,12 +378,12 @@ const ProfileSetting: React.FC<Props> = () => {
       </View>
 
       {/* ---- Linked Accounts ---- */}
-      <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 15 }}>
+      <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 15, left:20 }}>
         <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10 }}>
           Linked Accounts
         </Text>
       </View>
-      <View style={{ marginTop: 5, marginBottom: 12, flexDirection: 'column', justifyContent: 'flex-start', width: 240, paddingBottom: 20, left: 10 }}>
+      <View style={{ marginTop: 5, marginBottom: 12, flexDirection: 'column', justifyContent: 'flex-start', width: 240, paddingBottom: 20, left: 30 }}>
         <ButtonGoogle text="Google" borderColor={themeStyle.colors.primary} onPress={() => console.log('Google link')} width={220} />
         <ButtonPrimary text="Logout" filledColor={themeStyle.colors.white} textColor={themeStyle.colors.black} onPress={() => console.log('Logout')} />
 

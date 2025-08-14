@@ -13,6 +13,7 @@ interface TopBarProps {
   title: string;
   textColor?: string;
   onBack?: (event: GestureResponderEvent) => void;
+  showBackButton?: boolean;
 }
 
 const TopBar: React.FC<TopBarProps> = ({

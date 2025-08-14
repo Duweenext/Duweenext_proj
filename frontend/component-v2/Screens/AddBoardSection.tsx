@@ -6,6 +6,7 @@ import ManualAddBoardModal from '@/component-v2/Modals/ManualAddBoardModal';
 import BleConfigModal from '@/component-v2/Modals/bleModal';
 import WifiConfigModal from '../Modals/wificonfigModal';
 import { useBoard } from '@/src/api/useBoard';
+import { useBle } from '@/src/ble/useBle.native';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -17,9 +18,11 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   onManualSubmit
 }) => {
   const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "">("");
-  const { loading, verifyBoardInformation } = useBoard();
+  const { loading, verifyBoardInformation, setConnectionPassword } = useBoard();
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
+
+  const {provisionWifi} = useBle();
 
   const handleAddBoard = () => {
     setModalVisible("option");
@@ -66,17 +69,33 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     }
   }
 
-  const handleWifiSubmit = async (values: { ssid: string; wifiPassword: string; connectionPassword: string }) => {
-    setWifiSubmitting(true);
-    try {
-      setModalVisible("");
-      onSelectDevice?.(selectedBoardId);
-    } catch (err) {
-      console.warn("Sending WiFi credentials failed:", err);
-    } finally {
-      setWifiSubmitting(false);
-    }
-  };
+  const handleWifiSubmit = async (values: {
+  ssid: string;
+  wifiPassword: string;
+  connectionPassword: string;
+}) => {
+  if (!selectedBoardId) return;
+  setWifiSubmitting(true);
+  try {
+
+    await provisionWifi(selectedBoardId, {
+      ssid: values.ssid,
+      wifiPassword: values.wifiPassword,
+    });
+
+    await setConnectionPassword({ 
+      connectionPassword: values.connectionPassword, 
+      selectedBoardId: selectedBoardId
+    });
+
+    setModalVisible("");
+    onSelectDevice?.(selectedBoardId);
+  } catch (err) {
+    console.warn("Provisioning/Pairing failed:", err);
+  } finally {
+    setWifiSubmitting(false);
+  }
+}
 
   console.log(modalVisible);
 

@@ -193,7 +193,7 @@ func (s *FiberServer) websocketHandler(c *fiber.Ctx) error {
             if !s.isUserSubscribedToBoard(userId, boardId) {
                 conn.WriteMessage(websocket.TextMessage,
                     []byte(`{"error":"not subscribed to board"}`))
-                conn.Close()
+                conn.Close() 
                 return
             }
 

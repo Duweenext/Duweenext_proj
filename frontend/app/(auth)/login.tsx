@@ -28,16 +28,22 @@ const Login: React.FC = () => {
 
   const [forgotOpen, setForgotOpen] = React.useState(false);
 
+  // In your login.tsx file, update the onLogin function:
   const onLogin = () => {
+    // console.log('Login attempt:', { identifier, password });
     setIdError(undefined);
     setPwdError(undefined);
 
     if (!identifier.trim()) setIdError('Required');
     if (!password.trim()) setPwdError('Required');
     if (!identifier.trim() || !password.trim()) return;
-
-    Alert.alert('Login', 'Logged in (mock).');
-    // router.replace('/(tabs)');
+    try {
+      router.replace('/');
+      console.log('Navigation called successfully');
+    } catch (error: any) {
+      console.error('Navigation error:', error);
+      Alert.alert('Navigation Error', `Failed to navigate: ${error.message}`);
+    }
   };
 
   return (
@@ -49,7 +55,7 @@ const Login: React.FC = () => {
       />
       <StatusBar barStyle="light-content" />
 
-      <View style={{ flex: 1, paddingHorizontal: 18, paddingTop: 220 }}>
+      <View style={{ flex: 1, paddingHorizontal: 18, paddingTop: 100 }}>
         {/* Logo */}
         <View style={{ alignItems: 'center', marginBottom: 12 }}>
           <Animated.Image
@@ -98,12 +104,12 @@ const Login: React.FC = () => {
           <View style={{ paddingHorizontal: 16, marginTop: -6, alignItems: 'center', right: 100 }}>
             <ButtonUnderline text="Forgot password" onPress={() => setForgotOpen(true)} />
           </View>
-          <View style={{ maxWidth: 325}}>
-          <Text style={{color:'white'}}>To continue with password reset, 
-            you need to input email first.</Text>
+          <View style={{ maxWidth: 325 }}>
+            <Text style={{ color: 'white' }}>To continue with password reset,
+              you need to input email first.</Text>
           </View>
 
-            
+
           {/* Login button */}
           <Animated.View
             entering={FadeInDown.delay(200).duration(500)}
@@ -132,7 +138,7 @@ const Login: React.FC = () => {
           >
             Please{' '}
             <Text
-              onPress={() => router.push('/auth/signup')}
+              onPress={() => router.push('/(auth)/signup')}
               style={{
                 color: themeStyle.colors.primary,
                 textDecorationLine: 'underline',
@@ -173,12 +179,12 @@ const Login: React.FC = () => {
       </View>
 
       {/* Forgot Password flow: force verification step first */}
-     <ForgotPasswordFlow
+      <ForgotPasswordFlow
         visible={forgotOpen}
         onClose={() => setForgotOpen(false)}
         initialEmail={identifier}   // from Email TextField
         startStep="verify"          // force verification UI
-     />
+      />
 
 
     </SafeAreaView>

@@ -10,7 +10,6 @@ import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrim
 
 // Data
 import { mockBoards, formatRunningTime, type ExtendedBoardData } from '@/component-v2/Screens/mockBoardData';
-import { CardBoardModal } from '@/component-v2/Card/CardBoardModal';
 import { useTranslation } from 'react-i18next';
 
 // Main Sensor Screen
@@ -29,8 +28,6 @@ const SensorScreen = () => {
 
   const handleManualSubmit = (boardId: string) => {
     console.log('Manual board ID submitted:', boardId);
-    // Here you can add logic to handle the manual board registration
-    // For example, add the board to your state or send it to an API
   };
 
   const handleBoardIconPress = (board: ExtendedBoardData) => {
@@ -53,7 +50,7 @@ const SensorScreen = () => {
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       
       {/* Header */}
-      <SensorCenterHeader onBackPress={handleBackPress} />
+      {/* <SensorCenterHeader onBackPress={handleBackPress} /> */}
       
       {/* Main Content */}
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -66,7 +63,6 @@ const SensorScreen = () => {
         {/* Board Section */}
         <BoardSectionHeader title="Board" />
         
-        {/* Board Cards */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 20, gap: 12 }}>
           {mockBoards.map((board) => (
             <CardBoardPrimary

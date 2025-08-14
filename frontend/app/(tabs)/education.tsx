@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import CardEducation from '../../component-v2/Card/CardEducation';
 import { EDUCATION_TOPICS } from '../../src/data/educationData';
 
+<<<<<<< Updated upstream
 const spacing = 12;
 const numColumns = 2;
 const cardWidth = (Dimensions.get('window').width - spacing * (numColumns + 1)) / numColumns;
@@ -39,6 +40,13 @@ export default function EducationIndex() {
     </View>
     </SafeAreaView>
   );
+=======
+const Education = () => {
+    return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+        </View>
+    )
+>>>>>>> Stashed changes
 }
 
 const styles = StyleSheet.create({

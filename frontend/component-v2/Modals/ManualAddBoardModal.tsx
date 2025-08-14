@@ -26,7 +26,7 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
   };
 
   const handleClose = () => {
-    setBoardId(''); // Reset input when closing
+    setBoardId(''); 
     onClose();
   };
 

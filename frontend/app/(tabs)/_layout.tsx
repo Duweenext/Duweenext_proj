@@ -4,6 +4,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TopBar from '@/component-v2/NavBar/TopBar';
 
 function TabIcon({
     focused,
@@ -19,7 +20,7 @@ function TabIcon({
             <ImageBackground
                 source={images.highlight}
                 style={{
-                    padding: 12, // p-3
+                    padding: 16, // p-3
                     width: '100%',
                     flex: 1,
                     minWidth: 120, // min-w-[120px]
@@ -82,30 +83,30 @@ function TabIcon({
     );
 }
 
-const CustomHeader = ({ title }: { title: string }) => {
-    return (
-        <SafeAreaView>
-            <View
-                style={{
-                    paddingVertical: 24, // py-6
-                    paddingHorizontal: 24, // px-6
-                    backgroundColor: 'rgba(149, 231, 231, 0.85)',
-                }}
-            >
-                <Text
-                    style={{
-                        textAlign: 'left',
-                        fontWeight: '700',
-                        color: '#1A736A',
-                        fontSize: 24, // text-2xl
-                    }}
-                >
-                    {title}
-                </Text>
-            </View>
-        </SafeAreaView>
-    );
-};
+// const CustomHeader = ({ title }: { title: string }) => {
+//     return (
+//         <SafeAreaView>
+//             <View
+//                 style={{
+//                     paddingVertical: 24, // py-6
+//                     paddingHorizontal: 24, // px-6
+//                     backgroundColor: 'rgba(149, 231, 231, 0.85)',
+//                 }}
+//             >
+//                 <Text
+//                     style={{
+//                         textAlign: 'left',
+//                         fontWeight: '700',
+//                         color: '#1A736A',
+//                         fontSize: 24, // text-2xl
+//                     }}
+//                 >
+//                     {title}
+//                 </Text>
+//             </View>
+//         </SafeAreaView>
+//     );
+// };
 
 const _Layout = () => {
     return (
@@ -138,16 +139,18 @@ const _Layout = () => {
                 sceneStyle: {
                     backgroundColor: 'transparent',
                 },
+                
             }}
         >
             <Tabs.Screen
                 name="index"
                 options={{
                     title: '',
-                    headerShown: false,
+                    headerShown: true,
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.home} title="Home" />
                     ),
+                    header: () => <TopBar title="Home" showBackButton={false} />,
                 }}
             />
             <Tabs.Screen
@@ -158,18 +161,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.educate} title="Education" />
                     ),
-                    header: () => <CustomHeader title="Education" />,
-                }}
-            />
-            <Tabs.Screen
-                name="sensor"
-                options={{
-                    title: '',
-                    headerShown: true,
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.sensor} title="Sensor" />
-                    ),
-                    header: () => <CustomHeader title="Sensor" />,
+                    header: () => <TopBar title="Education" showBackButton={false}/>,
                 }}
             />
             <Tabs.Screen
@@ -178,9 +170,9 @@ const _Layout = () => {
                     title: '',
                     headerShown: true,
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.setting} title="Setting" />
+                        <TabIcon focused={focused} icon={icons.setting} title="Setting"/>
                     ),
-                    header: () => <CustomHeader title="Setting" />,
+                    header: () => <TopBar title="Setting" showBackButton={false}/>,
                 }}
             />
         </Tabs>

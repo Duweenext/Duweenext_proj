@@ -256,7 +256,7 @@ const SignUpScreen: React.FC = () => {
           <Text style={{ color: themeStyle.colors.white, marginRight: 4 }}>
             Already have an account?
           </Text>
-          <ButtonUnderline text="Log In" onPress={() => router.push('/auth/login')} />
+          <ButtonUnderline text="Log In" onPress={() => router.push('/(auth)/login')} />
           <Text style={{ color: themeStyle.colors.white, marginLeft: 4 }}>
             here.
           </Text>

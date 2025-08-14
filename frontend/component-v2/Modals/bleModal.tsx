@@ -1,4 +1,3 @@
-// components/BleConfigModal.tsx
 import React, {
   useEffect,
   useMemo,
@@ -19,7 +18,6 @@ import { CardBoardModal } from "@/component-v2/Card/CardBoardModal";
 import { theme } from "@/theme";
 import LoadingSpinner from "../Others/LoadingIndicator";
 import { useBle } from "@/src/ble/useBle.native";
-import WifiConfigModal from "./wificonfigModal";
 
 type BleConfigModalProp = {
   visible: boolean;
@@ -49,13 +47,6 @@ const BleConfigModal = ({
 }: BleConfigModalProp) => {
   
   const { isScanning, devices, startScan, stopScan, connect } = useBle();
-
-
-
-  // ---- Wifi Config modal state ----
-  const [wifiModalVisible, setWifiModalVisible] = useState(false);
-  const [selectedBoardId, setSelectedBoardId] = useState<string>("");
-  const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
   // Start scanning on open; stop on close/unmount
   useEffect(() => {

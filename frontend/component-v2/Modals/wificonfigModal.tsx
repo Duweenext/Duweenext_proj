@@ -15,6 +15,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/theme';
+import TextFieldModal from '../TextFields/TextFieldModal';
+import ButtonAddBoard from '../Buttons/ButtonAddBoard';
+import ButtonModalXL from '../Buttons/ButtonModalXL';
+import ButtonModalL from '../Buttons/ButtonModalL';
 
 const wifiSchema = z.object({
   ssid: z.string().min(1, 'Wifi name (SSID) is required'),
@@ -30,6 +34,7 @@ interface WifiConfigModalProps {
   onSubmit: (data: WifiFormData) => void;
   boardId: string;
   submitting?: boolean;
+  isBoardIdExists?: boolean;
 }
 
 const COLORS = {
@@ -49,6 +54,7 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
   onSubmit,
   boardId,
   submitting = false,
+  isBoardIdExists = true,
 }) => {
   const { control, handleSubmit, formState: { errors, isValid }, reset } =
     useForm<WifiFormData>({
@@ -105,15 +111,11 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 control={control}
                 name="ssid"
                 render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    value={value}
+                  <TextFieldModal
                     onChangeText={onChange}
-                    placeholder="Enter Wifi name"
-                    placeholderTextColor={COLORS.placeholder}
-                    style={styles.input}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="next"
+                    value={value}
+                    placeholder="Enter wifi name"
+                    borderColor={theme.colors.black}
                   />
                 )}
               />
@@ -127,16 +129,11 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 control={control}
                 name="wifiPassword"
                 render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    value={value}
+                  <TextFieldModal
                     onChangeText={onChange}
+                    value={value}
                     placeholder="Enter Wifi password"
-                    placeholderTextColor={COLORS.placeholder}
-                    style={styles.input}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    secureTextEntry={!showWifi}
-                    returnKeyType="next"
+                    borderColor={theme.colors.black}
                   />
                 )}
               />
@@ -158,17 +155,11 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 control={control}
                 name="connectionPassword"
                 render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    value={value}
+                  <TextFieldModal
                     onChangeText={onChange}
-                    placeholder="Enter Connection password"
-                    placeholderTextColor={COLORS.placeholder}
-                    style={styles.input}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    secureTextEntry={!showConn}
-                    returnKeyType="done"
-                    onSubmitEditing={handleSubmit(onSubmit)}
+                    value={value}
+                    placeholder="Enter Wifi password"
+                    borderColor={theme.colors.black}
                   />
                 )}
               />
@@ -186,15 +177,15 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
             )}
 
             {/* Submit */}
-            <TouchableOpacity
-              onPress={handleSubmit(onSubmit)}
-              disabled={!isValid || submitting}
-              style={[styles.submit, (!isValid || submitting) && styles.submitDisabled]}
-              accessibilityRole="button"
-              accessibilityLabel="Submit WiFi settings"
-            >
-              <Text style={styles.submitText}>{submitting ? 'Submitting…' : 'Submit'}</Text>
-            </TouchableOpacity>
+            <View style={{justifyContent: 'center', flexDirection: 'row', padding: 5}}>
+              <ButtonModalL
+                text='Submit'
+                textColor={theme.colors.white}
+                filledColor={theme.colors.black}
+                size='L'
+                onPress={handleSubmit(onSubmit)}
+              />
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -262,7 +253,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: COLORS.label,
-    fontSize: 15,
+    fontSize: theme.fontSize.description,
+    fontFamily: theme.fontFamily.regular,
     marginBottom: 6,
   },
   inputWrap: {

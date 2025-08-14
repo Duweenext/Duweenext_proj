@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, StatusBar } from "react-native";
 import { router } from "expo-router";
 import LineChartExample from "@/components/LineChartExample";
 import TabBox from "@/components/TabBox";
@@ -24,29 +24,6 @@ export default function Index() {
     <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 100 }}>
         
-        {/* Header */}
-                
-        <View style={{
-          backgroundColor: '#ffffff',
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }}>
-          <Text style={{
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: '#1f2937',
-            textAlign: 'center',
-          }}>
-            {t('home')}
-          </Text>
-        </View>
-
         {/* Navigation Cards */}
         <View style={{
           flexDirection: 'row',

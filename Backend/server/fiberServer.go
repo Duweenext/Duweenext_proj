@@ -97,7 +97,7 @@ func (s *FiberServer) Start() {
 	// sensorRepo := repositories.NewSensorRepository(s.db.GetDb())
 	pondHealthRepo := repositories.NewPondHealthRepository(s.db.GetDb())
 	educationRepo := repositories.NewEducationRepository(s.db.GetDb())
-	boardRelationShipRepo := repositories.NewBoardRelationshipRepository(s.db.GetDb())
+	// boardRelationShipRepo := repositories.NewBoardRelationshipRepository(s.db.GetDb())
 	// boardRepo := repositories.NewBoardRepository(s.db.GetDb())
 
 	// Use cases
@@ -105,7 +105,7 @@ func (s *FiberServer) Start() {
 	// sensorUseCase := usecases.NewSensorUseCase(*sensorRepo)
 	pondHealthUseCase := usecases.NewpondHealthUseCase(*pondHealthRepo)
 	educationUseCase := usecases.NewEducationUseCase(*educationRepo)
-	boardRelationShipUseCase := usecases.NewBoardRelationshipUseCase(*&boardRelationShipRepo)
+	// boardRelationShipUseCase := usecases.NewBoardRelationshipUseCase(*&boardRelationShipRepo)
 	// boardUseCase := usecases.NewBoardUseCase(*boardRepo)
 
 	// Handlers
@@ -113,7 +113,7 @@ func (s *FiberServer) Start() {
 	// sensorHandler := handlers.NewSensorHandler(sensorUseCase)
 	pondHealthHandler := handlers.NewPondHealthHandler(pondHealthUseCase)
 	educationHandler := handlers.NewEducationHandler(educationUseCase)
-	boardRelationShipHandler := handlers.NewBoardRelationshipHandler(boardRelationShipUseCase)
+	// boardRelationShipHandler := handlers.NewBoardRelationshipHandler(boardRelationShipUseCase)
 	// boardHandler := handlers.NewBoardHandler(boardUseCase)
 
 	// Routes
@@ -146,8 +146,8 @@ func (s *FiberServer) Start() {
 	api.Get("/education/:id", educationHandler.GetEducationByID)
 
 	// Board Relationship routes
-	api.Post("board/manual", boardRelationShipHandler.CreateManualBoardRelationship)
-	api.Post("board/ble", boardRelationShipHandler.CreateBLEBoardRelationship)
+	// api.Post("board/manual", boardRelationShipHandler.CreateManualBoardRelationship)
+	// api.Post("board/ble", boardRelationShipHandler.CreateBLEBoardRelationship)
 
 	// // Board routes
 	// api.Post("/boards", boardHandler.CreateBoard)
@@ -238,14 +238,14 @@ func (s *FiberServer) isUserSubscribedToBoard(userID uint, boardID string) bool 
 }
 
 // Method to broadcast data to all users that are subscribed to a board
-func (s *FiberServer) BroadcastTelemetryData(boardID string, data *entities.SensorData) {
+func (s *FiberServer) BroadcastTelemetryData(boardID string, data *entities.SensorLog) {
     s.mutex.Lock()
     defer s.mutex.Unlock()
 
 	    // envelope with a "type" and a "data" field
 		envelope := struct {
 			Type string               `json:"type"`
-			Data *entities.SensorData `json:"data"`
+			Data *entities.SensorLog `json:"data"`
 		}{
 			Type: "telemetry",
 			Data: data,
@@ -272,7 +272,7 @@ func (s *FiberServer) BroadcastTelemetryData(boardID string, data *entities.Sens
 }
 
 
-func (s *FiberServer) BroadcastSensorData(data *entities.SensorData) {
+func (s *FiberServer) BroadcastSensorData(data *entities.SensorLog) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -292,7 +292,7 @@ func (s *FiberServer) BroadcastSensorData(data *entities.SensorData) {
 	}
 }
 
-func (s *FiberServer) BroadcastStatus(status *entities.BoardStatus) {
+func (s *FiberServer) BroadcastStatus(status *entities.Board) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -312,57 +312,35 @@ func (s *FiberServer) BroadcastStatus(status *entities.BoardStatus) {
 	}
 }
 
-// Function to update the board status to the database
-func updateBoardStatus(boardId string, status string, db database.Database) error {
-    var boardStatus entities.BoardStatus
-    result := db.GetDb().Where("board_id = ?", boardId).First(&boardStatus)
-    
-    if result.Error != nil {
-        // Handle error if no record found
-        return result.Error
-    }
-
-    // Update the status
-    boardStatus.Status = status
-    boardStatus.UpdatedAt = time.Now() // Store the last update time
-    if err := db.GetDb().Save(&boardStatus).Error; err != nil {
-        return err
-    }
-
-    log.Printf("Updated Board ID: %s to status: %s", boardId, status)
-    return nil
-}
 
 
 func (s *FiberServer) monitorBoardStatus() {
-	ticker := time.NewTicker(30 * time.Second) // Check every 30 seconds
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		<-ticker.C
-		var boards []entities.BoardStatus
-		err := s.db.GetDb().Find(&boards).Error
-		if err != nil {
+		var boards []entities.Board
+		if err := s.db.GetDb().Find(&boards).Error; err != nil {
 			log.Printf("Error checking board statuses: %v", err)
 			continue
 		}
 
 		now := time.Now()
-		for _, board := range boards {
-			if !board.LastSeen.IsZero() && now.Sub(board.LastSeen) > time.Minute && board.Status != "offline" {
-				// Mark as offline
-				board.Status = "offline"
-				board.UpdatedAt = now
-				if err := s.db.GetDb().Save(&board).Error; err != nil {
-					log.Printf("Error updating board status to offline for %s: %v", board.BoardID, err)
-					continue
+		for i := range boards {
+			board := &boards[i]
+			if board.LastSeen != nil && now.Sub(*board.LastSeen) > time.Minute {
+				if board.BoardStatus == nil || *board.BoardStatus != entities.BoardStatusInactive {
+					inactiveStatus := entities.BoardStatusInactive
+					board.BoardStatus = &inactiveStatus
+					if err := s.db.GetDb().Save(board).Error; err != nil {
+						log.Printf("Error updating board status to offline for %s: %v", board.BoardID, err)
+						continue
+					}
+					log.Printf("Marked board %s as OFFLINE", board.BoardID)
+					s.BroadcastStatus(board)
 				}
-				log.Printf("Marked board %s as OFFLINE", board.BoardID)
-			
-				// Also broadcast offline status
-				s.BroadcastStatus(&board)
 			}
-			
 		}
 	}
 }

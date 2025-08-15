@@ -6,29 +6,35 @@ import (
 	"gorm.io/gorm"
 )
 
+type BoardStatusEnum string
+
+const (
+	BoardStatusActive   BoardStatusEnum = "active"
+	BoardStatusInactive BoardStatusEnum = "inactive"
+	BoardStatusDisabled BoardStatusEnum = "disabled"
+)
+
 type Board struct {
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-	BoardID           *uint  `gorm:"primaryKey;autoIncrement"`
-	SensorID		  *uint	 `gorm:"not null"`   
-	BoardName         *string    
-	BoardRegisterDate *time.Time 
-	BoardStatus       *string    
-	Sensors           Sensor  `gorm:"foreignKey:SensorID"`
+	gorm.Model
+	BoardID           string           `gorm:"unique;not null"`
+	BoardName         *string
+	BoardStatus       *BoardStatusEnum `gorm:"type:varchar(20);check:board_status IN ('active','inactive','disabled')"`
+	BoardRegisterDate *time.Time
+	LastSeen          *time.Time 
+	RunTime           *time.Time
 }
 
 type InsertBoardDto struct {
-	SensorID        uint    `json:"sensor_id"`
-	BoardName       string  `json:"board_name"`
-	BoardRegisterDate time.Time `json:"board_register_date"`
-	BoardStatus     string  `json:"board_status"`
+	BoardID   string  `json:"board_id" validate:"required"`
+	BoardName *string `json:"board_name"`
 }
 
 type BoardResponseDto struct {
-	BoardID         uint    `json:"board_id"`
-	SensorID        uint    `json:"sensor_id"`
-	BoardName       string  `json:"board_name"`
-	BoardRegisterDate time.Time `json:"board_register_date"`
-	BoardStatus     string  `json:"board_status"`
+	ID                uint             `json:"id"`       
+	BoardID           string           `json:"board_id"` 
+	BoardName         *string          `json:"board_name"`
+	BoardRegisterDate *time.Time       `json:"board_register_date"`
+	BoardStatus       *BoardStatusEnum `json:"board_status"`
+	LastSeen          *time.Time       `json:"last_seen"`
+	RunTime           *time.Time       `json:"run_time"`
 }

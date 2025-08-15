@@ -26,15 +26,13 @@ func NewBoardRelationshipRepository(db *gorm.DB) BoardRelationshipRepositoryInte
 func (r *BoardRelationshipRepository) Create(relationship *entities.BoardRelationship) (*entities.BoardRelationship, error) {
 	// --- BEGIN DIAGNOSTIC LOGGING ---
 	log.Printf("[DEBUG-REPO] Attempting to create BoardRelationship in DB. Data before GORM Create: %+v\n", relationship)
-	log.Printf("[DEBUG-REPO] Value of ConnectionID passed to GORM Create call: %d\n", relationship.ConnectionID) // <<<< CRUCIAL LOG
-	// --- END DIAGNOSTIC LOGGING ---
-
+	log.Printf("[DEBUG-REPO] Value of ConnectionID passed to GORM Create call: %d\n", relationship.ID)
 	if err := r.db.Create(relationship).Error; err != nil {
 		log.Printf("[ERROR-REPO] GORM Create failed: %v. Input data was: %+v", err, relationship) // Log GORM error
 		return nil, err
 	}
 
-	log.Printf("[DEBUG-REPO] Successfully created BoardRelationship. DB assigned ConnectionID: %d\n", relationship.ConnectionID)
+	log.Printf("[DEBUG-REPO] Successfully created BoardRelationship. DB assigned ConnectionID: %d\n", relationship.ID)
 	return relationship, nil
 }
 

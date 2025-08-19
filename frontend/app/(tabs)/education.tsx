@@ -4,10 +4,12 @@
 //education.ts in educationData in src
 //typesEducation.ts in educationData in src
 //CardEducation.tsx in Card folder inside component-v2
+// app/education/index.tsx
 import React from 'react';
 import { View, FlatList, StyleSheet, Dimensions, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import CardEducation from '../../component-v2/Card/CardEducation';
+import CardFAQ from '../../component-v2/Card/CardFAQ';
 import { EDUCATION_TOPICS } from '../../src/data/educationData';
 
 const spacing = 12;
@@ -18,8 +20,7 @@ export default function EducationIndex() {
   const router = useRouter();
 
   return (
-    <SafeAreaView>
-    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
       <FlatList
         contentContainerStyle={{ padding: spacing }}
         columnWrapperStyle={{ gap: spacing }}
@@ -35,12 +36,15 @@ export default function EducationIndex() {
           />
         )}
         ItemSeparatorComponent={() => <View style={{ height: spacing }} />}
+        ListFooterComponent={
+          <View style ={{paddingTop: 30,}}>
+          <CardFAQ
+            title="FAQs From Farmers"
+            onPress={() => router.push('/education/faqs')}
+          />
+          </View>
+        }
       />
-    </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1,} //backgroundColor: '#053f3a' }, // optional bg to match mock
-});

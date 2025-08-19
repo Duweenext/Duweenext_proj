@@ -4,6 +4,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { images } from '@/constants/images';
 import { icons } from '@/constants/icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TopBar from '@/component-v2/NavBar/TopBar';
 
 function TabIcon({
     focused,
@@ -148,6 +149,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.home} title="Home" />
                     ),
+                    header: () => <TopBar title = "Home Page" />
                 }}
             />
             <Tabs.Screen
@@ -158,7 +160,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.educate} title="Education" />
                     ),
-                    header: () => <CustomHeader title="Education" />,
+                    header: () => <TopBar title="Education" />,
                 }}
             />
             <Tabs.Screen
@@ -169,7 +171,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.sensor} title="Sensor" />
                     ),
-                    header: () => <CustomHeader title="Sensor" />,
+                    header: () => <TopBar title="Sensor" />,
                 }}
             />
             <Tabs.Screen
@@ -180,7 +182,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.setting} title="Setting" />
                     ),
-                    header: () => <CustomHeader title="Setting" />,
+                    header: () => <TopBar title="Setting" />,
                 }}
             />
         </Tabs>

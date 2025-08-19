@@ -23,6 +23,8 @@ const CardEducation: React.FC<Props> = ({ title, icon, onPress, style }) => {
   // inline base styles
   const baseCardStyle: ViewStyle = {
     backgroundColor: themeStyle.colors.white,
+    width: 12,
+    height: 200,
     borderWidth: 1,
     borderColor: themeStyle.colors.primary,
     borderRadius: 12,
@@ -41,6 +43,7 @@ const CardEducation: React.FC<Props> = ({ title, icon, onPress, style }) => {
   };
 
   return (
+    
     <Container style={[baseCardStyle, style]} onPress={onPress}>
       <View style={{ marginBottom: 12 }}>
         <Image

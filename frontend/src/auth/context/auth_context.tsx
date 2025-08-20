@@ -1,6 +1,8 @@
 import {useStorageState}  from "@/src/storage/useSecureStore";
 import React, { createContext, useContext, useEffect, type PropsWithChildren } from "react";
 import { useRouter, useSegments } from "expo-router";
+import { isTokenExpired, getUserFromToken, willTokenExpireSoon, getTokenInfo } from "@/src/utils/jwtUtils";
+import axiosInstance from "@/src/api/apiManager";
 
 type User = {
     id: string;
@@ -9,14 +11,13 @@ type User = {
     // Add other user properties as needed
 };
 
-type AuthContextType = {
-    login: (token: string, user?: User) => Promise<void>;
-    logout: () => Promise<void>;
-    session?: string | null;
-    user?: User | null;
+interface AuthContextType {
+    user: User | null;
+    token: string | null;
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => void;
     isLoading: boolean;
-    isAuthenticated: boolean;
-};
+}
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -26,10 +27,37 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const router = useRouter();
     const segments = useSegments();
 
-    const login = async (token: string, userData?: User) => {
-        setSession(token);
-        if (userData) {
-            setUser(JSON.stringify(userData));
+    const login = async (email: string, password: string) => {
+        try {
+            // Call your Go backend login endpoint
+            const response = await axiosInstance.post('/visit/login', {
+                email,
+                password
+            });
+
+            const { token, user: userData } = response.data;
+
+            // Validate JWT token before storing
+            if (isTokenExpired(token)) {
+                throw new Error('Token is expired');
+            }
+            
+            setSession(token);
+            
+            // Store user data from backend response
+            if (userData) {
+                const userToStore = {
+                    id: userData.id.toString(),
+                    email: userData.email,
+                    name: userData.username
+                };
+                setUser(JSON.stringify(userToStore));
+            }
+            
+            console.log('JWT login successful, token stored');
+        } catch (error: any) {
+            console.error('Login failed:', error);
+            throw new Error(error.response?.data?.error || error.message || 'Login failed');
         }
     };
 
@@ -38,8 +66,40 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setUser(null);
     };
 
-    const isAuthenticated = !!session;
+    // Check if session exists and is not expired
+    const isAuthenticated = !!session && !isTokenExpired(session);
     const isFullyLoaded = !isLoading && !isUserLoading;
+    
+    // Set up axios interceptor to include JWT token
+    useEffect(() => {
+        if (session && !isTokenExpired(session)) {
+            axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${session}`;
+        } else {
+            delete axiosInstance.defaults.headers.common['Authorization'];
+        }
+    }, [session]);
+    
+    // Auto-logout on token expiration
+    useEffect(() => {
+        if (session && isTokenExpired(session)) {
+            console.log('JWT token expired, logging out');
+            logout();
+        }
+    }, [session]);
+    
+    // Optional: Check for token expiration periodically
+    useEffect(() => {
+        if (!session) return;
+        
+        const interval = setInterval(() => {
+            if (willTokenExpireSoon(session, 5)) {
+                console.log('JWT token will expire soon');
+                // You could trigger a refresh here if you implement refresh tokens
+            }
+        }, 60000); // Check every minute
+        
+        return () => clearInterval(interval);
+    }, [session]);
 
     // Route protection logic
     // useEffect(() => {
@@ -65,15 +125,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     const parsedUser = user ? JSON.parse(user) : null;
 
+    // Debug function to check token info
+    const getTokenInfoDebug = () => {
+        if (!session) return { error: 'No token available' };
+        return getTokenInfo(session);
+    };
+
     return (
         <AuthContext.Provider
             value={{
+                user: parsedUser,
+                token: session,
                 login,
                 logout,
-                session,
-                user: parsedUser,
                 isLoading: isFullyLoaded ? false : true,
-                isAuthenticated,
             }}>
             {children}
         </AuthContext.Provider>

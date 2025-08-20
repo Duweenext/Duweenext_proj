@@ -83,7 +83,7 @@ const WelcomeScreen: React.FC = () => {
               borderColor={themeStyle.colors.white}
               textColor={themeStyle.colors.white}
               width={230}
-              onPress={() => router.push('/auth/signup')}
+              onPress={() => router.push('/(auth)/signup')}
             />
           </Animated.View>
 
@@ -93,7 +93,7 @@ const WelcomeScreen: React.FC = () => {
               filledColor={themeStyle.colors.white}
               textColor={themeStyle.colors.black}
               width={230}
-              onPress={() => router.push('/auth/login')}
+              onPress={() => router.push('/(auth)/login')}
             />
           </Animated.View>
 

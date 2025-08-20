@@ -11,6 +11,7 @@ import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrim
 // Data
 import { mockBoards, formatRunningTime, type ExtendedBoardData } from '@/component-v2/Screens/mockBoardData';
 import { useTranslation } from 'react-i18next';
+import TopBar from '@/component-v2/NavBar/TopBar';
 
 // Main Sensor Screen
 const SensorScreen = () => {
@@ -46,11 +47,8 @@ const SensorScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-
+      <TopBar title='Sensor Center' />
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      
-      {/* Header */}
-      {/* <SensorCenterHeader onBackPress={handleBackPress} /> */}
       
       {/* Main Content */}
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>

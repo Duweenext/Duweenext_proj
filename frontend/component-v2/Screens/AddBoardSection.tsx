@@ -7,6 +7,7 @@ import BleConfigModal from '@/component-v2/Modals/bleModal';
 import WifiConfigModal from '../Modals/wificonfigModal';
 import { useBoard } from '@/src/api/useBoard';
 import { useBle } from '@/src/ble/useBle.native';
+import ConnectionPasswordModal from '../Modals/connectionPasswordModal';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -17,12 +18,12 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   onSelectBLE,
   onManualSubmit
 }) => {
-  const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "">("");
+  const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "connect-pass" | "">("");
   const { loading, verifyBoardInformation, setConnectionPassword } = useBoard();
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
-  const {provisionWifi} = useBle();
+  const { provisionWifi } = useBle();
 
   const handleAddBoard = () => {
     setModalVisible("option");
@@ -43,7 +44,6 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   };
 
   const handleManualSubmit = (boardId: string) => {
-    // setManualModalVisible(false);
     setModalVisible("");
     onManualSubmit?.(boardId);
   };
@@ -56,9 +56,12 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   };
 
   const handleConnectBoard = async (boardId: string) => {
+    console.log("Connecting to board:", boardId);
     const res = await verifyBoardInformation(
-      boardId as unknown as number
+      boardId as string
     );
+
+    console.log("Board verification result:", res);
 
     if (res) {
       setSelectedBoardId(boardId);
@@ -70,32 +73,36 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   }
 
   const handleWifiSubmit = async (values: {
-  ssid: string;
-  wifiPassword: string;
-  connectionPassword: string;
-}) => {
-  if (!selectedBoardId) return;
-  setWifiSubmitting(true);
-  try {
+    ssid: string;
+    wifiPassword: string;
+    connectionPassword: string;
+  }) => {
+    if (!selectedBoardId) return;
+    setWifiSubmitting(true);
+    try {
 
-    await provisionWifi(selectedBoardId, {
-      ssid: values.ssid,
-      wifiPassword: values.wifiPassword,
-    });
+      await provisionWifi(selectedBoardId, {
+        ssid: values.ssid,
+        wifiPassword: values.wifiPassword,
+      });
 
-    await setConnectionPassword({ 
-      connectionPassword: values.connectionPassword, 
-      selectedBoardId: selectedBoardId
-    });
+      await setConnectionPassword({
+        connectionPassword: values.connectionPassword,
+        selectedBoardId: selectedBoardId
+      });
 
-    setModalVisible("");
-    onSelectDevice?.(selectedBoardId);
-  } catch (err) {
-    console.warn("Provisioning/Pairing failed:", err);
-  } finally {
-    setWifiSubmitting(false);
+      setModalVisible("");
+      onSelectDevice?.(selectedBoardId);
+    } catch (err) {
+      console.warn("Provisioning/Pairing failed:", err);
+    } finally {
+      setWifiSubmitting(false);
+    }
   }
-}
+
+  const handleSubmitConnectionPassword = () => {
+
+  }
 
   console.log(modalVisible);
 
@@ -140,6 +147,13 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         onSubmit={handleWifiSubmit}
         boardId={selectedBoardId}
         submitting={wifiSubmitting}
+      />
+
+      <ConnectionPasswordModal
+        visible={modalVisible === "connect-pass"}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitConnectionPassword}
+        boardId={selectedBoardId}
       />
     </View>
   );

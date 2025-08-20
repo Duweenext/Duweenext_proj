@@ -18,6 +18,7 @@ import { CardBoardModal } from "@/component-v2/Card/CardBoardModal";
 import { theme } from "@/theme";
 import LoadingSpinner from "../Others/LoadingIndicator";
 import { useBle } from "@/src/ble/useBle.native";
+import { convertBleDeviceId } from "@/src/utils/bleUtils";
 
 type BleConfigModalProp = {
   visible: boolean;
@@ -49,9 +50,26 @@ const BleConfigModal = ({
   const { isScanning, devices, startScan, stopScan, connect } = useBle();
 
   useEffect(() => {
-    if (visible && !wifiModalVisible) startScan();
+    if (visible && !wifiModalVisible) {
+      console.log('Starting BLE scan...');
+      startScan();
+    }
     return () => stopScan();
   }, [visible]);
+
+  // Debug: Log devices when they change
+  useEffect(() => {
+    console.log('BLE devices found:', Object.keys(devices).length);
+    Object.values(devices).forEach((device: any) => {
+      const normalizedId = convertBleDeviceId(device.id);
+      console.log('Device:', {
+        name: device.name,
+        originalId: device.id,
+        normalizedId: normalizedId,
+        rssi: device.rssi
+      });
+    });
+  }, [devices]);
 
   const data: DeviceRow[] = useMemo(() => {
     const arr = Object.values(devices) as DeviceRow[];
@@ -67,15 +85,20 @@ const BleConfigModal = ({
 
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<DeviceRow>) => (
-      <View style={styles.card_container}>
-        <CardBoardModal
-          onConnect={() => handleConnectBoard(item.id)}
-          name={item.name || "Unknown"}
-          uuid={item.id}
-        />
-      </View>
-    ),
+    ({ item }: ListRenderItemInfo<DeviceRow>) => {
+      // Convert the BLE device ID to the expected format
+      const normalizedId = convertBleDeviceId(item.id);
+      
+      return (
+        <View style={styles.card_container}>
+          <CardBoardModal
+            onConnect={() => handleConnectBoard(normalizedId)} // Use normalized ID
+            name={item.name || "Unknown"}
+            uuid={item.id} // Keep original for display
+          />
+        </View>
+      );
+    },
     [handleConnectBoard]
   );
 

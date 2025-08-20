@@ -17,7 +17,7 @@ interface Sensor {
   isConnected: boolean;
 }
 
-interface MeasurementDashboardProps {}
+interface MeasurementDashboardProps { }
 
 const { width, height } = Dimensions.get('window');
 
@@ -38,6 +38,8 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
     { id: 'ec', name: 'EC sensor', isConnected: true },
   ]);
 
+  const [isMeasureCurrent, setIsMeasureCurrent] = useState<boolean>(true);
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleMeasureAgain = async (): Promise<void> => {
@@ -51,6 +53,8 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
       });
       setIsLoading(false);
     }, 2000);
+
+    setIsMeasureCurrent(false)
   };
 
   const handleSensorToggle = (sensorId: string): void => {
@@ -77,25 +81,40 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
         <Text style={styles.sectionTitle}>Measurement</Text>
 
         {/* Measurement Card */}
-        <View style={styles.measurementCard}>
           {/* Measurement Values */}
-          <View style={[styles.measurementRow, { gap: gaugeGap }]}>
-            <HalfCircleGauge title="pH" value={measurementData.ph} unit="" min={4} max={9} extraHorizontalPadding={theme.spacing.md * 2}/>
-            <HalfCircleGauge title="Temperature" value={measurementData.temperature} unit="°C" min={0} max={50} extraHorizontalPadding={theme.spacing.md * 2}/>
-            <HalfCircleGauge title="EC" value={measurementData.ec} unit="ms/cm" min={0} max={500} extraHorizontalPadding={theme.spacing.md * 2}/>
-          </View>
+          {isMeasureCurrent ?
+            <View style={styles.measurementCard}>
+              <ButtonModalL
+                text="Measuring"
+                onPress={handleMeasureAgain}
+                filledColor={theme.colors.white}
+                textColor={theme.colors.black}
+                // borderColor={theme.colors.primary}
+                marginBottom={3}
+                size='3XL'
+              />
+            </View>
+            :
+            (
+              <View style={styles.measurementCard}>
+                <View style={[styles.measurementRow, { gap: gaugeGap }]}>
+                  <HalfCircleGauge title="pH" value={measurementData.ph} unit="" min={4} max={9} extraHorizontalPadding={theme.spacing.md * 2} />
+                  <HalfCircleGauge title="Temperature" value={measurementData.temperature} unit="°C" min={0} max={50} extraHorizontalPadding={theme.spacing.md * 2} />
+                  <HalfCircleGauge title="EC" value={measurementData.ec} unit="ms/cm" min={0} max={500} extraHorizontalPadding={theme.spacing.md * 2} />
+                </View>
+                <ButtonModalL
+                  text={isLoading ? "Measuring..." :"Measuring Again"}
+                  onPress={() => setIsMeasureCurrent(false)}
+                  filledColor={theme.colors.primary}
+                  textColor={theme.colors.white}
+                  // borderColor={theme.colors.primary}
+                  marginBottom={3}
+                // You can add more props as needed
+                />
+              </View>
+            )
 
-          {/* Measure Again Button */}
-          <ButtonModalL
-            text={isLoading ? "Measuring..." : "Measure Again"}
-            onPress={handleMeasureAgain}
-            filledColor={theme.colors.primary}
-            textColor={theme.colors.white}
-            // borderColor={theme.colors.primary}
-            marginBottom={3}
-            // You can add more props as needed
-          />
-        </View>
+          }
 
         {/* Sensors Section */}
         <View style={styles.section}>

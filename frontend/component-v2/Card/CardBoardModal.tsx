@@ -2,6 +2,7 @@ import * as React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import ButtonCard from "../Buttons/ButtonCard";
 import { theme } from "@/theme";
+import { getDisplayMacAddress, convertBleDeviceId } from "@/src/utils/bleUtils";
 
 interface DeviceCardProps {
   name: string;
@@ -15,13 +16,23 @@ export const CardBoardModal: React.FC<DeviceCardProps> = ({
   uuid,
   onConnect,
 }) => {
-  console.log("CardBoardModal rendering:", { name, uuid });
+  // Convert UUID for display and comparison
+  const displayUuid = getDisplayMacAddress(uuid);
+  const normalizedUuid = convertBleDeviceId(uuid);
+  
+  console.log("CardBoardModal rendering:", { 
+    name, 
+    originalUuid: uuid,
+    displayUuid,
+    normalizedUuid
+  });
   
   return (
     <View style={styles.container}>
       <View style={styles.infoSection}>
         <Text style={styles.name}>{name}</Text>
-        <Text style={styles.uuid}>UUID: {uuid}</Text>
+        <Text style={styles.uuid}>UUID: {displayUuid}</Text>
+        <Text style={styles.normalizedUuid}>ID: {normalizedUuid}</Text>
       </View>
       <View style={styles.buttonWrapper}>
         <ButtonCard
@@ -46,9 +57,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2, // Android shadow
-    paddingVertical: 12, // py-3
-    paddingHorizontal: 16, // px-4
+    elevation: 2, 
+    paddingVertical: 12, 
+    paddingHorizontal: 16, 
     width: "100%",
     minHeight: 80,
   },
@@ -65,6 +76,12 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.data_text, // text-sm
     fontFamily: theme.fontFamily.regular,
     color: "black",
+    marginBottom: 4,
+  },
+  normalizedUuid: {
+    fontSize: theme.fontSize.data_text, // text-sm
+    fontFamily: theme.fontFamily.regular,
+    color: "#666",
     marginBottom: 8,
   },
   buttonWrapper: {

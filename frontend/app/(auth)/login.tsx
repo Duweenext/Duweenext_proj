@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, SafeAreaView, StatusBar, Alert, ImageBackground } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/src/auth/context/auth_context';
 
 import { themeStyle } from '@/src/theme';
 import { images } from '@/constants/images';
@@ -13,12 +14,12 @@ import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
 
-// simple email check so we can prefill initialEmail if present
 const looksLikeEmail = (s: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
 
 const Login: React.FC = () => {
   const router = useRouter();
+  const { login, isLoading } = useAuth();
 
   const [identifier, setIdentifier] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -28,21 +29,31 @@ const Login: React.FC = () => {
 
   const [forgotOpen, setForgotOpen] = React.useState(false);
 
-  // In your login.tsx file, update the onLogin function:
-  const onLogin = () => {
-    // console.log('Login attempt:', { identifier, password });
+  const onLogin = async () => {
     setIdError(undefined);
     setPwdError(undefined);
 
-    if (!identifier.trim()) setIdError('Required');
-    if (!password.trim()) setPwdError('Required');
-    if (!identifier.trim() || !password.trim()) return;
+    // Validate email format
+    if (!identifier.trim()) {
+      setIdError('Email is required');
+      return;
+    }
+    if (!looksLikeEmail(identifier)) {
+      setIdError('Please enter a valid email address');
+      return;
+    }
+    if (!password.trim()) {
+      setPwdError('Password is required');
+      return;
+    }
+
     try {
+      await login(identifier, password);
       router.replace('/');
-      console.log('Navigation called successfully');
+      console.log('Login successful, navigating to home');
     } catch (error: any) {
-      console.error('Navigation error:', error);
-      Alert.alert('Navigation Error', `Failed to navigate: ${error.message}`);
+      console.error('Login failed:', error);
+      Alert.alert('Login Failed', error.message || 'Please check your credentials and try again.');
     }
   };
 
@@ -116,12 +127,13 @@ const Login: React.FC = () => {
             style={{ alignItems: 'center', marginTop: 80 }}
           >
             <ButtonPrimary
-              text="Login"
+              text={isLoading ? "Logging in..." : "Login"}
               filledColor={themeStyle.colors.primary}
               borderColor={themeStyle.colors.white}
               textColor={themeStyle.colors.white}
               width={230}
               onPress={onLogin}
+              disabled={isLoading}
             />
           </Animated.View>
 

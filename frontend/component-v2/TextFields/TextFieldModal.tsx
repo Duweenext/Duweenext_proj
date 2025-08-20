@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { themeStyle } from '../../src/theme';
 import { validateText } from '../../src/utlis/input';
 import { Eye, EyeOff } from 'lucide-react-native';
@@ -20,9 +20,7 @@ type Props = {
   confirmAgainst?: string;
   oldPasswordError?: string;
   secureToggle?: boolean;
-  /** NEW: where to show error text relative to the input (default 'below') */
   errorPlacement?: ErrorPlacement;
-  /** NEW: allow parent to force an error string for this field */
   externalError?: string;
 };
 
@@ -47,7 +45,7 @@ const getStrength = (pwd: string) => {
 
   if (score <= 2) return { label: 'Weak',   color: themeStyle.colors.fail,    ratio };
   if (score <= 4) return { label: 'Medium', color: themeStyle.colors.warning, ratio };
-  return            { label: 'Strong', color: themeStyle.colors.success, ratio };
+  return          { label: 'Strong', color: themeStyle.colors.success, ratio };
 };
 
 const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -89,13 +87,12 @@ const TextFieldModal: React.FC<Props> = ({
     onChangeText(text);
   };
 
-  // derive internal error
   let liveError = '';
   if (mode === 'text') {
     if (inputKind === 'email') {
       liveError = value && !isValidEmail(value.trim()) ? 'Invalid email address' : '';
     } else if (inputKind === 'letters') {
-      liveError = ''; // sanitized; parent can require non-empty
+      liveError = '';
     } else {
       liveError = validateText(value) || '';
     }
@@ -121,7 +118,6 @@ const TextFieldModal: React.FC<Props> = ({
   const resolvedBorderColor =
     computedError ? themeStyle.colors.fail : (borderColor ?? themeStyle.colors.primary);
 
-  // small strength bar (kept below input)
   const StrengthBar = () =>
     mode === 'password-new' && strength.label ? (
       <>
@@ -149,7 +145,6 @@ const TextFieldModal: React.FC<Props> = ({
       </>
     ) : null;
 
-  // reusable error text
   const ErrorText = () =>
     computedError ? (
       <Text
@@ -180,7 +175,6 @@ const TextFieldModal: React.FC<Props> = ({
         </Text>
       )}
 
-      {/* error ABOVE input */}
       {errorPlacement === 'above' ? <ErrorText /> : null}
 
       <View style={{ position: 'relative' }}>
@@ -226,10 +220,8 @@ const TextFieldModal: React.FC<Props> = ({
         )}
       </View>
 
-      {/* error BELOW input */}
       {errorPlacement === 'below' ? <ErrorText /> : null}
 
-      {/* strength meter always below input */}
       <StrengthBar />
     </View>
   );

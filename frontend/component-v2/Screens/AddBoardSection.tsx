@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AddBoardModal from '@/component-v2/Modals/AddBoardModal';
 import ManualAddBoardModal from '@/component-v2/Modals/ManualAddBoardModal';
@@ -23,13 +23,11 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     loading, 
     verifyBoardInformation, 
     setConnectionPassword, 
-    // verifyConnectionPassword 
-  } 
-    = useBoard();
+  } = useBoard();
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
-  const {provisionWifi} = useBle();
+  const { provisionWifi } = useBle();
 
   const handleAddBoard = () => {
     setModalVisible("option");
@@ -41,7 +39,6 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
 
   const handleManualSelect = () => {
     setModalVisible("manual");
-    // setManualModalVisible(true);
   };
 
   const handleBLESelect = () => {
@@ -50,12 +47,12 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   };
 
   const handleManualSubmit = (boardId: string) => {
-    // setManualModalVisible(false);
     setModalVisible("");
     onManualSubmit?.(boardId);
   };
 
   const onSelectDevice = (boardId: string) => {
+    // This function can be used to refresh the board list after successful pairing
   }
 
   const handleWifiConfigModal = () => {
@@ -63,54 +60,52 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   };
 
   const handleConnectBoard = async (boardId: string) => {
-    console.log("Connecting to board:", boardId);
-    const res = await verifyBoardInformation(
-      boardId as string
-    );
+    setSelectedBoardId(boardId); // Set the board ID first
+    try {
+      const res = await verifyBoardInformation(boardId);
+      
+      setIsBoardExist(!!res); 
 
-    console.log("Board verification result:", res);
-
-    setIsBoardExist(!!res);
-    handleWifiConfigModal();
+      console.log(isBoardExist)
+      
+      handleWifiConfigModal(); // Proceed to Wi-Fi config in both cases
+    } catch (error) {
+      console.error("Board verification failed with an unexpected error:", error);
+      Alert.alert("Error", "An unexpected error occurred while verifying the board.");
+    }
   }
 
   const handleWifiSubmit = async (values: {
-  ssid: string;
-  wifiPassword: string;
-  connectionPassword: string;
-  boardModelName: string;
-  isExist: boolean;
-}) => {
-  if (!selectedBoardId) return;
-  setWifiSubmitting(true);
-  try {
-    
-    await provisionWifi(selectedBoardId, {
-      ssid: values.ssid,
-      wifiPassword: values.wifiPassword,
-    });
+    ssid: string;
+    wifiPassword: string;
+    connectionPassword: string;
+    boardModelName: string;
+    isExist: boolean;
+  }) => {
+    if (!selectedBoardId) return;
+    setWifiSubmitting(true);
+    try {
+      await provisionWifi(selectedBoardId, {
+        ssid: values.ssid,
+        wifiPassword: values.wifiPassword,
+      });
 
-    if(isBoardExist)
-    {
-      // await verifyConnectionPassword({
+      // Here you would add logic to also save the boardModelName if isExist is false
+      // For now, we just set the connection password
+      await setConnectionPassword({ 
+        connectionPassword: values.connectionPassword, 
+        selectedBoardId: selectedBoardId
+      });
 
-      // })
+      setModalVisible("");
+      onSelectDevice?.(selectedBoardId);
+    } catch (err) {
+      console.warn("Provisioning/Pairing failed:", err);
+      Alert.alert("Provisioning Failed", "Could not complete the setup process. Please try again.");
+    } finally {
+      setWifiSubmitting(false);
     }
-    await setConnectionPassword({ 
-      connectionPassword: values.connectionPassword, 
-      selectedBoardId: selectedBoardId
-    });
-
-    setModalVisible("");
-    onSelectDevice?.(selectedBoardId);
-  } catch (err) {
-    console.warn("Provisioning/Pairing failed:", err);
-  } finally {
-    setWifiSubmitting(false);
   }
-}
-
-  console.log(modalVisible);
 
   return (
     <View style={styles.container}>

@@ -25,6 +25,7 @@ const wifiSchema = z.object({
   ssid: z.string().min(1, 'Wifi name (SSID) is required'),
   wifiPassword: z.string().min(8, 'Wifi password must be at least 8 characters'),
   connectionPassword: z.string().min(1, 'Connection password is required'),
+  boardModelName: z.string(), // Optional if not needed
 });
 
 export type WifiFormData = z.infer<typeof wifiSchema>;
@@ -150,29 +151,50 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
             {errors.wifiPassword && <Text style={styles.error}>{errors.wifiPassword.message}</Text>}
 
             {/* Connection password */}
-            <Text style={[styles.label, { marginTop: 12 }]}>Connection password</Text>
-            <View style={styles.inputWrap}>
-              <Controller
-                control={control}
-                name="connectionPassword"
-                render={({ field: { onChange, value } }) => (
-                  <TextFieldModal
-                    onChangeText={onChange}
-                    value={value}
-                    placeholder="Enter Wifi password"
-                    borderColor={theme.colors.black}
-                  />
-                )}
-              />
-              <TouchableOpacity
-                onPress={() => setShowConn((s) => !s)}
-                style={styles.eyeBtn}
-                accessibilityRole="button"
-                accessibilityLabel={showConn ? 'Hide Connection password' : 'Show Connection password'}
-              >
-                <Ionicons name={showConn ? 'eye-off' : 'eye'} size={22} color="#6B7280" />
-              </TouchableOpacity>
+           
+            {!isBoardIdExists && 
+            <View>
+              <Text style={[styles.label, { marginTop: 12 }]}>Connection password</Text>
+              <View style={styles.inputWrap}>
+                <Controller
+                  control={control}
+                  name="connectionPassword"
+                  render={({ field: { onChange, value } }) => (
+                    <TextFieldModal
+                      onChangeText={onChange}
+                      value={value}
+                      placeholder="Enter Connection password"
+                      borderColor={theme.colors.black}
+                    />
+                  )}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConn((s) => !s)}
+                  style={styles.eyeBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={showConn ? 'Hide Connection password' : 'Show Connection password'}
+                >
+                  <Ionicons name={showConn ? 'eye-off' : 'eye'} size={22} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={[styles.label, { marginTop: 12 }]}>Board name</Text>
+              <View style={styles.inputWrap}>
+                <Controller
+                  control={control}
+                  name="boardModelName"
+                  render={({ field: { onChange, value } }) => (
+                    <TextFieldModal
+                      onChangeText={onChange}
+                      value={value}
+                      placeholder="Enter Board Model Name"
+                      borderColor={theme.colors.black}
+                    />
+                  )}
+                />
+              </View>
             </View>
+            }
             {errors.connectionPassword && (
               <Text style={styles.error}>{errors.connectionPassword.message}</Text>
             )}

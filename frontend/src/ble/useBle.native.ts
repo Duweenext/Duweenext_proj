@@ -259,7 +259,6 @@ export function useBle() {
         );
       }
 
-      // ✅ Only Wi-Fi creds go over BLE
       const payload = JSON.stringify({
         ssid: creds.ssid,
         pass: creds.wifiPassword,

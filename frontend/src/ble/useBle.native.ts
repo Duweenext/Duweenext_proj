@@ -31,7 +31,7 @@ export function useBle() {
   useEffect(() => {
     const ble: BleManager | null = _bleManager;
     if (!ble) return;
-    const sub = ble.onStateChange(() => {}, true);
+    const sub = ble.onStateChange(() => { }, true);
     return () => {
       sub.remove();
       ble.stopDeviceScan();
@@ -51,7 +51,7 @@ export function useBle() {
     ble.startDeviceScan(serviceUuids ?? null, { allowDuplicates: true }, (error, device) => {
       if (error || !device) return;
       if (!device.name || !device.name.toLowerCase().startsWith("iotbox-")) return;
-      
+
       setDevices(prev => ({
         ...prev,
         [device.id]: { id: device.id, name: device.name, rssi: device.rssi },
@@ -112,13 +112,20 @@ export function useBle() {
     let dev: Device | null = null;
     let sub: Subscription | undefined;
     try {
-      const isConnected = await ble.isDeviceConnected(deviceId);
+      const connectionId = Platform.OS === 'android'
+        ? deviceId.replace(/:/g, '').toUpperCase() // Remove colons for Android
+        : deviceId; // Keep original format for iOS
+
+      console.log("🔍 Board ID verification - Original Device Id:", deviceId);
+      console.log("🔍 Board ID verification - Connection Device Id:", connectionId);
+
+      const isConnected = await ble.isDeviceConnected(connectionId);
       if (isConnected) {
-        await ble.cancelDeviceConnection(deviceId);
-        await new Promise(resolve => setTimeout(resolve, 500)); 
+        await ble.cancelDeviceConnection(connectionId);
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      dev = await ble.connectToDevice(deviceId, {
+      dev = await ble.connectToDevice(connectionId, {
         autoConnect: false,
         timeout: 10_000,
         requestMTU: Platform.OS === 'android' ? ANDROID_TARGET_MTU : undefined,
@@ -128,7 +135,7 @@ export function useBle() {
       let ackResolve: ((v: boolean) => void) | null = null;
       let ackReject: ((e: any) => void) | null = null;
       const ackPromise = new Promise<boolean>((res, rej) => { ackResolve = res; ackReject = rej; });
-      
+
       sub = dev.monitorCharacteristicForService(PROV_SERVICE_UUID, STATUS_CHAR_UUID, (error, ch) => {
         if (error) return ackReject?.(error);
         if (!ch?.value) return;

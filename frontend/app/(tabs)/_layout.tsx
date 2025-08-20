@@ -185,6 +185,17 @@ const _Layout = () => {
                     header: () => <TopBar title="Setting" />,
                 }}
             />
+             <Tabs.Screen
+                name="notification_setting"
+                options={{
+                    title: '',
+                    headerShown: true,
+                    tabBarIcon: ({ focused }) => (
+                        <TabIcon focused={focused} icon={icons.setting} title="Setting" />
+                    ),
+                    header: () => <TopBar title="Setting" />,
+                }}
+            />
         </Tabs>
     );
 };

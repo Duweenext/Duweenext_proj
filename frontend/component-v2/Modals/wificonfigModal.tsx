@@ -19,6 +19,7 @@ import TextFieldModal from '../TextFields/TextFieldModal';
 import ButtonAddBoard from '../Buttons/ButtonAddBoard';
 import ButtonModalXL from '../Buttons/ButtonModalXL';
 import ButtonModalL from '../Buttons/ButtonModalL';
+import { WifiConfig } from '@/src/interfaces/wifi';
 
 const wifiSchema = z.object({
   ssid: z.string().min(1, 'Wifi name (SSID) is required'),
@@ -31,7 +32,7 @@ export type WifiFormData = z.infer<typeof wifiSchema>;
 interface WifiConfigModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: WifiFormData) => void;
+  onSubmit: (data: WifiConfig) => void;
   boardId: string;
   submitting?: boolean;
   isBoardIdExists?: boolean;
@@ -183,7 +184,14 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 textColor={theme.colors.white}
                 filledColor={theme.colors.black}
                 size='L'
-                onPress={handleSubmit(onSubmit)}
+                onPress={handleSubmit((data) => {
+                  const wifiConfig: WifiConfig = {
+                    ...data,
+                    boardModelName: boardId,
+                    isExist: isBoardIdExists,
+                  };
+                  onSubmit(wifiConfig);
+                })}
               />
             </View>
           </View>

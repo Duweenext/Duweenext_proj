@@ -31,7 +31,7 @@ export function useBle() {
   useEffect(() => {
     const ble: BleManager | null = _bleManager;
     if (!ble) return;
-    const sub = ble.onStateChange(() => {}, true);
+    const sub = ble.onStateChange(() => { }, true);
     return () => {
       sub.remove();
       ble.stopDeviceScan();
@@ -52,7 +52,7 @@ export function useBle() {
       if (error || !device) return;
       // FIX: Made the check case-insensitive to correctly find the device
       if (!device.name || !device.name.toLowerCase().startsWith("iotbox-")) return;
-      
+
       setDevices(prev => ({
         ...prev,
         [device.id]: { id: device.id, name: device.name, rssi: device.rssi },
@@ -75,15 +75,49 @@ export function useBle() {
     const ble: BleManager | null = _bleManager;
     if (!ble) return null;
 
+    console.log("Device Id : " + deviceId)
+    const connectionId = Platform.OS === 'android'
+      ? deviceId.replace(/:/g, '').toUpperCase() 
+      : deviceId;
+
+    console.log("Original Device Id:", deviceId);
+    console.log("Connection Device Id:", connectionId);
+    console.log("Platform:", Platform.OS);
+
     let device: Device | null = null;
     try {
-      device = await ble.connectToDevice(deviceId, { timeout: 10000 });
+      console.log("⚡ Connecting with ID:", connectionId);
+      device = await ble.connectToDevice(connectionId, {
+        timeout: 15000,
+        autoConnect: false // Add this for more reliable connection
+      });
+      console.log("🔍 Starting service discovery...");
       await device.discoverAllServicesAndCharacteristics();
+      console.log("✅ Service discovery completed");
+
+      const stillConnected = await device.isConnected();
+      console.log("🔗 Device still connected:", stillConnected);
+
+
+      if (!stillConnected) {
+        console.error("❌ Device disconnected during service discovery");
+        return null;
+      }
+
+      console.log("📋 Listing all services...");
+      const services = await device.services();
+      console.log("📋 Found services:", services.length);
+
+      for (const service of services) {
+        console.log(`  📄 Service: ${service.uuid} (Primary: ${service.isPrimary})`);
+      }
+
       const characteristic = await device.readCharacteristicForService(
         PROV_SERVICE_UUID,
         BOARD_ID_CHAR_UUID
       );
       if (characteristic?.value) {
+        console.log("Characteristic : " + base64ToUtf8(characteristic.value))
         return base64ToUtf8(characteristic.value);
       }
       return null;
@@ -112,7 +146,7 @@ export function useBle() {
       let ackResolve: ((v: boolean) => void) | null = null;
       let ackReject: ((e: any) => void) | null = null;
       const ackPromise = new Promise<boolean>((res, rej) => { ackResolve = res; ackReject = rej; });
-      
+
       sub = dev.monitorCharacteristicForService(PROV_SERVICE_UUID, STATUS_CHAR_UUID, (error, ch) => {
         if (error) return ackReject?.(error);
         if (!ch?.value) return;

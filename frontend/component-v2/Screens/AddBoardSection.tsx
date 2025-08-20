@@ -17,8 +17,15 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   onSelectBLE,
   onManualSubmit
 }) => {
+  const [isBoardExist, setIsBoardExist] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "">("");
-  const { loading, verifyBoardInformation, setConnectionPassword } = useBoard();
+  const { 
+    loading, 
+    verifyBoardInformation, 
+    setConnectionPassword, 
+    // verifyConnectionPassword 
+  } 
+    = useBoard();
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
@@ -66,7 +73,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     if (res) {
       setSelectedBoardId(boardId);
       handleWifiConfigModal();
-      // handleCloseModal()
+      setIsBoardExist(res);
     } else {
       setSelectedBoardId(boardId);
     }
@@ -76,16 +83,24 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   ssid: string;
   wifiPassword: string;
   connectionPassword: string;
+  boardModelName: string;
+  isExist: boolean;
 }) => {
   if (!selectedBoardId) return;
   setWifiSubmitting(true);
   try {
-
+    
     await provisionWifi(selectedBoardId, {
       ssid: values.ssid,
       wifiPassword: values.wifiPassword,
     });
 
+    if(isBoardExist)
+    {
+      // await verifyConnectionPassword({
+
+      // })
+    }
     await setConnectionPassword({ 
       connectionPassword: values.connectionPassword, 
       selectedBoardId: selectedBoardId
@@ -143,6 +158,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         onSubmit={handleWifiSubmit}
         boardId={selectedBoardId}
         submitting={wifiSubmitting}
+        isBoardIdExists={isBoardExist}
       />
     </View>
   );

@@ -44,7 +44,6 @@ const BleConfigModal = ({
   loading = false,
 }: BleConfigModalProp) => {
   
-  // FIX: Removed 'connect' and added 'connectAndReadBoardId'
   const { isScanning, devices, startScan, stopScan, connectAndReadBoardId } = useBle();
 
   useEffect(() => {
@@ -67,6 +66,7 @@ const BleConfigModal = ({
   const onDeviceSelected = useCallback(async (deviceId: string) => {
     try {
       const boardIdFromChar = await connectAndReadBoardId(deviceId);
+      console.log("Board Id from char : " + boardIdFromChar)
       
       if (boardIdFromChar) {
         handleConnectBoard(boardIdFromChar);

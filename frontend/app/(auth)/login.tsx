@@ -12,6 +12,7 @@ import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
 import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
+import { useLogin } from '@/src/api/useAuth';
 
 // simple email check so we can prefill initialEmail if present
 const looksLikeEmail = (s: string) =>
@@ -23,14 +24,14 @@ const Login: React.FC = () => {
   const [identifier, setIdentifier] = React.useState('');
   const [password, setPassword] = React.useState('');
 
+  const {login} = useLogin();
+
   const [idError, setIdError] = React.useState<string | undefined>();
   const [pwdError, setPwdError] = React.useState<string | undefined>();
 
   const [forgotOpen, setForgotOpen] = React.useState(false);
 
-  // In your login.tsx file, update the onLogin function:
-  const onLogin = () => {
-    // console.log('Login attempt:', { identifier, password });
+  const onLogin = async () => {
     setIdError(undefined);
     setPwdError(undefined);
 
@@ -38,7 +39,12 @@ const Login: React.FC = () => {
     if (!password.trim()) setPwdError('Required');
     if (!identifier.trim() || !password.trim()) return;
     try {
-      router.replace('/');
+      const res = await login({
+        username: identifier,
+        password
+      });
+
+      console.log('Login successful:', res);
       console.log('Navigation called successfully');
     } catch (error: any) {
       console.error('Navigation error:', error);
@@ -71,7 +77,7 @@ const Login: React.FC = () => {
           <Animated.View entering={FadeInDown.delay(80).duration(500)}>
             <TextFieldPrimary
               name="Email"
-              type="email"
+              type="text"
               placeholder="example@gmail.com"
               value={identifier}
               onChangeText={(t) => {

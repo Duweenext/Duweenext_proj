@@ -9,10 +9,10 @@
 // export default axiosInstance;
 import axios from "axios";
 
-const BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU3NTAyNjYsInVzZXJfaWQiOjl9.VFowq_8wqRXyp-Aw97eSLIza5-rsAqhaIlaSjPblVAc";
+const BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTU3ODIwMDAsInVzZXJfaWQiOjl9.POII-0mkc7fof7LXVi6luoyLXnHsHLtiLsgrXjnUZzU";
 
 const axiosInstance = axios.create({
-  baseURL: "https://ac32bf3430ad.ngrok-free.app",
+  baseURL: "https://3017d4a7d28e.ngrok-free.app",
   responseType: "json",
   headers: {
     "ngrok-skip-browser-warning": "true",

@@ -42,26 +42,26 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const isFullyLoaded = !isLoading && !isUserLoading;
 
     // Route protection logic
-    // useEffect(() => {
-    //     if (!isFullyLoaded) return;
+    useEffect(() => {
+        if (!isFullyLoaded) return;
 
-    //     const inAuthGroup = segments[0] === '(auth)';
-    //     const inTabsGroup = segments[0] === '(tabs)';
-    //     const inScreensGroup = segments[0] === '(screens)';
+        const inAuthGroup = segments[0] === '(auth)';
+        const inTabsGroup = segments[0] === '(tabs)';
+        const inScreensGroup = segments[0] === '(screens)';
         
-    //     // Define public routes that don't require authentication
-    //     const isPublicRoute = inAuthGroup || segments.length <= 0; // Root route and auth routes
+        // Define public routes that don't require authentication
+        const isPublicRoute = inAuthGroup || segments.length <= 0; // Root route and auth routes
 
-    //     if (!isAuthenticated && !isPublicRoute) {
-    //         // User is not authenticated and trying to access protected route
-    //         console.log('Redirecting to login - not authenticated');
-    //         router.replace('/(auth)/login');
-    //     } else if (isAuthenticated && inAuthGroup) {
-    //         // User is authenticated but on auth screen
-    //         console.log('Redirecting to tabs - already authenticated');
-    //         router.replace('/(tabs)');
-    //     }
-    // }, [isAuthenticated, segments, isFullyLoaded]);
+        if (!isAuthenticated && !isPublicRoute) {
+            // User is not authenticated and trying to access protected route
+            console.log('Redirecting to login - not authenticated');
+            router.replace('/(auth)/login');
+        } else if (isAuthenticated && inAuthGroup) {
+            // User is authenticated but on auth screen
+            console.log('Redirecting to tabs - already authenticated');
+            router.replace('/(tabs)');
+        }
+    }, [isAuthenticated, segments, isFullyLoaded]);
 
     const parsedUser = user ? JSON.parse(user) : null;
 

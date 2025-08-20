@@ -1,13 +1,12 @@
 // src/pond/usePondAnalysis.ts
 import * as ImagePicker from 'expo-image-picker';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Platform } from 'react-native'; // 👈 add Platform
 import * as FileSystem from 'expo-file-system';
 import { AnalysisResult, AnalysisStatus, Service } from './types';
-import { loadHistory, saveHistory } from './storage';
+import { loadHistory, saveHistory, removeHistoryItemById } from './storage';
 
 const MAX_FILE_MB = 8;
-const ALLOWED_MIME = ['image/jpeg', 'image/png'];
 
 export function usePondAnalysis(service: Service) {
   const [status, setStatus] = useState<AnalysisStatus>('idle');
@@ -17,20 +16,42 @@ export function usePondAnalysis(service: Service) {
   const [history, setHistory] = useState<AnalysisResult[]>([]);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // init history
-  useMemo(() => { loadHistory().then(setHistory); }, []);
+  useEffect(() => {
+    let mounted = true;
+    loadHistory().then((h) => mounted && setHistory(h));
+    return () => { mounted = false; };
+  }, []);
 
-  const validateFile = async (uri: string): Promise<boolean> => {
+  useEffect(() => () => { if (pollTimer.current) clearTimeout(pollTimer.current); }, []);
+
+  // ✅ accept generic image/* on web to avoid false "unsupported"
+  const validateAsset = async (asset: ImagePicker.ImagePickerAsset): Promise<boolean> => {
     try {
-      const info = await FileSystem.getInfoAsync(uri, { size: true });
-      if (!info.exists) return false;
-      const sizeMB = (info.size ?? 0) / (1024 * 1024);
-      if (sizeMB > MAX_FILE_MB) {
-        Alert.alert('File too large', `Please choose an image less than ${MAX_FILE_MB} MB.`);
-        return false;
+      let sizeBytes = asset.fileSize ?? null;
+      if (sizeBytes == null) {
+        const info = await FileSystem.getInfoAsync(asset.uri, { size: true });
+        if (!info.exists) return false;
+        sizeBytes = info.size ?? null;
       }
-      // On Expo we often don’t get mime easily; guard by extension as best-effort
-      if (!(uri.endsWith('.jpg') || uri.endsWith('.jpeg') || uri.endsWith('.png'))) {
+      if (sizeBytes != null) {
+        const sizeMB = sizeBytes / (1024 * 1024);
+        if (sizeMB > MAX_FILE_MB) {
+          Alert.alert('File too large', `Please choose an image smaller than ${MAX_FILE_MB} MB.`);
+          return false;
+        }
+      }
+
+      const isImage = (asset.type ?? '').toLowerCase() === 'image';
+      const mime = (asset.mimeType ?? '').toLowerCase();
+      const name = (asset.fileName ?? '').toLowerCase();
+
+      const looksLikePngOrJpg =
+        mime.includes('png') || mime.includes('jpeg') || mime.includes('jpg') ||
+        name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg');
+
+      const looksLikeAnyImage = isImage || mime.startsWith('image/');
+
+      if (!(looksLikePngOrJpg || (Platform.OS === 'web' && looksLikeAnyImage))) {
         setPlaceholder('unsupported');
         return false;
       }
@@ -43,29 +64,50 @@ export function usePondAnalysis(service: Service) {
 
   const pickFromCamera = useCallback(async () => {
     setPlaceholder('default');
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
+    const { status: camStatus } = await ImagePicker.requestCameraPermissionsAsync();
+    if (camStatus !== 'granted') {
       Alert.alert('Permission required', 'Camera permission is required to take a photo.');
       return;
     }
     const res = await ImagePicker.launchCameraAsync({
-      allowsEditing: false, quality: 0.9, exif: false,
+      allowsEditing: false,
+      quality: 0.9,
+      exif: false,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
     });
     if (res.canceled) return;
-    const uri = res.assets[0].uri;
-    if (!(await validateFile(uri))) return;
-    setImageUri(uri);
+    const asset = res.assets[0];
+    if (!(await validateAsset(asset))) return;
+    setImageUri(asset.uri);
+    setStatus('idle');
   }, []);
 
+  // ✅ request media library permission first
   const pickFromLibrary = useCallback(async () => {
     setPlaceholder('default');
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (perm.status !== 'granted') {
+      Alert.alert('Permission required', 'Photo library permission is required to choose an image.');
+      return;
+    }
     const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: false, quality: 0.9,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+      allowsMultipleSelection: false,
     });
     if (res.canceled) return;
-    const uri = res.assets[0].uri;
-    if (!(await validateFile(uri))) return;
+    const asset = res.assets[0];
+    if (!(await validateAsset(asset))) return;
+    setImageUri(asset.uri);
+    setStatus('idle');
+  }, []);
+
+  const setExternalImageUri = useCallback((uri: string) => {
+    if (!uri) return;
+    setPlaceholder('default');
     setImageUri(uri);
+    setStatus('idle');
   }, []);
 
   const resetImage = () => setImageUri(null);
@@ -76,7 +118,7 @@ export function usePondAnalysis(service: Service) {
     try {
       const job = await service.upload(imageUri);
       setStatus('processing');
-      // Polling
+
       const poll = async () => {
         const r = await service.poll(job.jobId);
         if (r.status === 'processing') {
@@ -84,10 +126,10 @@ export function usePondAnalysis(service: Service) {
           return;
         }
         if (r.status === 'failed') {
-          setStatus('error'); setPlaceholder('network');
+          setStatus('error');
+          setPlaceholder('network');
           return;
         }
-        // success
         const result: AnalysisResult = {
           id: job.jobId,
           imageUri,
@@ -99,16 +141,23 @@ export function usePondAnalysis(service: Service) {
         await saveHistory(newHistory);
         setStatus('done');
       };
+
       poll();
     } catch {
-      setStatus('error'); setPlaceholder('network');
+      setStatus('error');
+      setPlaceholder('network');
     }
   }, [imageUri, history, service]);
 
+  const removeHistoryItem = useCallback(async (id: string) => {
+    setHistory(prev => prev.filter(h => h.id !== id));
+    await removeHistoryItemById(id);
+    setLatest(prev => (prev?.id === id ? null : prev));
+  }, []);
+
   return {
-    // state
     status, placeholder, imageUri, latest, history,
-    // actions
-    pickFromCamera, pickFromLibrary, startAnalysis, resetImage,
+    pickFromCamera, pickFromLibrary, startAnalysis, resetImage, setExternalImageUri,
+    removeHistoryItem,
   };
 }

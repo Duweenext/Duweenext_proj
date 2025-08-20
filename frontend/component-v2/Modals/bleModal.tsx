@@ -2,6 +2,7 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useState, // 1. Import useState
 } from "react";
 import {
   Modal,
@@ -45,9 +46,19 @@ const BleConfigModal = ({
 }: BleConfigModalProp) => {
   
   const { isScanning, devices, startScan, stopScan, connectAndReadBoardId } = useBle();
+  // 2. Add state to track the connecting device
+  const [connectingDeviceId, setConnectingDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (visible && !wifiModalVisible) startScan();
+    if (visible && !wifiModalVisible) {
+      startScan();
+    } else {
+      stopScan();
+    }
+    // Reset connecting state when modal is closed/hidden
+    if (!visible) {
+      setConnectingDeviceId(null);
+    }
     return () => stopScan();
   }, [visible, wifiModalVisible]);
 
@@ -64,6 +75,7 @@ const BleConfigModal = ({
   }, [devices]);
 
   const onDeviceSelected = useCallback(async (deviceId: string) => {
+    setConnectingDeviceId(deviceId); // 3. Set loading state for this specific device
     try {
       const boardIdFromChar = await connectAndReadBoardId(deviceId);
       console.log("Board Id from char : " + boardIdFromChar)
@@ -76,6 +88,8 @@ const BleConfigModal = ({
     } catch (error) {
       console.error("An error occurred during connection and read:", error);
       Alert.alert("Connection Failed", "An unexpected error occurred.");
+    } finally {
+      setConnectingDeviceId(null); // 4. Clear loading state
     }
   }, [connectAndReadBoardId, handleConnectBoard]);
 
@@ -87,10 +101,12 @@ const BleConfigModal = ({
           onConnect={() => onDeviceSelected(item.id)}
           name={item.name || "Unknown"}
           uuid={item.id}
+          // 5. Pass the connecting state to the card
+          isConnecting={connectingDeviceId === item.id}
         />
       </View>
     ),
-    [onDeviceSelected]
+    [onDeviceSelected, connectingDeviceId] // Add dependency
   );
 
   return (
@@ -146,6 +162,8 @@ const BleConfigModal = ({
     </Modal>
   );
 };
+
+// ... styles are unchanged
 
 const styles = StyleSheet.create({
   overlay: {

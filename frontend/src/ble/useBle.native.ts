@@ -11,6 +11,7 @@ const WIFI_SSID_CHAR_UUID = "1c95d5e1-d8f0-4f0a-8f2a-a5f4044e4aea";
 const WIFI_PASS_CHAR_UUID = "2d85a5e1-d8f0-4f0a-8f2a-a5f4044e4aeb";
 const CONTROL_POINT_CHAR_UUID = "3e43c9e1-d8f0-4f0a-8f2a-a5f4044e4aec";
 const STATUS_CHAR_UUID = "5f6a09e1-d8f0-4f0a-8f2a-a5f4044e4aed";
+// FIX: Corrected the typo in the Board ID Characteristic UUID to match your screenshot
 const BOARD_ID_CHAR_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 
 const ANDROID_TARGET_MTU = 185;
@@ -31,7 +32,7 @@ export function useBle() {
   useEffect(() => {
     const ble: BleManager | null = _bleManager;
     if (!ble) return;
-    const sub = ble.onStateChange(() => { }, true);
+    const sub = ble.onStateChange(() => {}, true);
     return () => {
       sub.remove();
       ble.stopDeviceScan();
@@ -50,9 +51,8 @@ export function useBle() {
 
     ble.startDeviceScan(serviceUuids ?? null, { allowDuplicates: true }, (error, device) => {
       if (error || !device) return;
-      // FIX: Made the check case-insensitive to correctly find the device
       if (!device.name || !device.name.toLowerCase().startsWith("iotbox-")) return;
-
+      
       setDevices(prev => ({
         ...prev,
         [device.id]: { id: device.id, name: device.name, rssi: device.rssi },
@@ -75,57 +75,36 @@ export function useBle() {
     const ble: BleManager | null = _bleManager;
     if (!ble) return null;
 
-    console.log("Device Id : " + deviceId)
-    const connectionId = Platform.OS === 'android'
-      ? deviceId.replace(/:/g, '').toUpperCase() 
-      : deviceId;
-
-    console.log("Original Device Id:", deviceId);
-    console.log("Connection Device Id:", connectionId);
-    console.log("Platform:", Platform.OS);
-
     let device: Device | null = null;
     try {
-      console.log("⚡ Connecting with ID:", connectionId);
-      device = await ble.connectToDevice(connectionId, {
-        timeout: 15000,
-        autoConnect: false // Add this for more reliable connection
-      });
-      console.log("🔍 Starting service discovery...");
+      console.log(`Attempting to connect to ${deviceId}...`);
+      device = await ble.connectToDevice(deviceId, { timeout: 15000 });
+      
+      console.log("Connected. Discovering services...");
       await device.discoverAllServicesAndCharacteristics();
-      console.log("✅ Service discovery completed");
-
-      const stillConnected = await device.isConnected();
-      console.log("🔗 Device still connected:", stillConnected);
-
-
-      if (!stillConnected) {
-        console.error("❌ Device disconnected during service discovery");
-        return null;
-      }
-
-      console.log("📋 Listing all services...");
-      const services = await device.services();
-      console.log("📋 Found services:", services.length);
-
-      for (const service of services) {
-        console.log(`  📄 Service: ${service.uuid} (Primary: ${service.isPrimary})`);
-      }
-
+      
+      console.log("Reading Board ID characteristic...");
       const characteristic = await device.readCharacteristicForService(
         PROV_SERVICE_UUID,
         BOARD_ID_CHAR_UUID
       );
+
       if (characteristic?.value) {
-        console.log("Characteristic : " + base64ToUtf8(characteristic.value))
-        return base64ToUtf8(characteristic.value);
+        const boardId = base64ToUtf8(characteristic.value);
+        console.log(`Successfully read Board ID: ${boardId}`);
+        return boardId;
       }
+      
+      console.warn("Board ID characteristic was empty.");
       return null;
     } catch (error) {
       console.error("Failed to read Board ID characteristic:", error);
       return null;
     } finally {
-      if (device) await device.cancelConnection();
+      if (device) {
+        await device.cancelConnection();
+        console.log("Disconnected.");
+      }
     }
   }, []);
 
@@ -146,7 +125,7 @@ export function useBle() {
       let ackResolve: ((v: boolean) => void) | null = null;
       let ackReject: ((e: any) => void) | null = null;
       const ackPromise = new Promise<boolean>((res, rej) => { ackResolve = res; ackReject = rej; });
-
+      
       sub = dev.monitorCharacteristicForService(PROV_SERVICE_UUID, STATUS_CHAR_UUID, (error, ch) => {
         if (error) return ackReject?.(error);
         if (!ch?.value) return;

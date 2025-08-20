@@ -11,7 +11,6 @@ const WIFI_SSID_CHAR_UUID = "1c95d5e1-d8f0-4f0a-8f2a-a5f4044e4aea";
 const WIFI_PASS_CHAR_UUID = "2d85a5e1-d8f0-4f0a-8f2a-a5f4044e4aeb";
 const CONTROL_POINT_CHAR_UUID = "3e43c9e1-d8f0-4f0a-8f2a-a5f4044e4aec";
 const STATUS_CHAR_UUID = "5f6a09e1-d8f0-4f0a-8f2a-a5f4044e4aed";
-// FIX: Corrected the typo in the Board ID Characteristic UUID to match your screenshot
 const BOARD_ID_CHAR_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 
 const ANDROID_TARGET_MTU = 185;
@@ -77,29 +76,32 @@ export function useBle() {
 
     let device: Device | null = null;
     try {
-      console.log(`Attempting to connect to ${deviceId}...`);
+      const isConnected = await ble.isDeviceConnected(deviceId);
+      if (isConnected) {
+        await ble.cancelDeviceConnection(deviceId);
+      }
+
       device = await ble.connectToDevice(deviceId, { timeout: 15000 });
-      
-      console.log("Connected. Discovering services...");
       await device.discoverAllServicesAndCharacteristics();
-      
-      console.log("Reading Board ID characteristic...");
       const characteristic = await device.readCharacteristicForService(
         PROV_SERVICE_UUID,
         BOARD_ID_CHAR_UUID
       );
 
       if (characteristic?.value) {
-        const boardId = base64ToUtf8(characteristic.value);
-        console.log(`Successfully read Board ID: ${boardId}`);
-        return boardId;
+        return base64ToUtf8(characteristic.value);
       }
-      
-      console.warn("Board ID characteristic was empty.");
       return null;
     } catch (error) {
       console.error("Failed to read Board ID characteristic:", error);
       return null;
+    } finally {
+      if (device) {
+        const stillConnected = await device.isConnected();
+        if (stillConnected) {
+          await device.cancelConnection();
+        }
+      }
     }
   }, []);
 
@@ -110,6 +112,12 @@ export function useBle() {
     let dev: Device | null = null;
     let sub: Subscription | undefined;
     try {
+      const isConnected = await ble.isDeviceConnected(deviceId);
+      if (isConnected) {
+        await ble.cancelDeviceConnection(deviceId);
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+      }
+
       dev = await ble.connectToDevice(deviceId, {
         autoConnect: false,
         timeout: 10_000,
@@ -129,17 +137,25 @@ export function useBle() {
         else ackReject?.(new Error('Device reported Wi-Fi connection failed'));
       });
 
+      console.log("Writing SSID...");
       await dev.writeCharacteristicWithoutResponseForService(
         PROV_SERVICE_UUID,
         WIFI_SSID_CHAR_UUID,
         utf8ToBase64(creds.ssid)
       );
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      console.log("Writing Password...");
       await dev.writeCharacteristicWithoutResponseForService(
         PROV_SERVICE_UUID,
         WIFI_PASS_CHAR_UUID,
         utf8ToBase64(creds.wifiPassword)
       );
-      const connectCommand = Buffer.from([0x01]).toString('base64');
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      console.log("Writing Control Point command...");
+      // --- FIX: Changed the command from 0x01 to 0x31 (ASCII for '1') ---
+      const connectCommand = Buffer.from([0x31]).toString('base64');
       await dev.writeCharacteristicWithoutResponseForService(
         PROV_SERVICE_UUID,
         CONTROL_POINT_CHAR_UUID,

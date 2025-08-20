@@ -7,6 +7,7 @@ import BleConfigModal from '@/component-v2/Modals/bleModal';
 import WifiConfigModal from '../Modals/wificonfigModal';
 import { useBoard } from '@/src/api/useBoard';
 import { useBle } from '@/src/ble/useBle.native';
+import { WifiConfig } from '@/src/interfaces/wifi';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -24,77 +25,51 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     verifyBoardInformation, 
     setConnectionPassword, 
   } = useBoard();
+  
+  // State for the LOGICAL Board ID (from characteristic)
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
+  // FIX: Add state for the PHYSICAL MAC Address (from scan)
+  const [selectedMacAddress, setSelectedMacAddress] = useState<string>("");
+
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
   const { provisionWifi } = useBle();
 
-  const handleAddBoard = () => {
-    setModalVisible("option");
-  };
+  const handleAddBoard = () => setModalVisible("option");
+  const handleCloseModal = () => setModalVisible("");
+  const handleManualSelect = () => setModalVisible("manual");
+  const handleBLESelect = () => setModalVisible("ble");
+  const handleManualSubmit = (boardId: string) => onManualSubmit?.(boardId);
+  const onSelectDevice = (boardId: string) => { /* Can be used to refresh list */ };
+  const handleWifiConfigModal = () => setModalVisible("wifi-config");
 
-  const handleCloseModal = () => {
-    setModalVisible("");
-  };
-
-  const handleManualSelect = () => {
-    setModalVisible("manual");
-  };
-
-  const handleBLESelect = () => {
-    setModalVisible("ble");
-    onSelectBLE?.();
-  };
-
-  const handleManualSubmit = (boardId: string) => {
-    setModalVisible("");
-    onManualSubmit?.(boardId);
-  };
-
-  const onSelectDevice = (boardId: string) => {
-    // This function can be used to refresh the board list after successful pairing
-  }
-
-  const handleWifiConfigModal = () => {
-    setModalVisible("wifi-config");
-  };
-
-  const handleConnectBoard = async (boardId: string) => {
-    setSelectedBoardId(boardId); // Set the board ID first
+  // FIX: Update handler to accept both the logical ID and the MAC address
+  const handleConnectBoard = async (boardId: string, macAddress: string) => {
+    setSelectedBoardId(boardId);
+    setSelectedMacAddress(macAddress); // Store the MAC address
     try {
       const res = await verifyBoardInformation(boardId);
-      
       setIsBoardExist(!!res); 
-
-      console.log(isBoardExist)
-      
-      handleWifiConfigModal(); // Proceed to Wi-Fi config in both cases
+      handleWifiConfigModal();
     } catch (error) {
       console.error("Board verification failed with an unexpected error:", error);
       Alert.alert("Error", "An unexpected error occurred while verifying the board.");
     }
   }
 
-  const handleWifiSubmit = async (values: {
-    ssid: string;
-    wifiPassword: string;
-    connectionPassword: string;
-    boardModelName: string;
-    isExist: boolean;
-  }) => {
-    if (!selectedBoardId) return;
+  const handleWifiSubmit = async (values: WifiConfig) => {
+    // FIX: Use the stored MAC address for provisioning, not the logical ID
+    if (!selectedMacAddress) return;
     setWifiSubmitting(true);
     try {
-      await provisionWifi(selectedBoardId, {
+      await provisionWifi(selectedMacAddress, {
         ssid: values.ssid,
         wifiPassword: values.wifiPassword,
       });
 
-      // Here you would add logic to also save the boardModelName if isExist is false
-      // For now, we just set the connection password
       await setConnectionPassword({ 
         connectionPassword: values.connectionPassword, 
-        selectedBoardId: selectedBoardId
+        selectedBoardId: selectedBoardId // API still needs the logical ID
       });
 
       setModalVisible("");

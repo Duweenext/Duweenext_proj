@@ -2,7 +2,7 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-  useState, // 1. Import useState
+  useState,
 } from "react";
 import {
   Modal,
@@ -26,27 +26,26 @@ type BleConfigModalProp = {
   wifiModalVisible: boolean;
   onClose: () => void;
   onSelectDevice: (boardId: string) => void;
-  handleConnectBoard: (boardId: string) => void;
+  // This prop expects a function that receives both the logical ID and the MAC address
+  handleConnectBoard: (boardId: string, macAddress: string) => void;
   loading?: boolean;
 };
 
 type DeviceRow = {
-  id: string;
+  id: string; // This is the MAC Address on Android
   name: string | null;
   rssi?: number | null;
 };
 
-const BleConfigModal = ({
+const BleConfigModal: React.FC<BleConfigModalProp> = ({
   visible,
   wifiModalVisible,
   onClose,
-  onSelectDevice,
   handleConnectBoard,
   loading = false,
-}: BleConfigModalProp) => {
+}) => {
   
   const { isScanning, devices, startScan, stopScan, connectAndReadBoardId } = useBle();
-  // 2. Add state to track the connecting device
   const [connectingDeviceId, setConnectingDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,7 +54,6 @@ const BleConfigModal = ({
     } else {
       stopScan();
     }
-    // Reset connecting state when modal is closed/hidden
     if (!visible) {
       setConnectingDeviceId(null);
     }
@@ -64,32 +62,25 @@ const BleConfigModal = ({
 
   const data: DeviceRow[] = useMemo(() => {
     const arr = Object.values(devices) as DeviceRow[];
-    return arr.sort((a, b) => {
-      const rssiA = a.rssi ?? -9999;
-      const rssiB = b.rssi ?? -9999;
-      if (rssiA !== rssiB) return rssiB - rssiA;
-      const nameA = (a.name ?? "").toLowerCase();
-      const nameB = (b.name ?? "").toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
+    return arr.sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999));
   }, [devices]);
 
-  const onDeviceSelected = useCallback(async (deviceId: string) => {
-    setConnectingDeviceId(deviceId); // 3. Set loading state for this specific device
+  const onDeviceSelected = useCallback(async (macAddress: string) => {
+    setConnectingDeviceId(macAddress);
     try {
-      const boardIdFromChar = await connectAndReadBoardId(deviceId);
-      console.log("Board Id from char : " + boardIdFromChar)
+      // The hook uses the macAddress to connect and read the logical ID
+      const boardIdFromChar = await connectAndReadBoardId(macAddress);
       
       if (boardIdFromChar) {
-        handleConnectBoard(boardIdFromChar);
+        // Pass both the logical ID (boardIdFromChar) and the physical MAC address back
+        handleConnectBoard(boardIdFromChar, macAddress);
       } else {
         Alert.alert("Error", "Could not read the Board ID from the device. Please try again.");
       }
     } catch (error) {
-      console.error("An error occurred during connection and read:", error);
       Alert.alert("Connection Failed", "An unexpected error occurred.");
     } finally {
-      setConnectingDeviceId(null); // 4. Clear loading state
+      setConnectingDeviceId(null);
     }
   }, [connectAndReadBoardId, handleConnectBoard]);
 
@@ -100,61 +91,37 @@ const BleConfigModal = ({
         <CardBoardModal
           onConnect={() => onDeviceSelected(item.id)}
           name={item.name || "Unknown"}
-          uuid={item.id}
-          // 5. Pass the connecting state to the card
+          uuid={item.id} // The card displays the MAC address (item.id)
           isConnecting={connectingDeviceId === item.id}
         />
       </View>
     ),
-    [onDeviceSelected, connectingDeviceId] // Add dependency
+    [onDeviceSelected, connectingDeviceId]
   );
 
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      statusBarTranslucent
-      hardwareAccelerated
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
-            <Text style={styles.title}>Add board with me</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton} accessibilityRole="button">
+            <Text style={styles.title}>Add Board</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
           </View>
-
           <View style={styles.content}>
             {loading ? (
-              <View style={styles.loading_indicator_container}>
-                <LoadingSpinner size="large" color={theme.colors.primary} message="Verifying Board ID..." />
-              </View>
+              <LoadingSpinner message="Verifying Board ID..." />
             ) : (
-              <View style={styles.listSection}>
-                <Text style={styles.subtitle}>
-                  Choose the board that has the same UUID as yours
-                </Text>
-
+              <>
+                <Text style={styles.subtitle}>Select your device from the list below.</Text>
                 <FlatList
-                  style={styles.list}
-                  contentContainerStyle={styles.listContent}
                   data={data}
-                  keyExtractor={(item) => item.id}
                   renderItem={renderItem}
-                  ListEmptyComponent={
-                    <Text style={styles.empty}>
-                      {isScanning ? "Scanning for devices…" : "No devices found yet"}
-                    </Text>
-                  }
-                  keyboardShouldPersistTaps="handled"
-                  initialNumToRender={8}
-                  windowSize={5}
-                  removeClippedSubviews={Platform.OS === "android"}
+                  keyExtractor={(item) => item.id}
+                  ListEmptyComponent={<Text style={styles.empty}>{isScanning ? "Scanning..." : "No devices found."}</Text>}
                 />
-              </View>
+              </>
             )}
           </View>
         </View>
@@ -163,79 +130,53 @@ const BleConfigModal = ({
   );
 };
 
-// ... styles are unchanged
-
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: theme.colors.overlayBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalContainer: {
-    width: '94%',
-    maxWidth: 560,
-    maxHeight: '82%',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 8,
-  },
-  header: {
-    backgroundColor: '#2c5f54',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  title: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#fff',
-    fontSize: theme.fontSize.header1,
-    fontFamily: theme.fontFamily.semibold,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  listSection: {
-    flexGrow: 1,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 12,
-  },
-  list: {
-    maxHeight: 440,
-  },
-  listContent: {
-    paddingBottom: 12,
-  },
-  loading_indicator_container: {
-    paddingVertical: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card_container: {
-    marginBottom: 12,
-  },
-  empty: {
-    textAlign: 'center',
-    color: '#6b7280',
-    paddingVertical: 20,
-  },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '90%',
+        maxHeight: '80%',
+        backgroundColor: '#f8f9fa',
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    header: {
+        backgroundColor: '#2c5f54',
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    title: {
+        color: 'white',
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    closeButton: {
+        padding: 4,
+    },
+    content: {
+        padding: 16,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#6b7280',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    card_container: {
+        marginBottom: 12,
+    },
+    empty: {
+        textAlign: 'center',
+        color: '#6b7280',
+        paddingVertical: 40,
+        fontSize: 16,
+    },
 });
 
 export default BleConfigModal;

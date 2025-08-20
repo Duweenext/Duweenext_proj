@@ -186,7 +186,7 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                   render={({ field: { onChange, value } }) => (
                     <TextFieldModal
                       onChangeText={onChange}
-                      value={value}
+                      value={value || ''} 
                       placeholder="Enter Board Model Name"
                       borderColor={theme.colors.black}
                     />

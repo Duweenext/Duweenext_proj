@@ -11,7 +11,7 @@ export const useBoard = () => {
         // console.log("Did this function get called?")
 
         try {
-            const res = await axiosInstance.get("/v1/board/F4650B4A8AC4");
+            const res = await axiosInstance.get(`/v1/board/${boardId}`);
             console.log(res.data);
             // await new Promise((resolve) => setTimeout(resolve, 5000));
             return res.data;

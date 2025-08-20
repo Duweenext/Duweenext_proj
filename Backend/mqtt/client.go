@@ -83,7 +83,7 @@ func handleTelemetryMessage(client mqtt.Client, msg mqtt.Message) {
 	}
 
 	var relationshipCount int64
-	if err := db.Model(&entities.BoardRelationship{}).Where("board_id = ?", board.ID).Count(&relationshipCount).Error; err != nil {
+	if err := db.Model(&entities.BoardRelationship{}).Where("board_id = ?", board.BoardID).Count(&relationshipCount).Error; err != nil {
 		log.Printf("Error checking board relationships for board %d: %v", board.ID, err)
 		return
 	}

@@ -16,12 +16,13 @@ const (
 
 type Board struct {
 	gorm.Model
-	BoardID           string           `gorm:"unique;not null"`
-	BoardName         *string
-	BoardStatus       *BoardStatusEnum `gorm:"type:varchar(20);check:board_status IN ('active','inactive','disabled')"`
-	BoardRegisterDate *time.Time
-	LastSeen          *time.Time 
-	RunTime           *time.Time
+	BoardID            string           `gorm:"unique;not null"`
+	BoardName          *string
+	ConPassword *string          `json:"-"`
+	BoardStatus        *BoardStatusEnum `gorm:"type:varchar(20);check:board_status IN ('active','inactive','disabled')"`
+	BoardRegisterDate  *time.Time
+	LastSeen           *time.Time
+	RunTime            *time.Time
 }
 
 type InsertBoardDto struct {
@@ -30,8 +31,8 @@ type InsertBoardDto struct {
 }
 
 type BoardResponseDto struct {
-	ID                uint             `json:"id"`       
-	BoardID           string           `json:"board_id"` 
+	ID                uint             `json:"id"`
+	BoardID           string           `json:"board_id"`
 	BoardName         *string          `json:"board_name"`
 	BoardRegisterDate *time.Time       `json:"board_register_date"`
 	BoardStatus       *BoardStatusEnum `json:"board_status"`

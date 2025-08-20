@@ -10,7 +10,7 @@ export const useBoard = () => {
         setError(null);
 
         try {
-            const res = await axiosInstance.get("/v1/board/F4650B4A8AC41");
+            const res = await axiosInstance.get("/v1/board/F4650B4A8AC4");
             console.log(res.data);
             // await new Promise((resolve) => setTimeout(resolve, 5000));
             return res.data;

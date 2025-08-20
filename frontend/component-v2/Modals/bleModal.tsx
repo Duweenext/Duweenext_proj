@@ -12,6 +12,7 @@ import {
   FlatList,
   ListRenderItemInfo,
   Platform,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CardBoardModal } from "@/component-v2/Card/CardBoardModal";
@@ -29,12 +30,9 @@ type BleConfigModalProp = {
 };
 
 type DeviceRow = {
-  id: string;                  // MAC (Android) or UUID (iOS surrogate)
+  id: string;
   name: string | null;
   rssi?: number | null;
-  isConnectable?: boolean;     // expose from your BLE lib if available
-  serviceUuids?: string[];     // from advertisement
-  manufacturerId?: number;     // optional
 };
 
 const BleConfigModal = ({
@@ -46,12 +44,13 @@ const BleConfigModal = ({
   loading = false,
 }: BleConfigModalProp) => {
   
-  const { isScanning, devices, startScan, stopScan, connect } = useBle();
+  // FIX: Removed 'connect' and added 'connectAndReadBoardId'
+  const { isScanning, devices, startScan, stopScan, connectAndReadBoardId } = useBle();
 
   useEffect(() => {
     if (visible && !wifiModalVisible) startScan();
     return () => stopScan();
-  }, [visible]);
+  }, [visible, wifiModalVisible]);
 
   const data: DeviceRow[] = useMemo(() => {
     const arr = Object.values(devices) as DeviceRow[];
@@ -65,18 +64,33 @@ const BleConfigModal = ({
     });
   }, [devices]);
 
+  const onDeviceSelected = useCallback(async (deviceId: string) => {
+    try {
+      const boardIdFromChar = await connectAndReadBoardId(deviceId);
+      
+      if (boardIdFromChar) {
+        handleConnectBoard(boardIdFromChar);
+      } else {
+        Alert.alert("Error", "Could not read the Board ID from the device. Please try again.");
+      }
+    } catch (error) {
+      console.error("An error occurred during connection and read:", error);
+      Alert.alert("Connection Failed", "An unexpected error occurred.");
+    }
+  }, [connectAndReadBoardId, handleConnectBoard]);
+
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<DeviceRow>) => (
       <View style={styles.card_container}>
         <CardBoardModal
-          onConnect={() => handleConnectBoard(item.id)}
+          onConnect={() => onDeviceSelected(item.id)}
           name={item.name || "Unknown"}
           uuid={item.id}
         />
       </View>
     ),
-    [handleConnectBoard]
+    [onDeviceSelected]
   );
 
   return (
@@ -100,7 +114,7 @@ const BleConfigModal = ({
           <View style={styles.content}>
             {loading ? (
               <View style={styles.loading_indicator_container}>
-                <LoadingSpinner size="large" color={theme.colors.primary} message="Verify board Id" />
+                <LoadingSpinner size="large" color={theme.colors.primary} message="Verifying Board ID..." />
               </View>
             ) : (
               <View style={styles.listSection}>
@@ -186,7 +200,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   list: {
-    // give the list a height budget so it actually lays out within the modal
     maxHeight: 440,
   },
   listContent: {

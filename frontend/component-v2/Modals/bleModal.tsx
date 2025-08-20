@@ -48,14 +48,11 @@ const BleConfigModal = ({
   
   const { isScanning, devices, startScan, stopScan, connect } = useBle();
 
-  // Start scanning on open; stop on close/unmount
   useEffect(() => {
     if (visible && !wifiModalVisible) startScan();
     return () => stopScan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  // Flatten + sort by signal then name
   const data: DeviceRow[] = useMemo(() => {
     const arr = Object.values(devices) as DeviceRow[];
     return arr.sort((a, b) => {
@@ -68,10 +65,6 @@ const BleConfigModal = ({
     });
   }, [devices]);
 
-
-
-  // Submit from WifiConfigModal
-  
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<DeviceRow>) => (

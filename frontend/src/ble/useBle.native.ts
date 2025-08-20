@@ -22,7 +22,7 @@ const DEFAULTS = {
   SCAN_DURATION_MS: 10_000,
   ANDROID_TARGET_MTU: 185,
   CHUNK_SIZE_ANDROID: 180, // leave a few bytes below MTU
-  CHUNK_SIZE_IOS: 20,      // iOS classic GATT default
+  CHUNK_SIZE_IOS: 20,       // iOS classic GATT default
   ACK_TIMEOUT_MS: 4_000,   // only used if notify UUID provided
 };
 
@@ -55,6 +55,7 @@ export function useBle() {
     const ble: BleManager | null = _bleManager;
     if (!ble) return;
 
+
     const sub = ble.onStateChange(() => { }, true);
     return () => {
       sub.remove();
@@ -80,6 +81,13 @@ export function useBle() {
         return;
       }
       if (!device) return;
+
+      // --- CHANGE IS HERE ---
+      // Filter devices to only include those whose name starts with "IoTBox-"
+      if (!device.name || !device.name.startsWith("IoTBox-")) {
+        return; // Ignore this device and do nothing
+      }
+      // --- END OF CHANGE ---
 
       setDevices(prev => {
         const existing = prev[device.id];
@@ -297,8 +305,10 @@ export function useBle() {
     readBase64Ble,
     writeBase64Ble,
     monitor,
-    provisionWifi,         // <-- use this from your WifiConfigModal submit
+    provisionWifi,       // <-- use this from your WifiConfigModal submit
     utf8ToBase64,
     base64ToUtf8,
   };
 }
+
+

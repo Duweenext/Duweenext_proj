@@ -15,7 +15,7 @@ export const CardBoardModal: React.FC<DeviceCardProps> = ({
   uuid,
   onConnect,
 }) => {
-  console.log("CardBoardModal rendering:", { name, uuid });
+  // console.log("CardBoardModal rendering:", { name, uuid });
   
   return (
     <View style={styles.container}>

@@ -56,9 +56,12 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   };
 
   const handleConnectBoard = async (boardId: string) => {
+    console.log("Connecting to board:", boardId);
     const res = await verifyBoardInformation(
-      boardId as unknown as number
+      boardId as string
     );
+
+    console.log("Board verification result:", res);
 
     if (res) {
       setSelectedBoardId(boardId);

@@ -5,12 +5,27 @@ import (
 	"main/duckweed/repositories"
 )
 
-type BoardUseCase struct {
-	repo repositories.BoardRepository
+type BoardUseCaseInterface interface {
+	CreateBoard(dto entities.InsertBoardDto) (*entities.Board, error)
+	GetAllBoards() ([]entities.Board, error)
+	GetBoardByID(id uint) (*entities.Board, error)
+	GetBoardByBoardID(boardID string) (*entities.Board, error) 
 }
 
-func NewBoardUseCase(repo repositories.BoardRepository) *BoardUseCase {
+type BoardUseCase struct {
+	repo repositories.BoardRepositoryInterface
+}
+
+func NewBoardUseCase(repo repositories.BoardRepositoryInterface) BoardUseCaseInterface {
 	return &BoardUseCase{repo}
+}
+
+func (uc *BoardUseCase) CreateBoard(dto entities.InsertBoardDto) (*entities.Board, error) {
+	board := &entities.Board{
+		BoardID:   dto.BoardID,
+		BoardName: dto.BoardName,
+	}
+	return uc.repo.Create(board)
 }
 
 func (uc *BoardUseCase) GetAllBoards() ([]entities.Board, error) {
@@ -21,8 +36,6 @@ func (uc *BoardUseCase) GetBoardByID(id uint) (*entities.Board, error) {
 	return uc.repo.FindByID(id)
 }
 
-// func (uc *BoardUseCase) CreateBoard(board entities.Board) (*entities.Board, error) {
-// 	// Additional board creation logic can be added here
-// 	err := uc.repo.Create(board)
-// 	return &board, err
-// }
+func (uc *BoardUseCase) GetBoardByBoardID(boardID string) (*entities.Board, error) {
+	return uc.repo.FindByBoardID(boardID)
+}

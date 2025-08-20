@@ -8,6 +8,7 @@ export const useBoard = () => {
     const verifyBoardInformation = useCallback(async (boardId: string) => {
         setLoading(true);
         setError(null);
+        // console.log("Did this function get called?")
 
         try {
             const res = await axiosInstance.get("/v1/board/F4650B4A8AC4");

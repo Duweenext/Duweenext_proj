@@ -100,11 +100,6 @@ export function useBle() {
     } catch (error) {
       console.error("Failed to read Board ID characteristic:", error);
       return null;
-    } finally {
-      if (device) {
-        await device.cancelConnection();
-        console.log("Disconnected.");
-      }
     }
   }, []);
 

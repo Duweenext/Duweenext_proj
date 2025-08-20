@@ -70,13 +70,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
 
     console.log("Board verification result:", res);
 
-    if (res) {
-      setSelectedBoardId(boardId);
-      handleWifiConfigModal();
-      setIsBoardExist(res);
-    } else {
-      setSelectedBoardId(boardId);
-    }
+    setIsBoardExist(!!res);
+    handleWifiConfigModal();
   }
 
   const handleWifiSubmit = async (values: {

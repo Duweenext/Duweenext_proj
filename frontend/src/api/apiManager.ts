@@ -2,7 +2,7 @@ import axios from "axios";
 import { isTokenExpired } from "@/src/utils/jwtUtils";
 
 const axiosInstance = axios.create({
-  baseURL: "http://10.0.2.2:8080",
+  baseURL: "http://localhost:8080",
   responseType: "json",
   withCredentials: false, // CHANGED: Disable cookies, use JWT only
 });

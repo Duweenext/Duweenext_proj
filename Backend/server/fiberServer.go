@@ -91,12 +91,15 @@ func (s *FiberServer) Start() {
 	pondHealthUseCase := usecases.NewpondHealthUseCase(*pondHealthRepo)
 	educationUseCase := usecases.NewEducationUseCase(*educationRepo)
 	boardRelationshipUseCase := usecases.NewBoardRelationshipUseCase(boardRepo, boardRelationshipRepo)
+	boardUseCase := usecases.NewBoardUseCase(boardRepo)
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userUseCase)
 	pondHealthHandler := handlers.NewPondHealthHandler(pondHealthUseCase)
 	educationHandler := handlers.NewEducationHandler(educationUseCase)
 	boardRelationShipHandler := handlers.NewBoardRelationshipHandler(boardRelationshipUseCase)
+	boardHandler := handlers.NewBoardHandler(boardUseCase)
+
 
 	// Routes
 	apivisit := s.app.Group("/visit")
@@ -120,6 +123,9 @@ func (s *FiberServer) Start() {
 
 	// Board Relationship routes
 	api.Post("/board-relationships", boardRelationShipHandler.CreateBoardRelationship)
+
+	// Board routes
+	api.Get("/board/:board_id", boardHandler.GetBoardByBoardID)
 
 	// WebSocket Route
 	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)

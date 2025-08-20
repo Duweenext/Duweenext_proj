@@ -57,9 +57,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2, // Android shadow
-    paddingVertical: 12, // py-3
-    paddingHorizontal: 16, // px-4
+    elevation: 2, 
+    paddingVertical: 12, 
+    paddingHorizontal: 16, 
     width: "100%",
     minHeight: 80,
   },

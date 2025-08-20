@@ -150,7 +150,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.home} title="Home" />
                     ),
-                    header: () => <TopBar title="Home" showBackButton={false} />,
+                    header: () => <TopBar title = "Home Page" />
                 }}
             />
             <Tabs.Screen
@@ -161,7 +161,18 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.educate} title="Education" />
                     ),
-                    header: () => <TopBar title="Education" showBackButton={false}/>,
+                    header: () => <TopBar title="Education" />,
+                }}
+            />
+            <Tabs.Screen
+                name="sensor"
+                options={{
+                    title: '',
+                    headerShown: true,
+                    tabBarIcon: ({ focused }) => (
+                        <TabIcon focused={focused} icon={icons.sensor} title="Sensor" />
+                    ),
+                    header: () => <TopBar title="Sensor" />,
                 }}
             />
             <Tabs.Screen
@@ -172,7 +183,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.setting} title="Setting"/>
                     ),
-                    header: () => <TopBar title="Setting" showBackButton={false}/>,
+                    header: () => <TopBar title="Setting" />,
                 }}
             />
         </Tabs>

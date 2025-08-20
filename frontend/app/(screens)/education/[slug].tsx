@@ -47,7 +47,7 @@ export default function EducationDetail() {
           {/* Page Title */}
           <View style={{
             width: '92%',
-            alignItems: 'flex-start',
+            alignItems: 'center',
           }}>
           <Text
             style={{
@@ -56,6 +56,7 @@ export default function EducationDetail() {
               marginTop: 18,
               marginBottom: 12,
               color: themeStyle.colors.primary,
+              alignItems: 'center',
             }}
           >
             {topic.title}
@@ -64,7 +65,7 @@ export default function EducationDetail() {
           {/* Hero Icon in rounded bordered box */}
           <View
             style={{
-              width: '35%',
+              width: '45%',
               alignItems: 'center',
               paddingVertical: 16,
               borderWidth: 1,

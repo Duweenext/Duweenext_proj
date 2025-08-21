@@ -196,6 +196,17 @@ const _Layout = () => {
                     header: () => <TopBar title="Setting" />,
                 }}
             />
+            <Tabs.Screen
+                name="404_notFound"
+                options={{
+                    title: '',
+                    headerShown: true,
+                    tabBarIcon: ({ focused }) => (
+                        <TabIcon focused={focused} icon={icons.setting} title="Page Not Found" />
+                    ),
+                    header: () => <TopBar title="" />,
+                }}
+            />
         </Tabs>
     );
 };

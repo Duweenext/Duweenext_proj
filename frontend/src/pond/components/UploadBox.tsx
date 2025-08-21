@@ -20,7 +20,7 @@ export default function UploadBox({ imageUri, status, placeholder, onReset }: Pr
   return (
     <View style={{
       backgroundColor: themeStyle.colors.white, borderRadius: 10, 
-      width: '90%', height: 200, alignSelf: 'center', justifyContent: 'center',
+      width: '90%', height: 300, alignSelf: 'center', justifyContent: 'center',
     }}>
       {imageUri ? (
         <>
@@ -36,6 +36,7 @@ export default function UploadBox({ imageUri, status, placeholder, onReset }: Pr
         <Text style={{
           textAlign: 'center', color: '#c9c9c9',
           fontFamily: themeStyle.fontFamily.medium,
+          fontSize: themeStyle.fontSize.header2,
         }}>{MSG[placeholder]}</Text>
       )}
     </View>

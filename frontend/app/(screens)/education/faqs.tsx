@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { themeStyle } from '@/src/theme';
-import TopBar from '@/component-v2/NavBar/TopBar';
 import { FAQS } from '@/src/data/faqs';
+import TopBar from '@/src/component/NavBar/TopBar';
 
 export default function FAQPage() {
   const [expanded, setExpanded] = useState<string | null>(null);

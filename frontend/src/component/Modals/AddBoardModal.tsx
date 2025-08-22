@@ -1,8 +1,8 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ButtonModalXL from '@/component-v2/Buttons/ButtonModalXL';
 import { theme } from '@/theme';
+import ButtonModalXL from '../Buttons/ButtonModalXL';
 
 interface AddBoardModalProps {
     visible: boolean;

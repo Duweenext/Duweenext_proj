@@ -1,14 +1,14 @@
 import React from 'react';
 import { Linking, Image } from 'react-native';
 import { themeStyle } from '@/src/theme';
-import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
 import {
   canResend,
   requestDeleteCode,
   resendDeleteCode,
   verifyDeleteCode,
 } from '../../src/services/authService.mock';
-import ModalSuccessTemplate from '@/component-v2/Modals/ModalVerificationComplete';
+import ModalChangeInformation from '../component/Modals/ModalChangeInformation';
+import ModalSuccessTemplate from '../component/Modals/ModalVerificationComplete';
 
 type Step = 'confirm' | 'password' | 'code' | 'complete' | 'locked';
 

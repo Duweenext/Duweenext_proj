@@ -3,8 +3,8 @@ import { View, Text, Image, SafeAreaView, StatusBar, ImageBackground } from 'rea
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { themeStyle } from '@/src/theme';
-import { images } from '@/constants/images';
-import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
+import { images } from '@/src/constants/images';
+import ButtonPrimary from '@/src/component/Buttons/ButtonPrimary';
 
 const WelcomeScreen: React.FC = () => {
   const router = useRouter();
@@ -83,7 +83,7 @@ const WelcomeScreen: React.FC = () => {
               borderColor={themeStyle.colors.white}
               textColor={themeStyle.colors.white}
               width={230}
-              onPress={() => router.push('/auth/signup')}
+              onPress={() => router.push('/(auth)/signup')}
             />
           </Animated.View>
 
@@ -93,7 +93,7 @@ const WelcomeScreen: React.FC = () => {
               filledColor={themeStyle.colors.white}
               textColor={themeStyle.colors.black}
               width={230}
-              onPress={() => router.push('/auth/login')}
+              onPress={() => router.push('/(auth)/login')}
             />
           </Animated.View>
 

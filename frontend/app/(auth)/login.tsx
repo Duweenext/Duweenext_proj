@@ -5,15 +5,15 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { themeStyle } from '@/src/theme';
-import { images } from '@/constants/images';
+import { images } from '@/src/constants/images';
 
-import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
-import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
-import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
-import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
-import { useAuthentication } from '@/src/api/useAuth';
+import { useAuthentication } from '@/src/api/hooks/useAuth';
 import { useAuth } from '@/src/auth/context/auth_context';
+import TextFieldPrimary from '@/src/component/TextFields/TextFieldPrimary';
+import ButtonUnderline from '@/src/component/Buttons/ButtonUnderline';
+import ButtonPrimary from '@/src/component/Buttons/ButtonPrimary';
+import ButtonGoogle from '@/src/component/Buttons/ButtonGoogle';
 
 // simple email validation function
 const isValidEmail = (email: string) =>

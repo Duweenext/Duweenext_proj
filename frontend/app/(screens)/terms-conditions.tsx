@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import TopBar from '@/component-v2/NavBar/TopBar';
+import TopBar from '@/src/component/NavBar/TopBar';
 import { themeStyle } from '@/theme';
 
 export default function TermsConditions() {

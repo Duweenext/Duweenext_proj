@@ -6,8 +6,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SettingCard } from '../../component-v2/Card/SettingCard';
 import { theme, themeStyle } from '@/theme';
+import { SettingCard } from '@/src/component/Card/SettingCard';
 
 //const bgImage = require('@/assets/images/green-splash.jpg'); // swap to your actual image
 

@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
-import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
-import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
-import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
-import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
-import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
-import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
 import ForgotPasswordFlow from '../../src/flows/ForgotPasswordFlow';
 import DeleteAccountFlow from '../../src/flows/DeleteAccountFlow';
 import { themeStyle } from '../../src/theme';
-import TopBar from '@/component-v2/NavBar/TopBar';
+import TopBar from '@/src/component/NavBar/TopBar';
+import ModalChangeInformation from '@/src/component/Modals/ModalChangeInformation';
+import ButtonPrimary from '@/src/component/Buttons/ButtonPrimary';
+import TextFieldPrimary from '@/src/component/TextFields/TextFieldPrimary';
+import ButtonModalL from '@/src/component/Buttons/ButtonModalL';
+import ButtonUnderline from '@/src/component/Buttons/ButtonUnderline';
+import ButtonGoogle from '@/src/component/Buttons/ButtonGoogle';
 
 const TAKEN_USERNAMES = new Set(['admin', 'jane', 'john', 'taken_user']);
 const TAKEN_EMAILS = new Set(['taken@example.com', 'exists@gmail.com']);

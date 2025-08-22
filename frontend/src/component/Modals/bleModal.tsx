@@ -16,10 +16,10 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { CardBoardModal } from "@/component-v2/Card/CardBoardModal";
 import { theme } from "@/theme";
 import LoadingSpinner from "../Others/LoadingIndicator";
 import { useBle } from "@/src/ble/useBle.native";
+import { CardBoardModal } from "../Card/CardBoardModal";
 
 type BleConfigModalProp = {
   visible: boolean;

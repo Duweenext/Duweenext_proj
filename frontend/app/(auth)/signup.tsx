@@ -5,16 +5,16 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
 import { themeStyle } from '@/src/theme';
-import { images } from '@/constants/images';
+import { images } from '@/src/constants/images';
 
-import TextFieldPrimary from '@/component-v2/TextFields/TextFieldPrimary';
-import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
-import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
-import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
-import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
-import ModalVerificationComplete from '@/component-v2/Modals/ModalVerificationComplete';
 import { useAuth } from '@/src/auth/context/auth_context';
-import { useAuthentication } from '@/src/api/useAuth';
+import { useAuthentication } from '@/src/api/hooks/useAuth';
+import TextFieldPrimary from '@/src/component/TextFields/TextFieldPrimary';
+import ButtonPrimary from '@/src/component/Buttons/ButtonPrimary';
+import ButtonUnderline from '@/src/component/Buttons/ButtonUnderline';
+import ButtonGoogle from '@/src/component/Buttons/ButtonGoogle';
+import ModalChangeInformation from '@/src/component/Modals/ModalChangeInformation';
+import ModalVerificationComplete from '@/src/component/Modals/ModalVerificationComplete';
 
 const looksLikeEmail = (s?: string) =>
   !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());

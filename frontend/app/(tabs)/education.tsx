@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, Dimensions, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
-import CardEducation from '../../component-v2/Card/CardEducation';
-import CardFAQ from '../../component-v2/Card/CardFAQ';
 import { EDUCATION_TOPICS } from '../../src/data/educationData';
+import CardEducation from '@/src/component/Card/CardEducation';
+import CardFAQ from '@/src/component/Card/CardFAQ';
 
 const spacing = 12;
 const numColumns = 2;

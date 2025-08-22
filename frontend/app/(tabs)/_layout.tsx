@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, ImageBackground, Image } from 'react-native';
 import { Redirect, Tabs } from 'expo-router';
-import { images } from '@/constants/images';
-import { icons } from '@/constants/icons';
+import { images } from '@/src/constants/images';
+import { icons } from '@/src/constants/icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import TopBar from '@/component-v2/NavBar/TopBar';
+import TopBar from '@/src/component/NavBar/TopBar';
 
 function TabIcon({
     focused,

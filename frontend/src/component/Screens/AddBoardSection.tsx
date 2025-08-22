@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AddBoardModal from '@/component-v2/Modals/AddBoardModal';
-import ManualAddBoardModal from '@/component-v2/Modals/ManualAddBoardModal';
-import BleConfigModal from '@/component-v2/Modals/bleModal';
 import WifiConfigModal from '../Modals/wificonfigModal';
-import { useBoard } from '@/src/api/useBoard';
+import { useBoard } from '@/src/api/hooks/useBoard';
 import { useBle } from '@/src/ble/useBle.native';
 import { WifiConfig } from '@/src/interfaces/wifi';
+import AddBoardModal from '../Modals/AddBoardModal';
+import BleConfigModal from '../Modals/bleModal';
+import ManualAddBoardModal from '../Modals/ManualAddBoardModal';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;

@@ -2,8 +2,8 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { themeStyle } from '@/src/theme';
-import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
-import { useForgotPassword } from '../hooks/useForgotPassword';
+import ModalChangeInformation from '../component/Modals/ModalChangeInformation';
+import { useForgotPassword } from '../api/hooks/useForgotPassword';
 
 type StartStep = 'email' | 'verify' | 'reset';
 

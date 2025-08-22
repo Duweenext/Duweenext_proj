@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { ScrollView, Text, View, TouchableOpacity, StatusBar } from "react-native";
 import { router } from "expo-router";
-import TabBox from "@/component-v2/TabBox";
-import { icons } from "@/constants/icons";
+import { icons } from "@/src/constants/icons";
 import { useTranslation } from "react-i18next";
+import TabBox from "@/src/component/TabBox";
 
 
 

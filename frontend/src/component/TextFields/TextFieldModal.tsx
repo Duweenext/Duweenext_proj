@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { themeStyle } from '../../src/theme';
-import { validateText } from '../../src/utlis/input';
 import { Eye, EyeOff } from 'lucide-react-native';
+import { themeStyle } from '@/src/theme';
+import { validateText } from '@/src/utlis/input';
 
 type Mode = 'text' | 'password-old' | 'password-new' | 'password-confirm';
 type InputKind = 'none' | 'letters' | 'email';

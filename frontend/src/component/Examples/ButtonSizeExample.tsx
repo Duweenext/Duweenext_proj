@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { View } from 'react-native';
-import ButtonModalXL from '@/component-v2/Buttons/ButtonModalXL';
-import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
+import ButtonModalXL from '../Buttons/ButtonModalXL';
+import ButtonModalL from '../Buttons/ButtonModalL';
 
 const ButtonSizeExample = () => {
   return (

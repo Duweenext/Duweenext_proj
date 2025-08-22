@@ -1,5 +1,5 @@
 // src/pond/components/ActionRow.tsx
-import CardIcon from '@/component-v2/Card/CardIcon';
+import CardIcon from '@/src/component/Card/CardIcon';
 import React, { JSX } from 'react';
 import { View } from 'react-native';
 

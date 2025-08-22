@@ -1,14 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Text, TextInput, View, Pressable, Animated, Easing } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
-import {
-  getPasswordStrength,
-  validateEmail,
-  validateText,
-  strengthColorMap,
-  strengthPercentMap,
-} from '../../src/utlis/input';
 import { themeStyle } from '@/src/theme';
+import { getPasswordStrength } from '@/src/utlis/passwordStrength';
+import { strengthColorMap, strengthPercentMap, validateEmail, validateText } from '@/src/utlis/input';
 
 type PasswordVariant = 'default' | 'old' | 'confirm';
 type ErrorPlacement = 'above' | 'below' | 'topRight';

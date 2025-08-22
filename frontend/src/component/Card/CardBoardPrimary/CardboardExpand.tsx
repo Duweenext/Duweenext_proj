@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { theme } from '@/theme'; // Adjust path as needed
-import { useBoard } from '@/src/api/useBoard';
-import HalfCircleGauge from '@/component-v2/Chart/GaugeChart';
-import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
+import { useBoard } from '@/src/api/hooks/useBoard';
+import HalfCircleGauge from '../../Chart/GaugeChart';
+import ButtonModalL from '../../Buttons/ButtonModalL';
 
 interface MeasurementData {
   ph: number;

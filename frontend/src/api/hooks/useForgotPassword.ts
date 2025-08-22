@@ -1,11 +1,6 @@
+import { canResend, requestReset, resendCode, resetPassword, verifyResetCode } from '@/src/services/authService.mock';
 import * as React from 'react';
-import {
-  requestReset,
-  verifyResetCode,
-  resetPassword,
-  canResend,
-  resendCode,
-} from '../services/authService.mock';
+
 
 export type ForgotState = 'request' | 'verify' | 'reset' | 'done';
 

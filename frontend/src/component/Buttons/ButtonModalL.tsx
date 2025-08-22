@@ -1,6 +1,6 @@
+import { themeStyle } from '@/src/theme';
 import React from 'react';
 import { TouchableOpacity, Text, GestureResponderEvent } from 'react-native';
-import { themeStyle } from '../../src/theme';
 
 type ButtonSize = 'L' | 'XL' | '2XL' | '3XL';
 

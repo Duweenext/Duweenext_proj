@@ -1,4 +1,5 @@
 // components/card/CardEducation.tsx
+import { themeStyle } from '@/src/theme';
 import React from 'react';
 import {
   View,
@@ -8,7 +9,6 @@ import {
   ViewStyle,
   Platform,
 } from 'react-native';
-import { themeStyle } from '../../src/theme';
 
 type Props = {
   title: string;

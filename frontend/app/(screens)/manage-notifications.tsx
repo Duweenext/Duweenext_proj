@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme, themeStyle } from '@/theme';
-import TopBar from '@/component-v2/NavBar/TopBar';
+import TopBar from '@/src/component/NavBar/TopBar';
 
 const STORAGE = {
   enabled: 'notif:enabled',

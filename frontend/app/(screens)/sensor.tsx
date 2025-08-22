@@ -3,14 +3,13 @@ import { View, ScrollView, StatusBar } from 'react-native';
 import { router } from 'expo-router';
 
 // Components
-import SensorCenterHeader from '@/component-v2/Screens/SensorCenterHeader';
-import AddBoardSection from '@/component-v2/Screens/AddBoardSection';
-import BoardSectionHeader from '@/component-v2/Screens/BoardSectionHeader';
-import CardBoardPrimary from '@/component-v2/Card/CardBoardPrimary/CardBoardPrimary';
 
 // Data
-import { mockBoards, formatRunningTime, type ExtendedBoardData } from '@/component-v2/Screens/mockBoardData';
 import { useTranslation } from 'react-i18next';
+import { ExtendedBoardData, formatRunningTime, mockBoards } from '@/src/component/Screens/mockBoardData';
+import AddBoardSection from '@/src/component/Screens/AddBoardSection';
+import BoardSectionHeader from '@/src/component/Screens/BoardSectionHeader';
+import CardBoardPrimary from '@/src/component/Card/CardBoardPrimary/CardBoardPrimary';
 
 // Main Sensor Screen
 const SensorScreen = () => {

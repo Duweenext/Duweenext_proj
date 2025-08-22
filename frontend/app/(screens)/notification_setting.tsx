@@ -4,9 +4,9 @@ import {
   View, Text, SectionList, TouchableOpacity, Modal, Pressable, Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import TopBar from '@/component-v2/NavBar/TopBar';
-import { CardNotification } from '@/component-v2/Card/CardNotification';
+import TopBar from '@/src/component/NavBar/TopBar';
 import { themeStyle } from '@/src/theme';
+import { CardNotification } from '@/src/component/Card/CardNotification';
 
 // ===== Types =====
 type NotificationSeverity = 'info' | 'warning' | 'success' | 'error';

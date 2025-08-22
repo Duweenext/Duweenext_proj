@@ -1,5 +1,4 @@
 import React from 'react';
-import { themeStyle } from '../../src/theme';
 import {
   View,
   Text,
@@ -12,6 +11,7 @@ import TextFieldVerificationCode from '../TextFields/TextFieldVerificationCode';
 import ButtonUnderline from '../Buttons/ButtonUnderline';
 import TextFieldModal from '../TextFields/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
+import { themeStyle } from '@/src/theme';
 
 type FieldMode = 'text' | 'password-old' | 'password-new' | 'password-confirm';
 type InputKind = 'none' | 'letters' | 'email';

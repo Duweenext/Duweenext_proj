@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
 import { Board } from '@/src/interfaces/board';
 import CardBoardExpanded from './CardboardExpand';
-import ButtonCard from '@/component-v2/Buttons/ButtonCard';
+import ButtonCard from '../../Buttons/ButtonCard';
 
 type Mode = 'connected' | 'failed' | 'disconnected';
 

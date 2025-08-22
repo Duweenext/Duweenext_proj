@@ -5,13 +5,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { themeStyle } from '@/src/theme';
-import TopBar from '@/component-v2/NavBar/TopBar';
-import UploadBox from '@/src/pond/components/UploadBox';
-import ActionRow from '@/src/pond/components/ActionRow';
-import LatestResultCard from '@/src/pond/components/LatestResultCard';
-import HistoryList from '@/src/pond/components/HistoryList';
-import { usePondAnalysis } from '@/src/pond/usePondAnalysis';
-import { mockService } from '@/src/pond/services';
+import UploadBox from '@/src/component/pond/components/UploadBox';
+import ActionRow from '@/src/component/pond/components/ActionRow';
+import LatestResultCard from '@/src/component/pond/components/LatestResultCard';
+import HistoryList from '@/src/component/pond/components/HistoryList';
+import { usePondAnalysis } from '@/src/component/pond/usePondAnalysis';
+import { mockService } from '@/src/component/pond/services';
+import TopBar from '@/src/component/NavBar/TopBar';
 
 const IconBtn = ({ icon, onPress, disabled }: any) => (
   <TouchableOpacity
@@ -320,7 +320,7 @@ Tip: ${latest.tips[0]}`
         <UploadBox imageUri={imageUri} status={status} placeholder={placeholder} onReset={resetImage} />
 
         <ActionRow
-          onCamera={() => router.push('/take-photo')}
+          onCamera={() => router.push('/(screens)/camera')}
           onUpload={pickFromLibrary}
           RenderButton={IconBtn}
           icons={{ camera: <Text>📷</Text>, upload: <Text>⬆️</Text> }}

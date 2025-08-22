@@ -1,7 +1,7 @@
 import axiosInstance from "@/src/api/apiManager";
 import { useCallback, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
-import { WifiCreds } from "../ble/useBle.native";
+import { WifiCreds } from "../../ble/useBle.native";
 
 export const useAuthentication = () => {
     const [loading, setLoading] = useState(false);

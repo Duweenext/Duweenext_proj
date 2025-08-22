@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getTopicBySlug } from '../../../src/data/educationData';
 import type { EduSection } from '../../../src/interfaces/typesEducation'; // or your updated path
 import { themeStyle } from '../../../src/theme';
-import TopBar from '@/component-v2/NavBar/TopBar';
+import TopBar from '@/src/component/NavBar/TopBar';
 
 export default function EducationDetail() {
   const { slug } = useLocalSearchParams<{ slug: string }>();

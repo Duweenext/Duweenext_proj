@@ -105,7 +105,7 @@ export function useBle() {
     }
   }, []);
 
-  const provisionWifi = useCallback(async (deviceId: string, creds: WifiCreds): Promise<void> => {
+  const provisionWifi = useCallback(async (deviceId: string, creds: WifiCreds): Promise<boolean> => {
     const ble: BleManager | null = _bleManager;
     if (!ble) throw new Error('BLE manager not available');
     ble.stopDeviceScan();
@@ -113,8 +113,6 @@ export function useBle() {
     let dev: Device | null = null;
     let sub: Subscription | undefined;
     try {
-
-
       const isConnected = await ble.isDeviceConnected(deviceId);
       if (isConnected) {
         await ble.cancelDeviceConnection(deviceId);
@@ -164,6 +162,8 @@ export function useBle() {
         ackPromise,
         new Promise((_, rej) => setTimeout(() => rej(new Error('Provisioning ACK timeout')), ACK_TIMEOUT_MS)),
       ]);
+
+      return true;
     } catch (err) {
       console.error("Wi-Fi provisioning failed:", err);
       throw err;

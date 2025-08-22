@@ -8,6 +8,7 @@ import WifiConfigModal from '../Modals/wificonfigModal';
 import { useBoard } from '@/src/api/useBoard';
 import { useBle } from '@/src/ble/useBle.native';
 import { WifiConfig } from '@/src/interfaces/wifi';
+import { useAuth } from '@/src/auth/context/auth_context';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -34,7 +35,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
   const { provisionWifi } = useBle();
-  const {user} = useAuth();
+  // const {user} = useAuth();
 
   const handleAddBoard = () => setModalVisible("option");
   const handleCloseModal = () => setModalVisible("");
@@ -65,6 +66,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         ssid: values.ssid,
         wifiPassword: values.wifiPassword,
       });
+
+    console.log("is Provisioning success : " + isSuccess)
 
       if(isSuccess)
       {

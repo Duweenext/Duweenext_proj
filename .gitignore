@@ -41,3 +41,20 @@ Backend/config.yaml
 node_modules
 Backend/main.exe~
 Backend/main.exe
+
+# Android build outputs
+/android/app/build/
+
+# Gradle files
+.gradle/
+
+# Node modules
+/node_modules/
+
+# JS build outputs
+/dist/
+/build/
+
+# Expo files
+.expo/
+.expo-shared/

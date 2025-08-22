@@ -58,37 +58,41 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     }
   }
 
-  const handleWifiSubmit = async (values: WifiConfig) => {
-    if (!selectedMacAddress) return;
+const handleWifiSubmit = async (values: WifiConfig) => {
+    if (!selectedMacAddress || !selectedBoardId) return; 
     setWifiSubmitting(true);
+    
     try {
-      const isSuccess = await provisionWifi(selectedMacAddress, {
-        ssid: values.ssid,
-        wifiPassword: values.wifiPassword,
-      });
-
-    console.log("is Provisioning success : " + isSuccess)
-
-      if(isSuccess)
-      {
-        await createBoardRelationship({ 
-          board_id: selectedBoardId, 
-          board_name: "ESP32 board",
-          con_method: "BLE",
-          con_password: values.connectionPassword,
-          user_id:1, 
+        console.log("Attempting to provision Wi-Fi...");
+        await provisionWifi(selectedMacAddress, {
+            ssid: values.ssid,
+            wifiPassword: values.wifiPassword,
         });
-      }
 
-      setModalVisible("");
-      onSelectDevice?.(selectedBoardId);
+        console.log("Provisioning successful. Creating board relationship...");
+        await createBoardRelationship({ 
+            board_id: selectedBoardId, 
+            board_name: values.boardModelName, 
+            con_method: "bluetooth",
+            con_password: values.connectionPassword,
+            user_id: 2, 
+        });
+
+        Alert.alert("Success!", "Board has been configured and registered.");
+        setModalVisible("");
+        onSelectDevice?.(selectedBoardId);
+
     } catch (err) {
-      console.warn("Provisioning/Pairing failed:", err);
-      Alert.alert("Provisioning Failed", "Could not complete the setup process. Please try again.");
+        console.warn("Provisioning/Pairing failed:", err);
+        let errorMessage = "Could not complete the setup process.";
+        if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string") {
+            errorMessage = (err as any).message;
+        }
+        Alert.alert("Setup Failed", errorMessage);
     } finally {
-      setWifiSubmitting(false);
+        setWifiSubmitting(false);
     }
-  }
+}
 
   return (
     <View style={styles.container}>

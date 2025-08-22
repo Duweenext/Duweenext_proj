@@ -9,6 +9,7 @@ import { useBoard } from '@/src/api/useBoard';
 import { useBle } from '@/src/ble/useBle.native';
 import { WifiConfig } from '@/src/interfaces/wifi';
 import { useAuth } from '@/src/auth/context/auth_context';
+import ConnectionPasswordModal from '../Modals/ConnectionPasswordModal';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -20,11 +21,11 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   onManualSubmit
 }) => {
   const [isBoardExist, setIsBoardExist] = useState<boolean>(false);
-  const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "">("");
-  const { 
-    loading, 
-    verifyBoardInformation, 
-    createBoardRelationship, 
+  const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "connect-password" | "">("");
+  const {
+    loading,
+    verifyBoardInformation,
+    createBoardRelationship,
   } = useBoard();
   
   // State for the LOGICAL Board ID (from characteristic)
@@ -35,19 +36,42 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
   const { provisionWifi } = useBle();
-  // const {user} = useAuth();
+  // const {user} = useAuth()
 
   const handleAddBoard = () => setModalVisible("option");
   const handleCloseModal = () => setModalVisible("");
   const handleManualSelect = () => setModalVisible("manual");
   const handleBLESelect = () => setModalVisible("ble");
-  const handleManualSubmit = (boardId: string) => onManualSubmit?.(boardId);
+  const handleConnectedPasswordModal = () => setModalVisible("connect-password");
+  const handleManualConnect = async (boardId: string) => {
+    setSelectedBoardId(boardId);
+    setSelectedMacAddress(""); // No MAC address for manual entry
+    try {
+      // const res = await verifyBoardInformation(boardId);
+      setIsBoardExist(true); 
+      handleConnectedPasswordModal();
+      console.log("Manual board ID submitted:", boardId);
+    } catch (error) {
+      console.error("Board verification failed with an unexpected error:", error);
+      Alert.alert("Error", "An unexpected error occurred while verifying the board.");
+    }
+  };
+
+  const handleManualSubmit = async (password: string) => {
+    await createBoardRelationship({ 
+            board_id: selectedBoardId, 
+            con_method: "manual",
+            con_password: password,
+            user_id: 10, 
+        });
+  }
+  
   const onSelectDevice = (boardId: string) => {  };
   const handleWifiConfigModal = () => setModalVisible("wifi-config");
 
-  const handleConnectBoard = async (boardId: string, macAddress: string) => {
+  const handleConnectBoard = async (boardId: string, macAddress?: string) => {
     setSelectedBoardId(boardId);
-    setSelectedMacAddress(macAddress);
+    setSelectedMacAddress(macAddress || "");
     try {
       const res = await verifyBoardInformation(boardId);
       setIsBoardExist(!!res); 
@@ -126,7 +150,7 @@ const handleWifiSubmit = async (values: WifiConfig) => {
       <ManualAddBoardModal
         visible={modalVisible === "manual"}
         onClose={handleCloseModal}
-        onSubmit={handleManualSubmit}
+        onSubmit={handleManualConnect}
       />
 
       <WifiConfigModal
@@ -136,6 +160,13 @@ const handleWifiSubmit = async (values: WifiConfig) => {
         boardId={selectedBoardId}
         submitting={wifiSubmitting}
         isBoardIdExists={isBoardExist}
+      />
+
+      <ConnectionPasswordModal
+        visible={modalVisible === "connect-password"}
+        onClose={handleCloseModal}
+        onSubmit={handleManualSubmit}
+        boardId={selectedBoardId}
       />
     </View>
   );

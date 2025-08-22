@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
 import { theme } from '@/theme';
 import TextFieldModal from '../TextFields/TextFieldModal';
+import { WifiConfig } from '@/src/interfaces/wifi';
 
 interface ManualAddBoardModalProps {
   visible: boolean;
@@ -18,16 +19,16 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
 }) => {
   const [boardId, setBoardId] = useState('');
 
-  const handleSubmit = () => {
-    if (boardId.trim()) {
-      onSubmit(boardId.trim());
-      setBoardId(''); // Reset input after submit
-    }
-  };
-
   const handleClose = () => {
     setBoardId(''); 
     onClose();
+  };
+
+  const handleSubmit = () => {
+    if (boardId.trim()) {
+      onSubmit(boardId.trim());
+      setBoardId(''); // Clear the input after submission
+    }
   };
 
   return (

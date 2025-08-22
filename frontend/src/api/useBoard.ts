@@ -7,7 +7,7 @@ export type BoardRegistrationData = {
   user_id: number;
   con_method: string;
   con_password: string;
-  board_name: string;
+  board_name?: string;
 };
 
 export const useBoard = () => {

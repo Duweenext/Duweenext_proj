@@ -28,8 +28,8 @@ export const strengthPercentMap: Record<Strength, number> = {
 };
 
 export const validateText = (text: string): string => {
-  const onlyLetters = /^[A-Za-z\s\\-]+$/;
-  return text && !onlyLetters.test(text) ? 'Should be letters only.' : '';
+  const onlyLettersAndNumbers = /^[A-Za-z0-9\s\-_]+$/;
+  return text && !onlyLettersAndNumbers.test(text) ? 'Should be letters and number only.' : '';
 };
 
 export const validateEmail = (

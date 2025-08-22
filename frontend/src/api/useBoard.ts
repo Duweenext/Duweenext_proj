@@ -2,6 +2,14 @@ import axiosInstance from "@/src/api/apiManager";
 import { useCallback, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
 
+export type BoardRegistrationData = {
+  board_id: string;
+  user_id: number;
+  con_method: string;
+  con_password: string;
+  board_name: string;
+};
+
 export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
@@ -12,14 +20,12 @@ export const useBoard = () => {
         try {
             console.log("Verifying Board ID with API:", boardId);
             const res = await axiosInstance.get(`/v1/board/${boardId}`);
-            return res.data; // Board exists, return its data
+            return res.data; 
         } catch (err) {
-            // Check if the error is an Axios error and has a 404 status
             if (axios.isAxiosError(err) && err.response?.status === 404) {
                 console.log("Board ID not found in database (404). Treating as a new board.");
-                return null; // This is a valid case for a new board, not an error
+                return null; 
             }
-            // For all other errors, set the error state and re-throw
             setError(err);
             throw err;
         } finally {
@@ -27,20 +33,27 @@ export const useBoard = () => {
         }
     }, []);
 
-    const setConnectionPassword = useCallback(
-        async (values: { connectionPassword: string, selectedBoardId: string }) => {
+    const createBoardRelationship = useCallback(
+        async (data: BoardRegistrationData) => {
             setLoading(true);
             setError(null);
-            if (!values.selectedBoardId) return;
-
             try {
-                const res = await axiosInstance.post(`/admin/boards/${values.selectedBoardId}/set-connection-password`, {
-                    connectionPassword: values.connectionPassword
-                });
-                return res.data;
+                console.log("Creating board relationship with data:", data);
+                const res = await axiosInstance.post('/v1/board-relationships', data);
+
+                return res.data.data;
+
             } catch (err) {
-                setError(err);
-                throw err;
+                console.error("Failed to create board relationship:", err);
+
+                let errorMessage = "An unknown error occurred.";
+                if (axios.isAxiosError(err) && err.response?.data?.message) {
+                    errorMessage = err.response.data.message;
+                }
+                
+                setError(new Error(errorMessage)); 
+                throw new Error(errorMessage); 
+                
             } finally {
                 setLoading(false);
             }
@@ -52,6 +65,6 @@ export const useBoard = () => {
         loading,
         error,
         verifyBoardInformation,
-        setConnectionPassword
+        createBoardRelationship,
     };
 };

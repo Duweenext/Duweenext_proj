@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"errors"
+	"fmt"
 	"main/duckweed/entities"
 	"main/duckweed/repositories"
 
@@ -33,6 +34,7 @@ func (u *userUseCase) GetAllUsers() ([]entities.User, error) {
 }
 
 func (u *userUseCase) Login(email, password string) (*entities.User, error) {
+	fmt.Print(email)
 	user, err := u.repo.FindByEmail(email)
 	if err != nil {
 		return nil, err
@@ -41,6 +43,8 @@ func (u *userUseCase) Login(email, password string) (*entities.User, error) {
 	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(password)); err != nil {
 		return nil, errors.New("invalid credentials")
 	}
+
+	fmt.Print(user)
 
 	return user, nil
 }

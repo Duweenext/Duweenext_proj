@@ -13,10 +13,10 @@ type AuthenticateUserDto struct {
 }
 
 type InsertUserDto struct {
-	UserName    string 
-	Email       string 
-	PhoneNumber string 
-	Password    string 
+	UserName    string
+	Email       string
+	PhoneNumber string
+	Password    string
 }
 
 type UserResponseDto struct {
@@ -27,13 +27,23 @@ type UserResponseDto struct {
 }
 
 type User struct {
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-	UserID      *uint `gorm:"primaryKey;autoIncrement"`
-	UserName    *string
-	Email       *string
-	PhoneNumber *string
-	Password    *string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       gorm.DeletedAt `gorm:"index"`
+	UserID          *uint          `gorm:"primaryKey;autoIncrement"`
+	UserName        *string
+	Email           *string
+	PhoneNumber     *string
+	Password        *string
+	EmailVerifiedAt *time.Time
 }
 
+type EmailVerificationCode struct {
+	ID          uint `gorm:"type:uuid;primaryKey"`
+	UserID      uint `gorm:"type:uuid;index"`
+	CodeHash    string
+	SentAt      time.Time
+	ExpiresAt   time.Time
+	Attempts    int
+	MaxAttempts int
+}

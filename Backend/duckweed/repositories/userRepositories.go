@@ -4,6 +4,8 @@ import (
 	"errors"
 	"main/duckweed/entities"
 
+	"strings"
+
 	"gorm.io/gorm"
 )
 
@@ -30,8 +32,12 @@ func (r *UserRepository) FindByID(id uint) (*entities.User, error) {
 }
 
 func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
+	norm := strings.TrimSpace(strings.ToLower(email))
+
 	var user entities.User
-	err := r.db.Where("email = ?", email).First(&user).Error
+	err := r.db.
+		Where("LOWER(email) = ?", norm).
+		First(&user).Error
 
 	return &user, err
 }

@@ -22,7 +22,7 @@ func migrateDrop(db database.Database) {
 	}
 	log.Println("Dropped table: BoardRelationship")
 
-	if err:= gormDB.Migrator().DropTable(&entities.Board{}); err != nil {
+	if err := gormDB.Migrator().DropTable(&entities.Board{}); err != nil {
 		log.Fatalf("Failed to drop table Board: %v", err)
 
 	}

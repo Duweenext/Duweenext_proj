@@ -1,33 +1,191 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { SettingCard } from '@/component-v2/Card/SettingCard'
-import { router } from 'expo-router'
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { SettingCard } from '../../component-v2/Card/SettingCard';
+import { theme, themeStyle } from '@/theme';
 
-const Setting = () => {
-    const title = [
-        {id: 1,title: 'Manage Profile ', route: '/(screens)/profile_setting'},
-        {id: 2,title: 'Manage Notifications', route: '/(screens)/notification_setting'},
-        {id: 3,title: 'Help & Supports', route: '/(screens)/help_support'},
-        {id: 4,title: 'Privacy Policy', route: '/(screens)/privacy_policy'},
-        {id: 5,title: 'Terms & Conditions', route: '/(screens)/terms_conditions'},
-        {id: 6,title: 'Language', route: ''},
-    ]
+//const bgImage = require('@/assets/images/green-splash.jpg'); // swap to your actual image
 
-    return (
-        <View style={{ flex: 1, padding: 20 }}>
-            {
-                title.map(item => (
-                   <View style={{ marginBottom: 12 }}>
-                       <SettingCard
-                           key={item.id}
-                           title={item.title}
-                           onPress={() => {item.route ? router.navigate(item.route as any) : null}}
-                       />6
-                   </View>
-                ))
-            }
+const Setting: React.FC = () => {
+  const router = useRouter();
+  const [lang, setLang] = useState<'en' | 'th'>('th');
+  const [langOpen, setLangOpen] = useState(false);
+  const PICKER_SHIFT_RIGHT = 80;   // same as the View that wraps the picker (right: 80)
+
+  const cardSpacing = 14;
+
+  const onPickLang = (code: 'en' | 'th') => {
+    setLang(code);
+    setLangOpen(false);
+    // TODO: hook to your i18n/locale change here
+  };
+
+  return (
+    <View style={{ 
+        flexDirection:'column', 
+        marginTop: 20,
+        alignItems: 'center'
+     }}>
+        {/* CARD LIST */}
+        <View style={{ gap: cardSpacing, width: '90%'}}>
+          <SettingCard
+            title="Manage Profile"
+            onPress={() => router.push('/(screens)/profile_setting')}
+          />
+          <SettingCard
+            title="Manage Notifications"
+            onPress={() => router.push('/(screens)/manage-notifications')}
+          />
+          <SettingCard
+            title="Help & Supports"
+            onPress={() => router.push('/(screens)/help-supports')}
+          />
+          <SettingCard
+            title="Privacy Policy"
+            onPress={() => router.push('/(screens)/privacy-policy')}
+          />
+          <SettingCard
+            title="Terms & Conditions"
+            onPress={() => router.push('/(screens)/terms-conditions')}
+          />
         </View>
-    )
-}
 
-export default Setting
+        {/* LANGUAGE ROW */}
+        <View
+          style={{
+            flexDirection: 'row', 
+            marginTop: 16,
+            backgroundColor: '#fff',
+            borderRadius: 5,
+            padding: 10,
+            width: '90%',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: themeStyle.fontSize.description,
+              fontFamily: themeStyle.fontFamily.medium,
+              color: themeStyle.colors.black,
+              alignSelf: 'center',
+            }}
+          >
+            Language
+          </Text>
+
+          <View
+            style={{
+              width: '100%',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              right: 80,
+            }}
+          >
+            <Pressable
+              onPress={() => setLangOpen((v) => !v)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: 12,
+                height: 40,
+                borderWidth: 1,
+                borderColor: '#CFCFCF',
+                borderRadius: 10,
+                minWidth: 160,
+                backgroundColor: themeStyle.colors.white,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontFamily: theme.fontFamily.regular,
+                  color: '#000',
+                }}
+              >
+                {lang === 'en' ? 'English' : 'Thai (default)'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="#7A7A7A" />
+            </Pressable>
+          </View>
+
+          {/* Small dropdown panel anchored under the button */}
+          {langOpen && (
+            <View
+              style={{
+                position: 'absolute',
+                right: 26,
+                top: 50,
+                backgroundColor: '#fff',
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: '#E6E6E6',
+                overflow: 'hidden',
+                minWidth: 160,
+                elevation: 3,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 4,
+              }}
+            >
+              <Pressable
+                onPress={() => onPickLang('en')}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: '#000',
+                    fontFamily:
+                      lang === 'en'
+                        ? theme.fontFamily.medium
+                        : theme.fontFamily.regular,
+                  }}
+                >
+                  English
+                </Text>
+              </Pressable>
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: '#EEEEEE',
+                  marginHorizontal: 10,
+                }}
+              />
+              <Pressable
+                onPress={() => onPickLang('th')}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: '#000',
+                    fontFamily:
+                      lang === 'th'
+                        ? theme.fontFamily.medium
+                        : theme.fontFamily.regular,
+                  }}
+                >
+                  Thai (default)
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+    </View>
+  );
+};
+
+export default Setting;

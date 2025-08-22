@@ -9,6 +9,7 @@ import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation
 import ForgotPasswordFlow from '../../src/flows/ForgotPasswordFlow';
 import DeleteAccountFlow from '../../src/flows/DeleteAccountFlow';
 import { themeStyle } from '../../src/theme';
+import TopBar from '@/component-v2/NavBar/TopBar';
 
 const TAKEN_USERNAMES = new Set(['admin', 'jane', 'john', 'taken_user']);
 const TAKEN_EMAILS = new Set(['taken@example.com', 'exists@gmail.com']);
@@ -264,6 +265,7 @@ const ProfileSetting: React.FC<Props> = () => {
     // idle or locked → Delete Account button
     return (
       <>
+     
         <ButtonPrimary
           text="Delete Account"
           filledColor={themeStyle.colors.white}
@@ -287,13 +289,16 @@ const ProfileSetting: React.FC<Props> = () => {
   };
 
   return (
+    <>
+    <TopBar title="Profile Setting"/>
     <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
+       
       {/* ---- Change Account Information ---- */}
-      <Text style={{fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 20, left: 20, paddingTop:30 }}>
+      <Text style={{fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 20, left: 20, }}>
         Change Account Information
       </Text>
 
-      <View style={{ flexDirection:'column', alignSelf:'center', width:'70%', backgroundColor: themeStyle.colors.white, borderRadius: 10, padding: 15, marginBottom: 25 }}>
+      <View style={{ flexDirection:'column', alignSelf:'center', width:'85%', backgroundColor: themeStyle.colors.white, borderRadius: 10, padding: 15, marginBottom: 25 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 }}>
           <Text style={{ fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.description }}>Username:</Text>
           <Text style={{ width: '70%' }}>{username}</Text>
@@ -420,6 +425,7 @@ const ProfileSetting: React.FC<Props> = () => {
         }}
       />
     </ScrollView>
+    </>
   );
 };
 

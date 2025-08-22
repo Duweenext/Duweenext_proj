@@ -19,8 +19,8 @@ const MSG = {
 export default function UploadBox({ imageUri, status, placeholder, onReset }: Props) {
   return (
     <View style={{
-      backgroundColor: '#fff', borderRadius: 10, padding: 10,
-      width: '90%', height: 200, alignSelf: 'center', justifyContent: 'center',
+      backgroundColor: themeStyle.colors.white, borderRadius: 10, 
+      width: '90%', height: 300, alignSelf: 'center', justifyContent: 'center',
     }}>
       {imageUri ? (
         <>
@@ -29,13 +29,14 @@ export default function UploadBox({ imageUri, status, placeholder, onReset }: Pr
             position: 'absolute', right: 10, top: 10, width: 28, height: 28, borderRadius: 14,
             backgroundColor: themeStyle.colors.primary, alignItems: 'center', justifyContent: 'center',
           }}>
-            <Text style={{ color: '#fff', fontWeight: '700' }}>×</Text>
+            <Text style={{ color: themeStyle.colors.white, fontWeight: '700' }}>×</Text>
           </TouchableOpacity>
         </>
       ) : (
         <Text style={{
           textAlign: 'center', color: '#c9c9c9',
           fontFamily: themeStyle.fontFamily.medium,
+          fontSize: themeStyle.fontSize.header2,
         }}>{MSG[placeholder]}</Text>
       )}
     </View>

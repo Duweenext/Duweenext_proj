@@ -38,7 +38,7 @@ export default function Index() {
           <TabBox
             title="Check Pond Health"
             icon={icons.camera}
-            onNav={() => router.push("/(screens)/camera")}
+            onNav={() => router.push("/(screens)/check-pond-health")}
           />
           <TabBox 
             title="Notification History" 

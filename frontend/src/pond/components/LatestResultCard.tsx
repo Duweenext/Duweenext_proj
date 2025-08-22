@@ -26,21 +26,21 @@ export default function LatestResultCard({ status, result, onOpenEducation }: Pr
       backgroundColor: themeStyle.colors.primary, margin: 16, padding: 16,
       borderRadius: 12, width: '90%', alignSelf: 'center',
     }}>
-      <Text style={{ color: '#fff', fontFamily: themeStyle.fontFamily.bold, fontSize: 18, marginBottom: 6 }}>
+      <Text style={{ color: themeStyle.colors.white, fontFamily: themeStyle.fontFamily.bold, fontSize: 18, marginBottom: 6 }}>
         Pond Health
       </Text>
       {loading && (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <ActivityIndicator />
-          <Text style={{ color: '#fff' }}>Analyzing…</Text>
+          <Text style={{ color: themeStyle.colors.white }}>Analyzing…</Text>
         </View>
       )}
       {!loading && result && (
         <>
-          <Text style={{ color: '#fff', marginTop: 6 }}>
+          <Text style={{ color: themeStyle.colors.white, marginTop: 6 }}>
             Health Status: {LABEL_MAP[result.label] ?? result.label} ({Math.round(result.confidence * 100)}%)
           </Text>
-          <Text style={{ color: '#fff', marginTop: 10 }}>{result.tips[0]}</Text>
+          <Text style={{ color: themeStyle.colors.white, marginTop: 10 }}>{result.tips[0]}</Text>
           {result.educationLinks?.[0] && (
             <Text
               onPress={() => onOpenEducation?.(result.educationLinks[0].slug)}

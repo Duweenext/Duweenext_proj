@@ -4,7 +4,13 @@ module.exports = (api) => {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'expo-router/babel',               // keep as plugin
+      'expo-router/babel',
+      ["module:react-native-dotenv", {
+        moduleName: "@env",
+        path: ".env",
+        safe: false,
+        allowUndefined: true,
+      }],
       'react-native-reanimated/plugin',  // MUST be last
     ],
   };

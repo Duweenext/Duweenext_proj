@@ -48,16 +48,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         const inAuthGroup = segments[0] === '(auth)';
         const inTabsGroup = segments[0] === '(tabs)';
         const inScreensGroup = segments[0] === '(screens)';
+        const isRootRoute = segments.length <= 1 && segments[0] !== '(auth)' && segments[0] !== '(tabs)' && segments[0] !== '(screens)';
         
-        // Define public routes that don't require authentication
-        const isPublicRoute = inAuthGroup || segments.length <= 0; // Root route and auth routes
-
-        if (!isAuthenticated && !isPublicRoute) {
-            // User is not authenticated and trying to access protected route
+        if (!isAuthenticated && !inAuthGroup) {
+            // User is not authenticated and not on auth screen, redirect to login
             console.log('Redirecting to login - not authenticated');
             router.replace('/(auth)/login');
-        } else if (isAuthenticated && inAuthGroup) {
-            // User is authenticated but on auth screen
+        } else if (isAuthenticated && (inAuthGroup || isRootRoute)) {
+            // User is authenticated but on auth screen or root, redirect to main app
             console.log('Redirecting to tabs - already authenticated');
             router.replace('/(tabs)');
         }

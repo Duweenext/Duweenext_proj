@@ -6,7 +6,6 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import '../src/i18n/i18n.config';
-import TopBar from '@/component-v2/NavBar/TopBar';
 import { AuthProvider, useAuth } from '@/src/auth/context/auth_context';
 
 SplashScreen.preventAutoHideAsync();
@@ -15,12 +14,7 @@ function AppContent() {
   const { isLoading } = useAuth();
   const pathname = usePathname();
 
-  // Don't show TopBar on auth screens and loading
   const shouldShowTopBar = !pathname.includes('(auth)') && !isLoading;
-
-  // console.log('shouldShowTopBar:',!pathname.includes('(auth)') );
-
-  // Helper function to get title from pathname
   function getTitleFromPath(pathname: string): string {
     if (pathname === '/' || pathname.includes('(tabs)')) return 'DuWeeNext';
     
@@ -40,7 +34,6 @@ function AppContent() {
   const title = getTitleFromPath(pathname);
   const isHomepage = pathname === '/' || pathname.includes('(tabs)');
 
-  // Show loading screen while authentication is being determined
   if (isLoading) {
     return (
       <ImageBackground
@@ -58,13 +51,6 @@ function AppContent() {
 
   return (
     <>
-      {/* {shouldShowTopBar && (
-        <TopBar
-          title={title}
-          textColor="#000000"
-          showBackButton={!isHomepage}
-        />
-      )} */}
       <ImageBackground
         source={require('../assets/images/background.png')}
         style={{ width: '100%', height: '100%' }}

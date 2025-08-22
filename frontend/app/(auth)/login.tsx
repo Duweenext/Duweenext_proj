@@ -1,6 +1,6 @@
 // app/auth/login.tsx
 import React from 'react';
-import { View, Text, SafeAreaView, StatusBar, Alert, ImageBackground } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, Alert, ImageBackground, ScrollView } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
@@ -12,39 +12,72 @@ import ButtonPrimary from '@/component-v2/Buttons/ButtonPrimary';
 import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
-import { useLogin } from '@/src/api/useAuth';
+import { useAuthentication } from '@/src/api/useAuth';
+import { useAuth } from '@/src/auth/context/auth_context';
 
-// simple email check so we can prefill initialEmail if present
-const looksLikeEmail = (s: string) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim());
+// simple email validation function
+const isValidEmail = (email: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 const Login: React.FC = () => {
   const router = useRouter();
 
-  const [identifier, setIdentifier] = React.useState('');
+  const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
 
-  const {login} = useLogin();
+  const {session, user, isAuthenticated, login: authLogin} = useAuth();
 
-  const [idError, setIdError] = React.useState<string | undefined>();
+  const {login: apiLogin} = useAuthentication();
+
+  const [emailError, setEmailError] = React.useState<string | undefined>();
   const [pwdError, setPwdError] = React.useState<string | undefined>();
 
   const [forgotOpen, setForgotOpen] = React.useState(false);
 
   const onLogin = async () => {
-    setIdError(undefined);
+    setEmailError(undefined);
     setPwdError(undefined);
 
-    if (!identifier.trim()) setIdError('Required');
-    if (!password.trim()) setPwdError('Required');
-    if (!identifier.trim() || !password.trim()) return;
+    // Validate email format
+    console.log(session, user?.email, isAuthenticated)
+    if (!email.trim()) {
+      setEmailError('Email is required');
+    } else if (!isValidEmail(email)) {
+      setEmailError('Please enter a valid email address');
+    }
+    
+    if (!password.trim()) setPwdError('Password is required');
+    
+    // Stop if there are validation errors
+    if (!email.trim() || !isValidEmail(email) || !password.trim()) return;
+    
     try {
-      const res = await login({
-        username: identifier,
-        password
+      const res = await apiLogin({
+        Email: email, // Send email as username for backend compatibility
+        Password: password
       });
 
       console.log('Login successful:', res);
+      
+      // Store the session in auth context
+      // Adjust these property names based on your actual API response structure
+      if (res?.token || res?.access_token || res?.jwt) {
+        const token = res.token || res.access_token || res.jwt;
+        const userData = {
+          id: res.user?.id || res.user_id || '1',
+          email: email,
+          name: res.user?.name || res.username || email.split('@')[0]
+        };
+        
+        await authLogin(token, userData);
+        console.log('Session stored successfully');
+        console.log('Token:', token);
+        console.log('User data:', userData);
+      } else {
+        console.error('No token found in response:', res);
+        Alert.alert('Login Error', 'No authentication token received from server');
+      }
+      
       console.log('Navigation called successfully');
     } catch (error: any) {
       console.error('Navigation error:', error);
@@ -61,7 +94,17 @@ const Login: React.FC = () => {
       />
       <StatusBar barStyle="light-content" />
 
-      <View style={{ flex: 1, paddingHorizontal: 18, paddingTop: 100 }}>
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={{ 
+          flexGrow: 1, 
+          paddingHorizontal: 18, 
+          paddingTop: 100,
+          paddingBottom: 50 
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Logo */}
         <View style={{ alignItems: 'center', marginBottom: 12 }}>
           <Animated.Image
@@ -73,19 +116,19 @@ const Login: React.FC = () => {
 
         {/* Form */}
         <View style={{ gap: 12, alignItems: 'center' }}>
-          {/* Username / Email */}
+          {/* Email Field */}
           <Animated.View entering={FadeInDown.delay(80).duration(500)}>
             <TextFieldPrimary
               name="Email"
-              type="text"
+              type="email"
               placeholder="example@gmail.com"
-              value={identifier}
+              value={email}
               onChangeText={(t) => {
-                setIdentifier(t);
-                if (idError) setIdError(undefined);
+                setEmail(t);
+                if (emailError) setEmailError(undefined);
               }}
               errorPlacement="topRight"
-              externalError={idError}
+              externalError={emailError}
             />
           </Animated.View>
 
@@ -119,7 +162,7 @@ const Login: React.FC = () => {
           {/* Login button */}
           <Animated.View
             entering={FadeInDown.delay(200).duration(500)}
-            style={{ alignItems: 'center', marginTop: 80 }}
+            style={{ alignItems: 'center'}}
           >
             <ButtonPrimary
               text="Login"
@@ -182,16 +225,15 @@ const Login: React.FC = () => {
             />
           </Animated.View>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Forgot Password flow: force verification step first */}
       <ForgotPasswordFlow
         visible={forgotOpen}
         onClose={() => setForgotOpen(false)}
-        initialEmail={identifier}   // from Email TextField
+        initialEmail={email}   // from Email TextField
         startStep="verify"          // force verification UI
       />
-
 
     </SafeAreaView>
   );

@@ -1,6 +1,6 @@
 // app/auth/signup.tsx
 import React from 'react';
-import { View, Text, SafeAreaView, StatusBar, ImageBackground, Alert } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, ImageBackground, Alert, ScrollView } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 
@@ -13,6 +13,8 @@ import ButtonGoogle from '@/component-v2/Buttons/ButtonGoogle';
 import ButtonUnderline from '@/component-v2/Buttons/ButtonUnderline';
 import ModalChangeInformation from '@/component-v2/Modals/ModalChangeInformation';
 import ModalVerificationComplete from '@/component-v2/Modals/ModalVerificationComplete';
+import { useAuth } from '@/src/auth/context/auth_context';
+import { useAuthentication } from '@/src/api/useAuth';
 
 const looksLikeEmail = (s?: string) =>
   !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
@@ -59,6 +61,8 @@ const SignUpScreen: React.FC = () => {
 
   // success modal
   const [doneOpen, setDoneOpen] = React.useState(false);
+  const { login: authLogin } = useAuth();
+  const { register: apiRegister } = useAuthentication();
 
   // resend timer
   const startResendTimer = React.useCallback(() => {
@@ -119,13 +123,39 @@ const SignUpScreen: React.FC = () => {
   const onRegister = async () => {
     if (!validate()) return;
     try {
-      await apiRegister({ username: username.trim(), email: email.trim(), password });
-      setSending(true);
-      setVerifyError(undefined);
-      await apiSendVerifyCode(email.trim());
-      startResendTimer();
-      setVerifyOpen(true);
+      const res = await apiRegister({ UserName: username.trim(), Email: email.trim(), Password: password });
+      
+      console.log('Registration successful:', res);
+      
+      // Store the session in auth context if registration returns a token
+      // Adjust these property names based on your actual API response structure
+      if (res?.token || res?.access_token || res?.jwt) {
+        const token = res.token || res.access_token || res.jwt;
+        const userData = {
+          id: res.user?.id || res.user_id || '1',
+          email: email.trim(),
+          name: res.user?.name || username.trim()
+        };
+        
+        await authLogin(token, userData);
+        console.log('Session stored after registration');
+        console.log('Token:', token);
+        console.log('User data:', userData);
+        
+        // Navigate to main app after successful registration and login
+        router.replace('/(tabs)');
+      } else {
+        // If no token is returned, might need verification or different flow
+        console.log('Registration successful but no token returned - might need verification');
+        // You can uncomment these lines if you have a verification flow
+        // setSending(true);
+        // setVerifyError(undefined);
+        // await apiSendVerifyCode(email.trim());
+        // startResendTimer();
+        // setVerifyOpen(true);
+      }
     } catch (e: any) {
+      console.error('Registration error:', e);
       Alert.alert('Registration failed', e?.message || 'Please try again.');
     } finally {
       setSending(false);
@@ -169,7 +199,17 @@ const SignUpScreen: React.FC = () => {
       />
       <StatusBar barStyle="light-content" />
 
-      <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 200 }}>
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={{ 
+          flexGrow: 1, 
+          paddingHorizontal: 16, 
+          paddingTop: 50,
+          paddingBottom: 50 
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Logo */}
         <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 6 }}>
           <Animated.Image
@@ -282,7 +322,7 @@ const SignUpScreen: React.FC = () => {
         </View>
 
         <View style={{ height: 16 }} />
-      </View>
+      </ScrollView>
 
       {/* Verification Modal (no email input; uses form email) */}
       <ModalChangeInformation

@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
 import { WifiCreds } from "../ble/useBle.native";
 
-export const useLogin = () => {
+export const useAuthentication = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
 
@@ -21,15 +21,36 @@ export const useLogin = () => {
         }
     }, []);
 
+    const register = useCallback(async (credential: RegisterCredential) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await axiosInstance.post(`/visit/register`, credential);
+            return res.data;
+        } catch (err) {
+            setError(err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
 
     return {
         login,
+        register,
         loading,
         error
     };
 };
 
 export interface LoginCredential {
-    username: string;
-    password: string;
+    Email: string;
+    Password: string;
+}
+
+export interface RegisterCredential {
+    Email: string;
+    Password: string;
+    UserName: string;
 }

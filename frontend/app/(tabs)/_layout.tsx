@@ -83,31 +83,6 @@ function TabIcon({
     );
 }
 
-// const CustomHeader = ({ title }: { title: string }) => {
-//     return (
-//         <SafeAreaView>
-//             <View
-//                 style={{
-//                     paddingVertical: 24, // py-6
-//                     paddingHorizontal: 24, // px-6
-//                     backgroundColor: 'rgba(149, 231, 231, 0.85)',
-//                 }}
-//             >
-//                 <Text
-//                     style={{
-//                         textAlign: 'left',
-//                         fontWeight: '700',
-//                         color: '#1A736A',
-//                         fontSize: 24, // text-2xl
-//                     }}
-//                 >
-//                     {title}
-//                 </Text>
-//             </View>
-//         </SafeAreaView>
-//     );
-// };
-
 const _Layout = () => {
     return (
         <Tabs

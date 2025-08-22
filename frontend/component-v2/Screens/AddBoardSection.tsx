@@ -34,6 +34,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const [wifiSubmitting, setWifiSubmitting] = useState(false);
 
   const { provisionWifi } = useBle();
+  const {user} = useAuth();
 
   const handleAddBoard = () => setModalVisible("option");
   const handleCloseModal = () => setModalVisible("");
@@ -60,14 +61,21 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     if (!selectedMacAddress) return;
     setWifiSubmitting(true);
     try {
-      await provisionWifi(selectedMacAddress, {
+      const isSuccess = await provisionWifi(selectedMacAddress, {
         ssid: values.ssid,
         wifiPassword: values.wifiPassword,
       });
 
-      await createBoardRelationship({ 
-        selectedBoardId: selectedBoardId 
-      });
+      if(user?.id && isSuccess)
+      {
+        await createBoardRelationship({ 
+          board_id: selectedBoardId, 
+          board_name: "ESP32 board",
+          con_method: "BLE",
+          con_password: values.connectionPassword,
+          user_id: user.id, 
+        });
+      }
 
       setModalVisible("");
       onSelectDevice?.(selectedBoardId);

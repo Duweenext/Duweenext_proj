@@ -113,8 +113,8 @@ export function useBle() {
     let sub: Subscription | undefined;
     try {
       const connectionId = Platform.OS === 'android'
-        ? deviceId.replace(/:/g, '').toUpperCase() // Remove colons for Android
-        : deviceId; // Keep original format for iOS
+        ? deviceId.replace(/:/g, '').toUpperCase() 
+        : deviceId; 
 
       console.log("🔍 Board ID verification - Original Device Id:", deviceId);
       console.log("🔍 Board ID verification - Connection Device Id:", connectionId);

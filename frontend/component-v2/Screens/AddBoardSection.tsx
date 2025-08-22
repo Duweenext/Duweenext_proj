@@ -66,14 +66,14 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         wifiPassword: values.wifiPassword,
       });
 
-      if(user?.id && isSuccess)
+      if(isSuccess)
       {
         await createBoardRelationship({ 
           board_id: selectedBoardId, 
           board_name: "ESP32 board",
           con_method: "BLE",
           con_password: values.connectionPassword,
-          user_id: user.id, 
+          user_id:1, 
         });
       }
 

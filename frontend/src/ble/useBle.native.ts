@@ -108,24 +108,20 @@ export function useBle() {
   const provisionWifi = useCallback(async (deviceId: string, creds: WifiCreds): Promise<void> => {
     const ble: BleManager | null = _bleManager;
     if (!ble) throw new Error('BLE manager not available');
-
+    ble.stopDeviceScan();
+    console.log("Scan stopped, attempting to provision...");
     let dev: Device | null = null;
     let sub: Subscription | undefined;
     try {
-      const connectionId = Platform.OS === 'android'
-        ? deviceId.replace(/:/g, '').toUpperCase() 
-        : deviceId; 
 
-      console.log("🔍 Board ID verification - Original Device Id:", deviceId);
-      console.log("🔍 Board ID verification - Connection Device Id:", connectionId);
 
-      const isConnected = await ble.isDeviceConnected(connectionId);
+      const isConnected = await ble.isDeviceConnected(deviceId);
       if (isConnected) {
-        await ble.cancelDeviceConnection(connectionId);
+        await ble.cancelDeviceConnection(deviceId);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      dev = await ble.connectToDevice(connectionId, {
+      dev = await ble.connectToDevice(deviceId, {
         autoConnect: false,
         timeout: 10_000,
         requestMTU: Platform.OS === 'android' ? ANDROID_TARGET_MTU : undefined,
@@ -145,25 +141,20 @@ export function useBle() {
       });
 
       console.log("Writing SSID...");
-      await dev.writeCharacteristicWithoutResponseForService(
+      await dev.writeCharacteristicWithResponseForService(
         PROV_SERVICE_UUID,
         WIFI_SSID_CHAR_UUID,
         utf8ToBase64(creds.ssid)
       );
-      await new Promise(resolve => setTimeout(resolve, 50));
-
       console.log("Writing Password...");
-      await dev.writeCharacteristicWithoutResponseForService(
+      await dev.writeCharacteristicWithResponseForService(
         PROV_SERVICE_UUID,
         WIFI_PASS_CHAR_UUID,
         utf8ToBase64(creds.wifiPassword)
       );
-      await new Promise(resolve => setTimeout(resolve, 50));
-
       console.log("Writing Control Point command...");
-      // --- FIX: Changed the command from 0x01 to 0x31 (ASCII for '1') ---
       const connectCommand = Buffer.from([0x31]).toString('base64');
-      await dev.writeCharacteristicWithoutResponseForService(
+      await dev.writeCharacteristicWithResponseForService(
         PROV_SERVICE_UUID,
         CONTROL_POINT_CHAR_UUID,
         connectCommand
@@ -177,8 +168,14 @@ export function useBle() {
       console.error("Wi-Fi provisioning failed:", err);
       throw err;
     } finally {
-      sub?.remove();
-      if (dev) await dev.cancelConnection();
+      sub?.remove(); 
+      if (dev) {
+        const isConnected = await dev.isConnected();
+        if (isConnected) {
+          console.log("Disconnecting from device...");
+          await dev.cancelConnection();
+        }
+      }
     }
   }, []);
 

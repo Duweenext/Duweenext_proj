@@ -23,7 +23,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const { 
     loading, 
     verifyBoardInformation, 
-    setConnectionPassword, 
+    createBoardRelationship, 
   } = useBoard();
   
   // State for the LOGICAL Board ID (from characteristic)
@@ -40,13 +40,12 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const handleManualSelect = () => setModalVisible("manual");
   const handleBLESelect = () => setModalVisible("ble");
   const handleManualSubmit = (boardId: string) => onManualSubmit?.(boardId);
-  const onSelectDevice = (boardId: string) => { /* Can be used to refresh list */ };
+  const onSelectDevice = (boardId: string) => {  };
   const handleWifiConfigModal = () => setModalVisible("wifi-config");
 
-  // FIX: Update handler to accept both the logical ID and the MAC address
   const handleConnectBoard = async (boardId: string, macAddress: string) => {
     setSelectedBoardId(boardId);
-    setSelectedMacAddress(macAddress); // Store the MAC address
+    setSelectedMacAddress(macAddress);
     try {
       const res = await verifyBoardInformation(boardId);
       setIsBoardExist(!!res); 
@@ -58,7 +57,6 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   }
 
   const handleWifiSubmit = async (values: WifiConfig) => {
-    // FIX: Use the stored MAC address for provisioning, not the logical ID
     if (!selectedMacAddress) return;
     setWifiSubmitting(true);
     try {
@@ -67,9 +65,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         wifiPassword: values.wifiPassword,
       });
 
-      await setConnectionPassword({ 
-        connectionPassword: values.connectionPassword, 
-        selectedBoardId: selectedBoardId // API still needs the logical ID
+      await createBoardRelationship({ 
+        selectedBoardId: selectedBoardId 
       });
 
       setModalVisible("");

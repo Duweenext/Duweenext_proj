@@ -26,13 +26,12 @@ type BleConfigModalProp = {
   wifiModalVisible: boolean;
   onClose: () => void;
   onSelectDevice: (boardId: string) => void;
-  // This prop expects a function that receives both the logical ID and the MAC address
   handleConnectBoard: (boardId: string, macAddress: string) => void;
   loading?: boolean;
 };
 
 type DeviceRow = {
-  id: string; // This is the MAC Address on Android
+  id: string; 
   name: string | null;
   rssi?: number | null;
 };
@@ -68,11 +67,9 @@ const BleConfigModal: React.FC<BleConfigModalProp> = ({
   const onDeviceSelected = useCallback(async (macAddress: string) => {
     setConnectingDeviceId(macAddress);
     try {
-      // The hook uses the macAddress to connect and read the logical ID
       const boardIdFromChar = await connectAndReadBoardId(macAddress);
       
       if (boardIdFromChar) {
-        // Pass both the logical ID (boardIdFromChar) and the physical MAC address back
         handleConnectBoard(boardIdFromChar, macAddress);
       } else {
         Alert.alert("Error", "Could not read the Board ID from the device. Please try again.");

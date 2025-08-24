@@ -16,7 +16,7 @@ const ButtonCamera: React.FC = () => {
   return (
     <TouchableOpacity style={styles.button} onPress={handlePress} activeOpacity={0.8}>
       <Image
-        source={require('../../assets/images/camera.png')} 
+        source={require('@/assets/images/camera.png')} 
         style={styles.icon}
       />
     </TouchableOpacity>

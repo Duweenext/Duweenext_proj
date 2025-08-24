@@ -1,48 +1,34 @@
 import React from 'react';
 import { ImageBackground, View } from 'react-native';
-import { Slot, usePathname } from 'expo-router';
+import { Slot } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import '../i18n/i18n.config';
 import { AuthProvider, useAuth } from '@/src/auth/context/auth_context';
+import TopBar from '@/src/component/NavBar/TopBar';
+import { useTitle, getTitleFromPath } from '@/src/hooks/useTitle';
 
 SplashScreen.preventAutoHideAsync();
 
+// Re-export for backward compatibility
+export { getTitleFromPath };
+
 function AppContent() {
   const { isLoading } = useAuth();
-  const pathname = usePathname();
+  const title = useTitle();
 
-  const shouldShowTopBar = !pathname.includes('(auth)') && !isLoading;
-  function getTitleFromPath(pathname: string): string {
-    if (pathname === '/' || pathname.includes('(tabs)')) return 'DuWeeNext';
-    
-    const segments = pathname.split('/').filter(Boolean);
-    const lastSegment = segments[segments.length - 1];
-    
-    if (lastSegment?.includes('(') && lastSegment?.includes(')')) {
-      return 'DuWeeNext';
-    }
-    
-    return lastSegment
-      ?.split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ') || 'DuWeeNext';
-  }
-
-  const title = getTitleFromPath(pathname);
-  const isHomepage = pathname === '/' || pathname.includes('(tabs)');
+  
 
   if (isLoading) {
     return (
       <ImageBackground
-        source={require('../assets/images/background.png')}
+        source={require('@/assets/images/background.png')}
         style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
         resizeMode="cover"
       >
         <View style={{ padding: 20, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 10 }}>
-          {/* Add your loading component here */}
+          {/* <TopBar title={title} showBackButton={false} /> */}
           <Slot />
         </View>
       </ImageBackground>

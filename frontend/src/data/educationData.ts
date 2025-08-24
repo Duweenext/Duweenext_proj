@@ -6,7 +6,7 @@ export const EDUCATION_TOPICS: EducationTopic[] = [
   { 
     slug: 'step-by-step-guide',
     title: 'Step-by-step Guide on how to grow Wolffia Globosa',
-    heroIcon: require('../../assets/education_assets/stepbystepguide.png'), 
+    heroIcon: require('@/assets/education_assets/stepbystepguide.png'), 
     tagline:'',
     sections: [
       {
@@ -26,7 +26,7 @@ export const EDUCATION_TOPICS: EducationTopic[] = [
   {
     slug: 'pesticide-contamination',
     title: 'Pesticide Contamination',
-    heroIcon: require('../../assets/education_assets/pesticide.png'),
+    heroIcon: require('@/assets/education_assets/pesticide.png'),
     tagline:
       'If your pond is near a rice field or plantation, always check water sources — clean water = safe duckweed = safe consumers.',
     sections: [
@@ -70,7 +70,7 @@ export const EDUCATION_TOPICS: EducationTopic[] = [
   {
     slug: 'heavy-metal-contamination',
     title: 'Heavy Metal Contamination',
-    heroIcon: require('../../assets/education_assets/heavy_metal.png'),
+    heroIcon: require('@/assets/education_assets/heavy_metal.png'),
     tagline: 'Just because water looks clean doesn’t mean it’s safe. Choose water sources wisely to protect your duckweed and your customers.',
     sections: [
       { kind: 'paragraph', 
@@ -115,7 +115,7 @@ export const EDUCATION_TOPICS: EducationTopic[] = [
   {
     slug: 'overuse-of-NPK',
     title: 'Overuse of Chemical Fertilizers (NPK)',
-    heroIcon: require('../../assets/education_assets/npk.png'),
+    heroIcon: require('@/assets/education_assets/npk.png'),
     tagline: 'Fertilizer is food, not a cure. Too much can do more harm than good. Watch your duckweed, check your data, and apply only what’s needed.',
     sections: [
       { kind: 'paragraph', 
@@ -160,7 +160,7 @@ export const EDUCATION_TOPICS: EducationTopic[] = [
   {
     slug: 'user-of-organic-fertilizers',
     title: 'Use of Organic Fertilizers (Animal Waste)',
-    heroIcon: require('../../assets/education_assets/organic_fertilizer.png'),
+    heroIcon: require('@/assets/education_assets/organic_fertilizer.png'),
     tagline: 'Just because it’s organic doesn’t mean it’s safe. Avoid animal waste in ponds to protect your duckweed and your health.',
     sections: [
       { kind: 'paragraph', 

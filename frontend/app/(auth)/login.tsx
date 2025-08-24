@@ -1,8 +1,9 @@
 // app/auth/login.tsx
 import React from 'react';
-import { View, Text, SafeAreaView, StatusBar, Alert, ImageBackground, ScrollView } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, ImageBackground, ScrollView, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import axios from 'axios'; // Import axios to check for AxiosError
 
 import { themeStyle } from '@/src/theme';
 import { images } from '@/src/constants/images';
@@ -33,6 +34,19 @@ const Login: React.FC = () => {
   const [pwdError, setPwdError] = React.useState<string | undefined>();
 
   const [forgotOpen, setForgotOpen] = React.useState(false);
+  
+  // Custom popup states
+  const [showErrorPopup, setShowErrorPopup] = React.useState(false);
+  const [errorTitle, setErrorTitle] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  // Helper function to show custom popup
+  const showError = (title: string, message: string) => {
+    console.log('Showing error popup:', title, message); // Debug log
+    setErrorTitle(title);
+    setErrorMessage(message);
+    setShowErrorPopup(true);
+  };
 
   const onLogin = async () => {
     setEmailError(undefined);
@@ -75,20 +89,63 @@ const Login: React.FC = () => {
         console.log('User data:', userData);
       } else {
         console.error('No token found in response:', res);
-        Alert.alert('Login Error', 'No authentication token received from server');
+        showError('Login Error', 'No authentication token received from server');
       }
       
       console.log('Navigation called successfully');
     } catch (error: any) {
-      console.error('Navigation error:', error);
-      Alert.alert('Navigation Error', `Failed to navigate: ${error.message}`);
+      console.error('Login error:', error);
+      
+      // Check if it's an axios error with 401 status
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        
+        if (status === 401) {
+          // Show specific popup for wrong email/password
+          console.log("Unauthorized 401 ");
+          showError(
+            'Login Failed',
+            'Email or password is incorrect. Please check your credentials and try again.'
+          );
+        } else if (status === 400) {
+          // Handle other client errors
+          showError(
+            'Login Error',
+            error.response?.data?.message || 'Please check your input and try again.'
+          );
+        } else if (status && status >= 500) {
+          // Handle server errors
+          showError(
+            'Server Error',
+            'Something went wrong on our end. Please try again later.'
+          );
+        } else {
+          // Handle other HTTP errors
+          showError(
+            'Login Error',
+            error.response?.data?.message || 'An error occurred during login. Please try again.'
+          );
+        }
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network')) {
+        // Handle network errors
+        showError(
+          'Network Error',
+          'Please check your internet connection and try again.'
+        );
+      } else {
+        // Handle other errors
+        showError(
+          'Login Error',
+          error.message || 'An unexpected error occurred. Please try again.'
+        );
+      }
     }
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeStyle.colors.black }}>
       <ImageBackground
-        source={require('../../assets/images/background.png')}
+        source={require('@/assets/images/background.png')}
         style={{ position: 'absolute', width: '100%', height: '100%' }}
         resizeMode="cover"
       />
@@ -220,7 +277,7 @@ const Login: React.FC = () => {
             <ButtonGoogle
               text="Sign up with Google"
               borderColor={themeStyle.colors.black}
-              onPress={() => Alert.alert('Google', 'Google auth (mock)')}
+              onPress={() => showError('Google', 'Google auth (mock)')}
               width={270}
             />
           </Animated.View>
@@ -235,8 +292,82 @@ const Login: React.FC = () => {
         startStep="verify"          // force verification UI
       />
 
+      {/* Custom Error Popup Modal */}
+      <Modal
+        visible={showErrorPopup}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowErrorPopup(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{errorTitle}</Text>
+            <Text style={styles.modalMessage}>{errorMessage}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowErrorPopup(false)}
+            >
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
+
+// Modal styles for custom popup
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    margin: 20,
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    minWidth: 280,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#666',
+    lineHeight: 22,
+  },
+  modalButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 export default Login;

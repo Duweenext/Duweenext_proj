@@ -3,9 +3,9 @@ import React, { useMemo } from 'react';
 import { View, Text, Image, ScrollView } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getTopicBySlug } from '../../../src/data/educationData';
-import type { EduSection } from '../../../src/interfaces/typesEducation'; // or your updated path
-import { themeStyle } from '../../../src/theme';
+import { getTopicBySlug } from '../../../../src/data/educationData';
+import type { EduSection } from '../../../../src/interfaces/typesEducation'; // or your updated path
+import { themeStyle } from '../../../../src/theme';
 import TopBar from '@/src/component/NavBar/TopBar';
 
 export default function EducationDetail() {
@@ -128,7 +128,7 @@ export default function EducationDetail() {
             elevation: 16, // Android stacking
           }}
         >
-          <TopBar title="Education" />
+          {/* <TopBar title="Education" /> */}
         </View>
       </View>
     </>

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { EDUCATION_TOPICS } from '../../src/data/educationData';
 import CardEducation from '@/src/component/Card/CardEducation';
 import CardFAQ from '@/src/component/Card/CardFAQ';
+import BackgroundWrapper from '@/src/component/Layout/BackgroundWrapper';
 
 const spacing = 12;
 const numColumns = 2;

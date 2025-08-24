@@ -12,7 +12,7 @@ const WelcomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeStyle.colors.black }}>
       <ImageBackground
-        source={require('../../assets/images/background.png')}
+        source={require('@/assets/images/background.png')}
         style={{ position: 'absolute', width: '100%', height: '100%' }}
         resizeMode="cover"
       />

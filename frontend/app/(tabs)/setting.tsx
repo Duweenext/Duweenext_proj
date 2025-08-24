@@ -9,20 +9,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme, themeStyle } from '@/theme';
 import { SettingCard } from '@/src/component/Card/SettingCard';
 
-//const bgImage = require('@/assets/images/green-splash.jpg'); // swap to your actual image
-
 const Setting: React.FC = () => {
   const router = useRouter();
   const [lang, setLang] = useState<'en' | 'th'>('th');
   const [langOpen, setLangOpen] = useState(false);
-  const PICKER_SHIFT_RIGHT = 80;   // same as the View that wraps the picker (right: 80)
+  const PICKER_SHIFT_RIGHT = 80;  
 
   const cardSpacing = 14;
 
   const onPickLang = (code: 'en' | 'th') => {
     setLang(code);
     setLangOpen(false);
-    // TODO: hook to your i18n/locale change here
   };
 
   return (
@@ -35,23 +32,23 @@ const Setting: React.FC = () => {
         <View style={{ gap: cardSpacing, width: '90%'}}>
           <SettingCard
             title="Manage Profile"
-            onPress={() => router.push('/(screens)/profile_setting')}
+            onPress={() => router.push('/(tabs)/(screens)/profile_setting')}
           />
           <SettingCard
             title="Manage Notifications"
-            onPress={() => router.push('/(screens)/manage-notifications')}
+            onPress={() => router.push('/(tabs)/(screens)/manage-notifications')}
           />
           <SettingCard
             title="Help & Supports"
-            onPress={() => router.push('/(screens)/help-supports')}
+            onPress={() => router.push('/(tabs)/(screens)/help-supports')}
           />
           <SettingCard
             title="Privacy Policy"
-            onPress={() => router.push('/(screens)/privacy-policy')}
+            onPress={() => router.push('/(tabs)/(screens)/privacy-policy')}
           />
           <SettingCard
             title="Terms & Conditions"
-            onPress={() => router.push('/(screens)/terms-conditions')}
+            onPress={() => router.push('/(tabs)/(screens)/terms-conditions')}
           />
         </View>
 

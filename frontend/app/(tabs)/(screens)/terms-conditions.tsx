@@ -22,7 +22,7 @@ export default function TermsConditions() {
 
   return (
     <View style={{ flex: 1,}}>
-      <TopBar title="Term & Conditions" />
+      {/* <TopBar title="Term & Conditions" /> */}
       <ScrollView contentContainerStyle={{ paddingVertical: 12 }}>
         <View
           style={{

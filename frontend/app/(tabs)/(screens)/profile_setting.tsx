@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
-import ForgotPasswordFlow from '../../src/flows/ForgotPasswordFlow';
-import DeleteAccountFlow from '../../src/flows/DeleteAccountFlow';
-import { themeStyle } from '../../src/theme';
+import ForgotPasswordFlow from '../../../src/flows/ForgotPasswordFlow';
+import DeleteAccountFlow from '../../../src/flows/DeleteAccountFlow';
+import { themeStyle } from '../../../src/theme';
 import TopBar from '@/src/component/NavBar/TopBar';
 import ModalChangeInformation from '@/src/component/Modals/ModalChangeInformation';
 import ButtonPrimary from '@/src/component/Buttons/ButtonPrimary';
@@ -10,6 +10,7 @@ import TextFieldPrimary from '@/src/component/TextFields/TextFieldPrimary';
 import ButtonModalL from '@/src/component/Buttons/ButtonModalL';
 import ButtonUnderline from '@/src/component/Buttons/ButtonUnderline';
 import ButtonGoogle from '@/src/component/Buttons/ButtonGoogle';
+import { useAuth } from '@/src/auth/context/auth_context';
 
 const TAKEN_USERNAMES = new Set(['admin', 'jane', 'john', 'taken_user']);
 const TAKEN_EMAILS = new Set(['taken@example.com', 'exists@gmail.com']);
@@ -53,6 +54,8 @@ const ProfileSetting: React.FC<Props> = () => {
   const [editName, setEditName] = React.useState('');
   const [editEmail, setEditEmail] = React.useState('');
   const [editError, setEditError] = React.useState<string | undefined>();
+
+  const {logout} = useAuth();
 
   const onEditInfo = () => {
     setVerifyPassword('');
@@ -290,7 +293,7 @@ const ProfileSetting: React.FC<Props> = () => {
 
   return (
     <>
-    <TopBar title="Profile Setting"/>
+    {/* <TopBar title="Profile Setting"/> */}
     <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
        
       {/* ---- Change Account Information ---- */}
@@ -390,7 +393,7 @@ const ProfileSetting: React.FC<Props> = () => {
       </View>
       <View style={{ marginTop: 5, marginBottom: 12, flexDirection: 'column', justifyContent: 'flex-start', width: 240, paddingBottom: 20, left: 30 }}>
         <ButtonGoogle text="Google" borderColor={themeStyle.colors.primary} onPress={() => console.log('Google link')} width={220} />
-        <ButtonPrimary text="Logout" filledColor={themeStyle.colors.white} textColor={themeStyle.colors.black} onPress={() => console.log('Logout')} />
+        <ButtonPrimary text="Logout" filledColor={themeStyle.colors.white} textColor={themeStyle.colors.black} onPress={() => logout()} />
 
         {/* Danger zone / Recovery UI */}
         {renderDeleteAction()}

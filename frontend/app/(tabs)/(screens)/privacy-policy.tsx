@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
 
   return (
     <View style={{ flex: 1, }}>
-      <TopBar title="Privacy & Policy" />
+      {/* <TopBar title="Privacy & Policy" /> */}
       <ScrollView contentContainerStyle={{ paddingVertical: 12 }}>
         <View
           style={{

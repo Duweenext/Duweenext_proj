@@ -23,6 +23,8 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/radovskyb/watcher v1.0.7 // indirect
 	github.com/savsgio/gotils v0.0.0-20250408102913-196191ec6287 // indirect
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.16.1+incompatible // indirect
 	golang.org/x/net v0.40.0 // indirect
 )
 

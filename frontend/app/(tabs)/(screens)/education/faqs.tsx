@@ -9,7 +9,7 @@ export default function FAQPage() {
 
   return (
     <View style={{ flex: 1, backgroundColor: themeStyle.colors.white }}>
-      <TopBar title="FAQs" />
+      {/* <TopBar title="FAQs" /> */}
       <ScrollView style={{ padding: 18 }}>
         {FAQS.map((faq, idx) => {
           const isOpen = expanded === faq.id;

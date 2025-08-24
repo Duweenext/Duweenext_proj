@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/context/auth_context";
 import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import React from "react";
 
 export default function Page() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -10,16 +11,13 @@ export default function Page() {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        // User has JWT token, redirect to main app (tabs)
         router.replace('/(tabs)');
       } else {
-        // No JWT token, redirect to auth (login)
         router.replace('/(auth)/login');
       }
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Show loading spinner while checking authentication
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#0000ff" />

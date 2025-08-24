@@ -124,7 +124,8 @@ func (s *FiberServer) Start() {
 	// Board Relationship routes
 	api.Post("/board-relationships", boardRelationShipHandler.CreateBoardRelationship)
 
-	// Board routes
+	// Board routes - specific routes first, then parameterized routes
+	api.Get("/board/all", boardHandler.GetAllBoards)
 	api.Get("/board/:board_id", boardHandler.GetBoardByBoardID)
 
 	// WebSocket Route

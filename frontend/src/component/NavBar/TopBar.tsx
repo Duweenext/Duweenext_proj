@@ -1,4 +1,7 @@
+
+import { useTitle } from '@/src/hooks/useTitle';
 import { themeStyle } from '@/src/theme';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   View,
@@ -10,17 +13,25 @@ import {
 } from 'react-native';
 
 interface TopBarProps {
-  title: string;
+  title?: string;
   textColor?: string;
   onBack?: (event: GestureResponderEvent) => void;
   showBackButton?: boolean;
 }
 
 const TopBar: React.FC<TopBarProps> = ({
-  title,
+  title: topbar_title,
   textColor = themeStyle.colors.white,
-  onBack = () => {},
+  showBackButton = true
 }) => {
+
+  const router = useRouter();
+  const title = useTitle();
+  if(!topbar_title)
+  {
+    topbar_title = title;
+  }
+
   return (
     <View style={{
         width: '100%',
@@ -41,7 +52,7 @@ const TopBar: React.FC<TopBarProps> = ({
         alignItems: 'center',
         justifyContent: 'flex-start',
         }}>
-        <TouchableOpacity onPress={onBack} style={{paddingRight: 12}}>
+        {showBackButton && <TouchableOpacity onPress={() => router.back()} style={{paddingRight: 12}}>
           <Image
             source={require('@/assets/icons/back-arrowhead.png')}
             style={{
@@ -53,7 +64,7 @@ const TopBar: React.FC<TopBarProps> = ({
             left: 15,
           }}
           />
-        </TouchableOpacity>
+        </TouchableOpacity>}
         <Text style={{
             fontSize: 18,
             fontWeight: 'bold',
@@ -61,7 +72,7 @@ const TopBar: React.FC<TopBarProps> = ({
             textAlign: 'center',
             marginTop:18,
             marginRight: 32,
-            color: textColor}}>{title}</Text>
+            color: textColor}}>{topbar_title}</Text>
       </View>
     </View>
   );

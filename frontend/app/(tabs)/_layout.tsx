@@ -1,10 +1,29 @@
 import React from 'react';
-import { View, Text, ImageBackground, Image } from 'react-native';
+import { View, Text, ImageBackground, Image, Dimensions, PixelRatio } from 'react-native';
 import { Redirect, Tabs } from 'expo-router';
 import { images } from '@/src/constants/images';
 import { icons } from '@/src/constants/icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TopBar from '@/src/component/NavBar/TopBar';
+import BackgroundWrapper from '@/src/component/Layout/BackgroundWrapper';
+import { theme } from '@/src/theme';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const getResponsiveSize = (size: number) => {
+    const scale = screenWidth / 320; 
+    const newSize = size * scale;
+    return Math.max(newSize, size * 0.9);
+};
+
+const responsiveMinWidth = Math.min(screenWidth * 0.80, 160);
+const responsiveHeight = Math.min(screenHeight * 0.08, 300); 
+const responsivePadding = getResponsiveSize(1);
+const responsiveMarginTop = getResponsiveSize(14);
+
+const responsiveTabBarHeight = Math.max(screenHeight * 0.08, 60);
+const responsiveTabBarMargin = Math.max(screenWidth * 0.05, 20);
+const responsiveTabBarMarginBottom = Math.max(screenHeight * 0.018, 1);
 
 function TabIcon({
     focused,
@@ -20,19 +39,28 @@ function TabIcon({
             <ImageBackground
                 source={images.highlight}
                 style={{
-                    padding: 16, // p-3
-                    width: '100%',
+                    padding: responsivePadding,
+                    width: responsiveMinWidth,
                     flex: 1,
-                    minWidth: 120, // min-w-[120px]
-                    minHeight: 64, // min-h-16
-                    marginTop: 14, // mt-3.5
+                    // minWidth: responsiveMinWidth,
+                    minHeight: responsiveHeight,
+                    maxHeight: responsiveHeight + 10, // Slight max height for better appearance
+                    marginTop: responsiveMarginTop,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    borderRadius: 12, // rounded-xl
+                    borderRadius: 12,
                     overflow: 'hidden',
                     flexDirection: 'column',
                 }}
-                imageStyle={{ borderRadius: 12 }}
+                imageStyle={{ 
+                    borderRadius: 12,
+                    resizeMode: 'stretch', // Stretch to fill container
+                    position: 'absolute',
+                    left: 0, 
+                    top: 0,
+                    width: '100%',
+                    height: '100%'
+                }}
             >
                 <Image
                     source={icon}
@@ -55,14 +83,15 @@ function TabIcon({
     return (
         <View
             style={{
-                minWidth: 120, // min-w-[120px]
+                minWidth: responsiveMinWidth,
                 width: '100%',
                 height: '100%',
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginTop: 16, // mt-4
-                borderRadius: 999, // rounded-full
+                marginTop: responsiveMarginTop + 2, // Slightly more margin for unfocused state
+                borderRadius: 999,
                 flexDirection: 'column',
+                paddingHorizontal: 4, // Add some horizontal padding
             }}
         >
             <Image
@@ -85,38 +114,35 @@ function TabIcon({
 
 const _Layout = () => {
     return (
-        <Tabs
-            screenOptions={{
-                tabBarItemStyle: {
-                    width: '100%',
-                    height: '100%',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                },
-                tabBarStyle: {
-                    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                    borderRadius: 15,
-                    marginHorizontal: 20,
-                    marginBottom: 60,
-                    paddingTop: 5,
-                    height: 60,
-                    position: 'absolute',
-                    overflow: 'hidden',
-                    borderWidth: 0,
-                    elevation: 0, // Android shadow off
-                    shadowOpacity: 0, // iOS shadow off
-                    borderTopWidth: 0,
-                    backdropFilter: 'blur(10px)', // iOS blur effect
-                },
-                headerStyle: {
-                    backgroundColor: 'transparent',
-                },
-                sceneStyle: {
-                    backgroundColor: 'transparent',
-                },
-                
-            }}
-        >
+        <BackgroundWrapper>
+            <Tabs
+                screenOptions={{
+                    tabBarItemStyle: {
+                        width: '100%',
+                        height: '100%',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    },
+                    tabBarStyle: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        borderRadius: 25,
+                        marginHorizontal: responsiveTabBarMargin,
+                        marginBottom: responsiveTabBarMarginBottom,
+                        paddingTop: 5,
+                        height: responsiveTabBarHeight,
+                        position: 'absolute',
+                        overflow: 'hidden',
+                        borderWidth: 0,
+                        elevation: 0,
+                        shadowOpacity: 0, 
+                        borderTopWidth: 0,
+                        backdropFilter: 'blur(10px)',
+                    },
+                    sceneStyle: {
+                        backgroundColor: theme.colors.secondary, // Now we can use transparent since we have background wrapper
+                    },
+                }}
+            >
             <Tabs.Screen
                 name="index"
                 options={{
@@ -125,7 +151,7 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.home} title="Home" />
                     ),
-                    header: () => <TopBar title = "Home Page" />
+                    header: () => <TopBar title="Home Page" showBackButton={false} />
                 }}
             />
             <Tabs.Screen
@@ -140,29 +166,7 @@ const _Layout = () => {
                 }}
             />
             <Tabs.Screen
-                name="sensor"
-                options={{
-                    title: '',
-                    headerShown: true,
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.sensor} title="Sensor" />
-                    ),
-                    header: () => <TopBar title="Sensor" />,
-                }}
-            />
-            <Tabs.Screen
                 name="setting"
-                options={{
-                    title: '',
-                    headerShown: true,
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.setting} title="Setting"/>
-                    ),
-                    header: () => <TopBar title="Setting" />,
-                }}
-            />
-             <Tabs.Screen
-                name="notification_setting"
                 options={{
                     title: '',
                     headerShown: true,
@@ -173,17 +177,19 @@ const _Layout = () => {
                 }}
             />
             <Tabs.Screen
-                name="404_notFound"
+                name="(screens)"
                 options={{
                     title: '',
-                    headerShown: true,
+                    headerShown: false,
+                    href: null,
                     tabBarIcon: ({ focused }) => (
-                        <TabIcon focused={focused} icon={icons.setting} title="Page Not Found" />
+                        <TabIcon focused={focused} icon={icons.educate} title="Screen" />
                     ),
-                    header: () => <TopBar title="" />,
+                    // header: () => <TopBar title="Screen" />,
                 }}
             />
         </Tabs>
+        </BackgroundWrapper>
     );
 };
 

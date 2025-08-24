@@ -13,8 +13,8 @@ type Props = {
 export default function ActionRow({ onCamera, onUpload }: Props) {
   return (
     <View style={{ flexDirection: 'row', gap: 14, paddingHorizontal: 20, paddingTop: 8 }}>
-      <CardIcon icon={require('../../../assets/images/camera.png')} onPress={onCamera} />
-      <CardIcon icon={require('../../../assets/images/upload.png')} onPress={onUpload} />
+      <CardIcon icon={require('@/assets/images/camera.png')} onPress={onCamera} />
+      <CardIcon icon={require('@/assets/images/upload.png')} onPress={onUpload} />
       {/* ❌ Removed share button */}
     </View>
   );

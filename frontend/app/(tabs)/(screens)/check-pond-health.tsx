@@ -311,7 +311,6 @@ Tip: ${latest.tips[0]}`
 
   return (
     <View style={{ flex: 1 }}>
-      <TopBar title="Check Pond Health" />
       <ScrollView contentContainerStyle={{ paddingBottom: 30, marginTop: 20 }}>
         <Text style={{ color: themeStyle.colors.white, fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.header2, left: 20, marginBottom: 10 }}>
           Determine your pond health
@@ -320,7 +319,7 @@ Tip: ${latest.tips[0]}`
         <UploadBox imageUri={imageUri} status={status} placeholder={placeholder} onReset={resetImage} />
 
         <ActionRow
-          onCamera={() => router.push('/(screens)/camera')}
+          onCamera={() => router.push('/(tabs)/(screens)/camera')}
           onUpload={pickFromLibrary}
           RenderButton={IconBtn}
           icons={{ camera: <Text>📷</Text>, upload: <Text>⬆️</Text> }}

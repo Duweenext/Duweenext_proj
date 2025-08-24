@@ -5,8 +5,6 @@ import { icons } from "@/src/constants/icons";
 import { useTranslation } from "react-i18next";
 import TabBox from "@/src/component/TabBox";
 
-
-
 export default function Index() {
   const {t, i18n} = useTranslation();
 
@@ -27,23 +25,23 @@ export default function Index() {
         <View style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          marginBottom: 24,
+          marginVertical: 24,
           gap: 12,
         }}>
           <TabBox
             title="Sensor"
             icon={icons.sensor}
-            onNav={() => router.push("/(screens)/sensor")}
+            onNav={() => router.push("/(tabs)/(screens)/sensor")}
           />
           <TabBox
             title="Check Pond Health"
             icon={icons.camera}
-            onNav={() => router.push("/(screens)/check-pond-health")}
+            onNav={() => router.push("/(tabs)/(screens)/check-pond-health")}
           />
-          <TabBox 
-            title="Notification History" 
-            icon={icons.assistant} 
-            onNav={() => router.push("/(screens)/notification_setting")} 
+          <TabBox
+            title="Notification History"
+            icon={icons.assistant}
+            onNav={() => router.push("/(tabs)/(screens)/notification_setting")}
           />
         </View>
 

@@ -71,7 +71,7 @@ const ManageNotifications: React.FC = () => {
 
   return (
     <>
-    <TopBar title='Manage Notifications'/>
+    {/* <TopBar title='Manage Notifications'/> */}
      
 
       {/* Content */}

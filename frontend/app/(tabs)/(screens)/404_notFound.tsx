@@ -11,7 +11,7 @@ export default function NotFoundScreen() {
   const router = useRouter();
 
   // ⬇️ Fill these with your assets when ready
-  const CIRCLE_IMG = require('../../assets/images/404.png');
+  const CIRCLE_IMG = require('@/assets/images/404.png');
   
 
   return (

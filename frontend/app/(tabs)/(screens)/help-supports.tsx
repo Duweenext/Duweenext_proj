@@ -38,7 +38,6 @@ export default function HelpSupports() {
 
   return (
     <View style={{ flex: 1, }}>
-      <TopBar title="Help & Support" />
       <ScrollView contentContainerStyle={{ paddingVertical: 12 }}>
         <View
           style={{

@@ -10,6 +10,7 @@ import (
 type BoardRelationshipRepositoryInterface interface {
 	Create(relationship *entities.BoardRelationship) (*entities.BoardRelationship, error)
 	FindByBoardIDAndUserID(boardID string, userID uint) (*entities.BoardRelationship, error)
+	FindByUserID(userID uint) ([]entities.BoardRelationship, error)
 }
 
 type BoardRelationshipRepository struct {
@@ -42,4 +43,16 @@ func (r *BoardRelationshipRepository) FindByBoardIDAndUserID(boardID string, use
 		return nil, err
 	}
 	return &relationship, nil
+}
+
+func (r *BoardRelationshipRepository) FindByUserID(userID uint) ([]entities.BoardRelationship, error) {
+    var relationships []entities.BoardRelationship
+    log.Printf("[DEBUG-REPO] Querying for all relationships with UserID: %d\n", userID)
+    err := r.db.Where("user_id = ?", userID).Find(&relationships).Error
+    if err != nil {
+        log.Printf("[ERROR-REPO] GORM Find failed for UserID %d: %v\n", userID, err)
+        return nil, err
+    }
+    log.Printf("[DEBUG-REPO] Found %d relationships in DB for UserID: %d\n", len(relationships), userID)
+    return relationships, nil
 }

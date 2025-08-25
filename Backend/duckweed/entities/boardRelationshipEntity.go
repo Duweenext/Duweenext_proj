@@ -43,6 +43,7 @@ type InsertBoardRelationshipDto struct {
 // DTO for responding with BoardRelationship details
 type BoardRelationshipResponseDto struct {
 	BoardID   string          `json:"board_id"`
+	BoardName *string       `json:"board_name"`
 	UserID    uint          `json:"user_id"`
 	ConStatus ConStatusEnum `json:"con_status"`
 	ConMethod ConMethodEnum `json:"con_method"`

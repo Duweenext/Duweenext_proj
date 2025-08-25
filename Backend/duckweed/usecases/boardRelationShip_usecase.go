@@ -3,6 +3,7 @@ package usecases
 import (
 	"errors"
 	"fmt"
+	"log"
 	"main/duckweed/entities"
 	"main/duckweed/repositories"
 
@@ -11,6 +12,7 @@ import (
 
 type BoardRelationshipUseCaseInterface interface {
 	CreateBoardRelationship(dto entities.InsertBoardRelationshipDto) (*entities.BoardRelationshipResponseDto, error)
+	GetRelationshipsByUserID(userID uint) ([]entities.BoardRelationshipResponseDto, error)
 }
 
 type BoardRelationshipUseCase struct {
@@ -52,8 +54,8 @@ func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertB
 		}
 
 		newBoard := &entities.Board{
-			BoardID:            dto.BoardID,
-			BoardName:          dto.BoardName,
+			BoardID:     dto.BoardID,
+			BoardName:   dto.BoardName,
 			ConPassword: hashedPassword,
 		}
 		board, err = uc.boardRepo.Create(newBoard)
@@ -67,7 +69,7 @@ func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertB
 			}
 			err := bcrypt.CompareHashAndPassword([]byte(*board.ConPassword), []byte(*dto.ConPassword))
 			if err != nil {
-				return nil, errors.New("invalid password") 
+				return nil, errors.New("invalid password")
 			}
 		}
 	}
@@ -95,10 +97,51 @@ func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertB
 	responseDto := &entities.BoardRelationshipResponseDto{
 		UserID:    createdRelationship.UserID,
 		BoardID:   createdRelationship.BoardID,
+		BoardName: board.BoardName, 
 		ConStatus: createdRelationship.ConStatus,
 		ConMethod: createdRelationship.ConMethod,
 		CreatedAt: createdRelationship.CreatedAt,
 		UpdatedAt: createdRelationship.UpdatedAt,
 	}
 	return responseDto, nil
+}
+
+
+func (uc *BoardRelationshipUseCase) GetRelationshipsByUserID(userID uint) ([]entities.BoardRelationshipResponseDto, error) {
+    log.Printf("[DEBUG-USECASE] Fetching relationships for UserID: %d\n", userID)
+    relationships, err := uc.boardRelationshipRepo.FindByUserID(userID)
+    if err != nil {
+        log.Printf("[ERROR-USECASE] Error fetching relationships from repo for UserID %d: %v\n", userID, err)
+        return nil, fmt.Errorf("error retrieving relationships: %w", err)
+    }
+
+    log.Printf("[DEBUG-USECASE] Found %d relationships for UserID: %d\n", len(relationships), userID)
+
+    var responseDtos []entities.BoardRelationshipResponseDto
+    for _, rel := range relationships {
+        board, err := uc.boardRepo.FindByBoardID(rel.BoardID)
+        if err != nil {
+            log.Printf("[ERROR-USECASE] Could not find board with BoardID %s for UserID %d: %v\n", rel.BoardID, userID, err)
+            // Decide if you want to skip this relationship or return an error
+            continue 
+        }
+
+        var boardName *string
+        if board != nil && board.BoardName != nil {
+            boardName = board.BoardName
+        }
+
+        responseDtos = append(responseDtos, entities.BoardRelationshipResponseDto{
+            UserID:    rel.UserID,
+            BoardID:   rel.BoardID,
+            BoardName: boardName,
+            ConStatus: rel.ConStatus,
+            ConMethod: rel.ConMethod,
+            CreatedAt: rel.CreatedAt,
+            UpdatedAt: rel.UpdatedAt,
+        })
+    }
+
+    log.Printf("[DEBUG-USECASE] Successfully prepared %d DTOs for UserID: %d\n", len(responseDtos), userID)
+    return responseDtos, nil
 }

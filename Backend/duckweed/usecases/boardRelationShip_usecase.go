@@ -13,21 +13,61 @@ import (
 type BoardRelationshipUseCaseInterface interface {
 	CreateBoardRelationship(dto entities.InsertBoardRelationshipDto) (*entities.BoardRelationshipResponseDto, error)
 	GetRelationshipsByUserID(userID uint) ([]entities.BoardRelationshipResponseDto, error)
+	UpdateBoardRelationshipStatus(id uint, dto entities.UpdateBoardRelationshipStatusDto) (*entities.BoardRelationshipResponseDto, error)
 }
 
 type BoardRelationshipUseCase struct {
 	boardRepo             repositories.BoardRepositoryInterface
 	boardRelationshipRepo repositories.BoardRelationshipRepositoryInterface
+	sensorRepo            repositories.SensorRepositoryInterface // Added
 }
 
 func NewBoardRelationshipUseCase(
 	boardRepo repositories.BoardRepositoryInterface,
 	boardRelationshipRepo repositories.BoardRelationshipRepositoryInterface,
+	sensorRepo repositories.SensorRepositoryInterface, // Added
 ) BoardRelationshipUseCaseInterface {
 	return &BoardRelationshipUseCase{
 		boardRepo:             boardRepo,
 		boardRelationshipRepo: boardRelationshipRepo,
+		sensorRepo:            sensorRepo, // Added
 	}
+}
+
+func (uc *BoardRelationshipUseCase) ensureAllSensorsExist(boardID uint) error {
+	// Use the corrected SensorType and constant names
+	requiredSensors := []entities.SensorType{
+		entities.SensorTypePH,
+		entities.SensorTypeEC,
+		entities.SensorTypeTemperature,
+	}
+
+	existingSensors, err := uc.sensorRepo.FindByBoardID(boardID)
+	if err != nil {
+		return fmt.Errorf("failed to find existing sensors: %w", err)
+	}
+
+	// Use the corrected SensorType for the map key
+	existingSensorTypes := make(map[entities.SensorType]bool)
+	for _, sensor := range existingSensors {
+		existingSensorTypes[sensor.SensorType] = true
+	}
+
+	for _, requiredType := range requiredSensors {
+		if !existingSensorTypes[requiredType] {
+			// Create a new sensor matching the updated struct
+			newSensor := &entities.Sensor{
+				BoardID:    boardID,
+				SensorType: requiredType,
+			}
+			if _, err := uc.sensorRepo.Create(newSensor); err != nil {
+				return fmt.Errorf("failed to create sensor of type %s: %w", requiredType, err)
+			}
+			log.Printf("[INFO-USECASE] Created missing sensor '%s' for board ID %d", requiredType, boardID)
+		}
+	}
+
+	return nil
 }
 
 func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertBoardRelationshipDto) (*entities.BoardRelationshipResponseDto, error) {
@@ -73,6 +113,13 @@ func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertB
 			}
 		}
 	}
+	
+	// THIS IS THE CRITICAL DEBUGGING LINE
+	log.Printf("[DEBUG-USECASE] Board check complete. Numeric ID to be used for sensors is: %d", board.ID)
+
+	if err := uc.ensureAllSensorsExist(board.ID); err != nil {
+		log.Printf("[WARN-USECASE] Could not ensure all sensors for board ID %d: %v", board.ID, err)
+	}
 
 	existingRel, err := uc.boardRelationshipRepo.FindByBoardIDAndUserID(board.BoardID, dto.UserID)
 	if err != nil {
@@ -97,7 +144,7 @@ func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertB
 	responseDto := &entities.BoardRelationshipResponseDto{
 		UserID:    createdRelationship.UserID,
 		BoardID:   createdRelationship.BoardID,
-		BoardName: board.BoardName, 
+		BoardName: board.BoardName,
 		ConStatus: createdRelationship.ConStatus,
 		ConMethod: createdRelationship.ConMethod,
 		CreatedAt: createdRelationship.CreatedAt,
@@ -106,42 +153,81 @@ func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertB
 	return responseDto, nil
 }
 
-
 func (uc *BoardRelationshipUseCase) GetRelationshipsByUserID(userID uint) ([]entities.BoardRelationshipResponseDto, error) {
-    log.Printf("[DEBUG-USECASE] Fetching relationships for UserID: %d\n", userID)
-    relationships, err := uc.boardRelationshipRepo.FindByUserID(userID)
-    if err != nil {
-        log.Printf("[ERROR-USECASE] Error fetching relationships from repo for UserID %d: %v\n", userID, err)
-        return nil, fmt.Errorf("error retrieving relationships: %w", err)
-    }
+	log.Printf("[DEBUG-USECASE] Fetching relationships for UserID: %d\n", userID)
+	relationships, err := uc.boardRelationshipRepo.FindByUserID(userID)
+	if err != nil {
+		log.Printf("[ERROR-USECASE] Error fetching relationships from repo for UserID %d: %v\n", userID, err)
+		return nil, fmt.Errorf("error retrieving relationships: %w", err)
+	}
 
-    log.Printf("[DEBUG-USECASE] Found %d relationships for UserID: %d\n", len(relationships), userID)
+	log.Printf("[DEBUG-USECASE] Found %d relationships for UserID: %d\n", len(relationships), userID)
 
-    var responseDtos []entities.BoardRelationshipResponseDto
-    for _, rel := range relationships {
-        board, err := uc.boardRepo.FindByBoardID(rel.BoardID)
-        if err != nil {
-            log.Printf("[ERROR-USECASE] Could not find board with BoardID %s for UserID %d: %v\n", rel.BoardID, userID, err)
-            // Decide if you want to skip this relationship or return an error
-            continue 
-        }
+	var responseDtos []entities.BoardRelationshipResponseDto
+	for _, rel := range relationships {
+		board, err := uc.boardRepo.FindByBoardID(rel.BoardID)
+		if err != nil {
+			log.Printf("[ERROR-USECASE] Could not find board with BoardID %s for UserID %d: %v\n", rel.BoardID, userID, err)
+			continue
+		}
 
-        var boardName *string
-        if board != nil && board.BoardName != nil {
-            boardName = board.BoardName
-        }
+		var boardName *string
+		if board != nil && board.BoardName != nil {
+			boardName = board.BoardName
+		}
 
-        responseDtos = append(responseDtos, entities.BoardRelationshipResponseDto{
-            UserID:    rel.UserID,
-            BoardID:   rel.BoardID,
-            BoardName: boardName,
-            ConStatus: rel.ConStatus,
-            ConMethod: rel.ConMethod,
-            CreatedAt: rel.CreatedAt,
-            UpdatedAt: rel.UpdatedAt,
-        })
-    }
+		responseDtos = append(responseDtos, entities.BoardRelationshipResponseDto{
+			ID:        rel.ID,
+			UserID:    rel.UserID,
+			BoardID:   rel.BoardID,
+			BoardName: boardName,
+			ConStatus: rel.ConStatus,
+			ConMethod: rel.ConMethod,
+			CreatedAt: rel.CreatedAt,
+			UpdatedAt: rel.UpdatedAt,
+		})
+	}
 
-    log.Printf("[DEBUG-USECASE] Successfully prepared %d DTOs for UserID: %d\n", len(responseDtos), userID)
-    return responseDtos, nil
+	log.Printf("[DEBUG-USECASE] Successfully prepared %d DTOs for UserID: %d\n", len(responseDtos), userID)
+	return responseDtos, nil
+}
+
+func (uc *BoardRelationshipUseCase) UpdateBoardRelationshipStatus(id uint, dto entities.UpdateBoardRelationshipStatusDto) (*entities.BoardRelationshipResponseDto, error) {
+	relationship, err := uc.boardRelationshipRepo.FindByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("error finding relationship: %w", err)
+	}
+	if relationship == nil {
+		return nil, errors.New("board relationship not found")
+	}
+
+	relationship.ConStatus = dto.ConStatus
+
+	updatedRelationship, err := uc.boardRelationshipRepo.Update(relationship)
+	if err != nil {
+		return nil, fmt.Errorf("could not update board relationship: %w", err)
+	}
+
+	board, err := uc.boardRepo.FindByBoardID(updatedRelationship.BoardID)
+	if err != nil {
+		log.Printf("[WARN-USECASE] Could not find board with BoardID %s while updating relationship %d: %v\n", updatedRelationship.BoardID, id, err)
+	}
+
+	var boardName *string
+	if board != nil {
+		boardName = board.BoardName
+	}
+
+	responseDto := &entities.BoardRelationshipResponseDto{
+		ID:        updatedRelationship.ID,
+		UserID:    updatedRelationship.UserID,
+		BoardID:   updatedRelationship.BoardID,
+		BoardName: boardName,
+		ConStatus: updatedRelationship.ConStatus,
+		ConMethod: updatedRelationship.ConMethod,
+		CreatedAt: updatedRelationship.CreatedAt,
+		UpdatedAt: updatedRelationship.UpdatedAt,
+	}
+
+	return responseDto, nil
 }

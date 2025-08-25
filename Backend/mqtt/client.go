@@ -95,9 +95,9 @@ func handleTelemetryMessage(client mqtt.Client, msg mqtt.Message) {
 
 	sensorLog := &entities.SensorLog{
 		BoardID:     &board.BoardID,
-		Temperature: &dto.Temperature,
-		Ec:          &dto.Ec,
-		Ph:          &dto.Ph,
+		Temperature: dto.Temperature,
+		Ec:          dto.Ec,
+		Ph:          dto.Ph,
 	}
 
 	if err := db.Create(&sensorLog).Error; err != nil {
@@ -106,6 +106,9 @@ func handleTelemetryMessage(client mqtt.Client, msg mqtt.Message) {
 	}
 	log.Printf("Successfully saved sensor log for BoardID: %s", *sensorLog.BoardID)
 
+	// After saving, check thresholds and broadcast telemetry
+	checkThresholdsAndNotify(&board, &dto)
+
 	if serverInstance != nil {
 		serverInstance.BroadcastTelemetryData(board.BoardID, sensorLog)
 	} else {
@@ -113,6 +116,48 @@ func handleTelemetryMessage(client mqtt.Client, msg mqtt.Message) {
 	}
 
 	updateBoardLastSeen(board.ID)
+}
+
+// checkThresholdsAndNotify checks telemetry data against predefined sensor thresholds.
+func checkThresholdsAndNotify(board *entities.Board, telemetry *entities.InsertSensorLogDto) {
+	var sensors []entities.Sensor
+	// Find all sensor settings associated with this board
+	if err := db.Where("board_id = ?", board.ID).Find(&sensors).Error; err != nil {
+		log.Printf("Could not retrieve sensors for board ID %d to check thresholds: %v", board.ID, err)
+		return
+	}
+
+	for _, sensor := range sensors {
+		var alertMessage string
+		switch sensor.SensorType {
+		case entities.SensorTypeTemperature:
+			if sensor.SensorThresholdMax != nil && telemetry.Temperature > *sensor.SensorThresholdMax {
+				alertMessage = fmt.Sprintf("Temperature (%.2f) exceeded maximum threshold (%.2f)", telemetry.Temperature, *sensor.SensorThresholdMax)
+			}
+			if sensor.SensorThresholdMin != nil && telemetry.Temperature < *sensor.SensorThresholdMin {
+				alertMessage = fmt.Sprintf("Temperature (%.2f) is below minimum threshold (%.2f)", telemetry.Temperature, *sensor.SensorThresholdMin)
+			}
+		case entities.SensorTypeEC:
+			if sensor.SensorThresholdMax != nil && telemetry.Ec > *sensor.SensorThresholdMax {
+				alertMessage = fmt.Sprintf("EC (%.2f) exceeded maximum threshold (%.2f)", telemetry.Ec, *sensor.SensorThresholdMax)
+			}
+			if sensor.SensorThresholdMin != nil && telemetry.Ec < *sensor.SensorThresholdMin {
+				alertMessage = fmt.Sprintf("EC (%.2f) is below minimum threshold (%.2f)", telemetry.Ec, *sensor.SensorThresholdMin)
+			}
+		case entities.SensorTypePH:
+			if sensor.SensorThresholdMax != nil && telemetry.Ph > *sensor.SensorThresholdMax {
+				alertMessage = fmt.Sprintf("pH (%.2f) exceeded maximum threshold (%.2f)", telemetry.Ph, *sensor.SensorThresholdMax)
+			}
+			if sensor.SensorThresholdMin != nil && telemetry.Ph < *sensor.SensorThresholdMin {
+				alertMessage = fmt.Sprintf("pH (%.2f) is below minimum threshold (%.2f)", telemetry.Ph, *sensor.SensorThresholdMin)
+			}
+		}
+
+		if alertMessage != "" {
+			// Print the alert to the console
+			log.Printf("[ALERT] Board %s: %s", board.BoardID, alertMessage)
+		}
+	}
 }
 
 func handleStatusMessage(client mqtt.Client, msg mqtt.Message) {

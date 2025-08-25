@@ -49,7 +49,7 @@ func migrate(db database.Database) {
         log.Fatalf("Failed to migrate Sensor: %v", err)
         return
     }
-    log.Println("Migrated BoardRelationship")
+    log.Println("Migrated Sensor")
 
     err = gormDB.AutoMigrate(&entities.BoardRelationship{})
     if err != nil {

@@ -43,7 +43,13 @@ func (r *BoardRepository) Create(board *entities.Board) (*entities.Board, error)
 	if err := r.db.Create(board).Error; err != nil {
 		return nil, err
 	}
-	return board, nil
+
+	var createdBoard entities.Board
+	if err := r.db.First(&createdBoard, board.ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &createdBoard, nil
 }
 
 func (r *BoardRepository) FindAll() ([]entities.Board, error) {

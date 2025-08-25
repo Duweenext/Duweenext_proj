@@ -1,52 +1,90 @@
 package handlers
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 	"main/duckweed/entities"
+	"main/duckweed/usecases"
+	"strconv"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
 )
 
-func CreateSensor(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		dto := new(entities.InsertSensorDto)
-		if err := c.BodyParser(dto); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-		}
+type SensorHandler struct {
+	useCase   usecases.SensorUseCaseInterface
+	validator *validator.Validate
+}
 
-		sensor := entities.Sensor{
-			SensorName:      &dto.SensorName,
-			SensorType:      &dto.SensorType,
-			SensorStatus:    &dto.SensorStatus,
-			SensorThreshold: &dto.SensorThreshold,
-			SensorFrequency: &dto.SensorFrequency,
-		}
-
-		if err := db.Create(&sensor).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-		}
-
-		return c.Status(fiber.StatusCreated).JSON(sensor)
+func NewSensorHandler(uc usecases.SensorUseCaseInterface) *SensorHandler {
+	return &SensorHandler{
+		useCase:   uc,
+		validator: validator.New(),
 	}
 }
 
-
-func GetAllSensors(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var sensors []entities.Sensor
-		if err := db.Find(&sensors).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.JSON(sensors)
+func (h *SensorHandler) CreateSensor(c *fiber.Ctx) error {
+	dto := new(entities.InsertSensorDto)
+	if err := c.BodyParser(dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Invalid request body", "data": err.Error()})
 	}
+
+	if err := h.validator.Struct(dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Validation failed", "data": err.Error()})
+	}
+
+	sensor, err := h.useCase.CreateSensor(*dto)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "Could not create sensor", "data": err.Error()})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": "success", "data": sensor})
 }
 
-func GetSensorByID(db *gorm.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		id := c.Params("id")
-		var sensor entities.Sensor
-		if err := db.First(&sensor, id).Error; err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Sensor not found"})
-		}
-		return c.JSON(sensor)
+func (h *SensorHandler) GetAllSensors(c *fiber.Ctx) error {
+	sensors, err := h.useCase.GetAllSensors()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "Could not retrieve sensors"})
 	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": sensors})
+}
+
+func (h *SensorHandler) GetSensorByID(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Invalid ID format"})
+	}
+
+	sensor, err := h.useCase.GetSensorByID(uint(id))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "Could not retrieve sensor"})
+	}
+	if sensor == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "error", "message": "Sensor not found"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": sensor})
+}
+
+
+func (h *SensorHandler) UpdateSensorThresholds(c *fiber.Ctx) error {
+	boardID := c.Params("board_id")
+	if boardID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Board ID is required in the URL"})
+	}
+
+	dto := new(entities.UpdateSensorThresholdDto)
+	if err := c.BodyParser(dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Invalid request body", "data": err.Error()})
+	}
+
+	if err := h.validator.Struct(dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Validation failed", "data": err.Error()})
+	}
+
+	updatedSensor, err := h.useCase.UpdateSensorThresholds(boardID, *dto)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": err.Error()})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": updatedSensor})
 }

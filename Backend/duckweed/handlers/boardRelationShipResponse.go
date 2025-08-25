@@ -57,7 +57,6 @@ func (h *BoardRelationshipHandler) CreateBoardRelationship(c *fiber.Ctx) error {
 	})
 }
 
-// New handler function to get relationships by User ID
 func (h *BoardRelationshipHandler) GetRelationshipsByUserID(c *fiber.Ctx) error {
 	userIDStr := c.Params("userID")
 	userID, err := strconv.ParseUint(userIDStr, 10, 32)
@@ -92,5 +91,56 @@ func (h *BoardRelationshipHandler) GetRelationshipsByUserID(c *fiber.Ctx) error 
 		"status":  "success",
 		"message": "Board relationships retrieved successfully.",
 		"data":    relationships,
+	})
+}
+
+func (h *BoardRelationshipHandler) UpdateBoardRelationshipStatus(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid relationship ID format.",
+			"data":    err.Error(),
+		})
+	}
+
+	dto := new(entities.UpdateBoardRelationshipStatusDto)
+	if err := c.BodyParser(dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid request body.",
+			"data":    err.Error(),
+		})
+	}
+
+	if err := h.validator.Struct(dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Validation failed: 'con_status' is required and must be 'active', 'inactive', or 'disabled'.",
+			"data":    err.Error(),
+		})
+	}
+
+	updatedRelationship, err := h.useCase.UpdateBoardRelationshipStatus(uint(id), *dto)
+	if err != nil {
+		if err.Error() == "board relationship not found" {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "error",
+				"message": err.Error(),
+				"data":    nil,
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Could not update board relationship.",
+			"data":    err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Board relationship status updated successfully.",
+		"data":    updatedRelationship,
 	})
 }

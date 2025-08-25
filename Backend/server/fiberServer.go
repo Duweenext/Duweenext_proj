@@ -85,13 +85,17 @@ func (s *FiberServer) Start() {
 	educationRepo := repositories.NewEducationRepository(s.db.GetDb())
 	boardRepo := repositories.NewBoardRepository(s.db.GetDb())
 	boardRelationshipRepo := repositories.NewBoardRelationshipRepository(s.db.GetDb())
+	sensorLogRepo := repositories.NewSensorLogRepository(s.db.GetDb())
+	sensorRepo := repositories.NewSensorRepository(s.db.GetDb())
 
 	// Use cases
 	userUseCase := usecases.NewUserUseCase(*userRepo)
 	pondHealthUseCase := usecases.NewpondHealthUseCase(*pondHealthRepo)
 	educationUseCase := usecases.NewEducationUseCase(*educationRepo)
-	boardRelationshipUseCase := usecases.NewBoardRelationshipUseCase(boardRepo, boardRelationshipRepo)
+	boardRelationshipUseCase := usecases.NewBoardRelationshipUseCase(boardRepo, boardRelationshipRepo, sensorRepo)
 	boardUseCase := usecases.NewBoardUseCase(boardRepo)
+	sensorLogUseCase := usecases.NewSensorLogUseCase(sensorLogRepo)
+	sensorUseCase := usecases.NewSensorUseCase(sensorRepo, boardRepo)
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userUseCase)
@@ -99,6 +103,8 @@ func (s *FiberServer) Start() {
 	educationHandler := handlers.NewEducationHandler(educationUseCase)
 	boardRelationShipHandler := handlers.NewBoardRelationshipHandler(boardRelationshipUseCase)
 	boardHandler := handlers.NewBoardHandler(boardUseCase)
+	sensorLogHandler := handlers.NewSensorLogHandler(sensorLogUseCase)
+	sensorHandler := handlers.NewSensorHandler(sensorUseCase)
 
 
 	// Routes
@@ -124,10 +130,18 @@ func (s *FiberServer) Start() {
 	// Board Relationship routes
 	api.Post("/board-relationships", boardRelationShipHandler.CreateBoardRelationship)
 	api.Get("/relationships/user/:userID", boardRelationShipHandler.GetRelationshipsByUserID)
-	
+	api.Put("/board-relationships/:id", boardRelationShipHandler.UpdateBoardRelationshipStatus)
+
+
 	// Board routes
 	api.Get("/board/:board_id", boardHandler.GetBoardByBoardID)
-	
+
+	// Sensor Log routes
+	api.Get("/sensors", sensorHandler.GetAllSensors)
+	api.Post("/sensors", sensorHandler.CreateSensor)
+	api.Get("/sensors/:id", sensorHandler.GetSensorByID)
+	api.Put("/sensor/thresholds/:board_id", sensorHandler.UpdateSensorThresholds)
+	api.Get("/sensor/:sensor_type/:board_id/:days<int(1..365)>", sensorLogHandler.GetSensorData)	
 	// WebSocket Route
 	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)
 

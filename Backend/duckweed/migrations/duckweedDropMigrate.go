@@ -17,16 +17,16 @@ func migrateDrop(db database.Database) {
 	gormDB := db.GetDb()
 
 	// Drop the BoardRelationship table first due to the foreign key constraint.
-	if err := gormDB.Migrator().DropTable(&entities.BoardRelationship{}); err != nil {
+	if err := gormDB.Migrator().DropTable(&entities.Sensor{}); err != nil {
 		log.Fatalf("Failed to drop table BoardRelationship: %v", err)
 	}
-	log.Println("Dropped table: BoardRelationship")
+	log.Println("Dropped table: Sensor")
 
-	if err:= gormDB.Migrator().DropTable(&entities.Board{}); err != nil {
-		log.Fatalf("Failed to drop table Board: %v", err)
+	// if err:= gormDB.Migrator().DropTable(&entities.Board{}); err != nil {
+	// 	log.Fatalf("Failed to drop table Board: %v", err)
 
-	}
-	log.Println("Dropped table: Board")
+	// }
+	// log.Println("Dropped table: Board")
 	// Now you can safely drop the Board table.
 	// if err := gormDB.Migrator().DropTable(&entities.Board{}); err != nil {
 	// 	log.Fatalf("Failed to drop table Board: %v", err)

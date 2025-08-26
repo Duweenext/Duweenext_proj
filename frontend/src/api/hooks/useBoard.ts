@@ -14,6 +14,8 @@ export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
 
+    const [boards, setBoards] = useState<any[]>([]);
+
     const verifyBoardInformation = useCallback(async (boardId: string) => {
         setLoading(true);
         setError(null);
@@ -60,6 +62,23 @@ export const useBoard = () => {
         },
         []
     );
+
+    const getAllBoard = useCallback(
+        async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await axiosInstance.get('/v1/boards');
+                return res.data;
+            } catch (err) {
+                setError(err);
+                throw err;
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    )
 
     return {
         loading,

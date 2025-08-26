@@ -44,7 +44,6 @@ func NewFiberServer(conf *config.Config, db database.Database) Server {
 	return server
 }
 
-
 func (s *FiberServer) Start() {
 	s.app.Use(recover.New())
 	s.app.Use(logger.New())
@@ -80,11 +79,10 @@ func (s *FiberServer) Start() {
 		},
 		ContextKey: "user",
 	})
-	
-	// Initialize MQTT client and publisher
-	mqtt.Initialize(s.db.GetDb(), s.conf, s) 
-	mqttPublisher := &mqtt.Publisher{}
 
+	// Initialize MQTT client and publisher
+	mqtt.Initialize(s.db.GetDb(), s.conf, s)
+	mqttPublisher := &mqtt.Publisher{}
 
 	// Repositories
 	userRepo := repositories.NewUserRepository(s.db.GetDb())
@@ -113,53 +111,38 @@ func (s *FiberServer) Start() {
 	sensorLogHandler := handlers.NewSensorLogHandler(sensorLogUseCase)
 	sensorHandler := handlers.NewSensorHandler(sensorUseCase)
 
-
-	// Routes
 	apivisit := s.app.Group("/visit")
 	api := s.app.Group("/v1", jwtMiddleware)
 
-	// User routes
 	api.Get("/users", userHandler.GetAllUsers)
 	api.Get("/users/:id", userHandler.GetUserByID)
 	apivisit.Post("/login", userHandler.Login)
 	apivisit.Post("/register", userHandler.Register)
 
-	// PondHealth routes
 	api.Get("/pondhealth", pondHealthHandler.GetAllPondHealth)
 	api.Get("/pondhealth/:id", pondHealthHandler.GetPondHealthByID)
 	api.Get("/pondhealthByUserId/:userid", pondHealthHandler.GetPondHealthByUserID)
 	api.Post("/PostPondHealth/", pondHealthHandler.PostPondHealth)
 
-	// Education routes
 	api.Get("/education", educationHandler.GetAllEducation)
 	api.Get("/education/:id", educationHandler.GetEducationByID)
 
-	// Board Relationship routes
 	api.Post("/board-relationships", boardRelationShipHandler.CreateBoardRelationship)
 	api.Get("/relationships/user/:userID", boardRelationShipHandler.GetRelationshipsByUserID)
 	api.Put("/board-relationships/:id", boardRelationShipHandler.UpdateBoardRelationshipStatus)
 
-
-	// Board routes - specific routes first, then parameterized routes
 	api.Get("/board/all", boardHandler.GetAllBoards)
 	api.Get("/board/:board_id", boardHandler.GetBoardByBoardID)
 	api.Put("/board/frequency/:board_id", boardHandler.UpdateSensorFrequency)
 	api.Post("/board/measure/:board_id", boardHandler.TriggerMeasurement)
 
-
-	// Sensor Log routes
 	api.Get("/sensors", sensorHandler.GetAllSensors)
 	api.Post("/sensors", sensorHandler.CreateSensor)
 	api.Get("/sensors/:id", sensorHandler.GetSensorByID)
 	api.Put("/sensor/thresholds/:board_id", sensorHandler.UpdateSensorThresholds)
-	api.Get("/sensor/:sensor_type/:board_id/:days<int(1..365)>", sensorLogHandler.GetSensorData)	
-	// WebSocket Route
+	api.Get("/sensor/:sensor_type/:board_id/:days<int(1..365)>", sensorLogHandler.GetSensorData)
 	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)
 
-	// Start background tasks
-	// go s.monitorBoardStatus() // This might need to be adapted depending on implementation
-
-	// Start server
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
 	log.Fatal(s.app.Listen(serverUrl))
 }

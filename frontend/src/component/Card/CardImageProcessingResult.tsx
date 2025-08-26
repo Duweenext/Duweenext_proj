@@ -4,13 +4,9 @@ import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '@/theme';
 
 interface PondHealthCardProps {
-  /** Top‐level heading (defaults to “Pond Health”) */
   title?: string;
-  /** e.g. “Healthy”, “Unable to connect” */
   healthStatus: string;
-  /** The longer body text under the status */
   message: string;
-  /** Optional style override for the outer container */
   style?: ViewStyle;
 }
 

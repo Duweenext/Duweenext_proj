@@ -42,9 +42,8 @@ function TabIcon({
                     padding: responsivePadding,
                     width: responsiveMinWidth,
                     flex: 1,
-                    // minWidth: responsiveMinWidth,
                     minHeight: responsiveHeight,
-                    maxHeight: responsiveHeight + 10, // Slight max height for better appearance
+                    maxHeight: responsiveHeight + 10, 
                     marginTop: responsiveMarginTop,
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -54,7 +53,7 @@ function TabIcon({
                 }}
                 imageStyle={{ 
                     borderRadius: 12,
-                    resizeMode: 'stretch', // Stretch to fill container
+                    resizeMode: 'stretch', 
                     position: 'absolute',
                     left: 0, 
                     top: 0,
@@ -129,7 +128,7 @@ const _Layout = () => {
                         marginHorizontal: responsiveTabBarMargin,
                         marginBottom: responsiveTabBarMarginBottom,
                         paddingTop: 5,
-                        height: responsiveTabBarHeight,
+                        height: 70,
                         position: 'absolute',
                         overflow: 'hidden',
                         borderWidth: 0,
@@ -139,7 +138,7 @@ const _Layout = () => {
                         backdropFilter: 'blur(10px)',
                     },
                     sceneStyle: {
-                        backgroundColor: theme.colors.secondary, // Now we can use transparent since we have background wrapper
+                        backgroundColor: theme.colors.white,
                     },
                 }}
             >

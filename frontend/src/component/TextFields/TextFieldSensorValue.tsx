@@ -32,8 +32,8 @@ const TextFieldSensorValue: React.FC<Props> = ({
           paddingHorizontal: 12,
           backgroundColor: 'white',
           fontSize: 16,
-          color: '#1A736A',       // Constant text color
-          borderColor: '#E5E7EB', // Optional soft border
+          color: '#1A736A',  
+          borderColor: '#E5E7EB',
         }}
       />
     </View>

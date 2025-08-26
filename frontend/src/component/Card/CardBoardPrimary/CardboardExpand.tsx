@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { theme } from '@/theme'; // Adjust path as needed
-import { useBoard } from '@/src/api/hooks/useBoard';
+import SensorBoardExpand from '@/src/component/Card/CardSensorPrimary/SensorBoardExpand';
 import HalfCircleGauge from '../../Chart/GaugeChart';
 import ButtonModalL from '../../Buttons/ButtonModalL';
+import SensorCard, { SensorCardProp } from '../CardSensorPrimary/SensorCard';
+import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
 
 interface MeasurementData {
   ph: number;
@@ -11,20 +13,18 @@ interface MeasurementData {
   temperature: number;
 }
 
-interface Sensor {
-  id: string;
-  name: string;
-  isConnected: boolean;
-}
 
-interface MeasurementDashboardProps {}
+
+interface MeasurementDashboardProps {
+  boardFrequency: number;
+}
 
 const { width, height } = Dimensions.get('window');
 
 // tiny util for responsive clamping
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
+const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency }) => {
   // const {getReturnById} = useBoard();
   const [measurementData, setMeasurementData] = useState<MeasurementData>({
     ph: 5.6,
@@ -32,10 +32,10 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
     temperature: 32,
   });
 
-  const [sensors, setSensors] = useState<Sensor[]>([
-    { id: 'ph', name: 'Ph sensor', isConnected: true },
-    { id: 'temperature', name: 'Temperature sensor', isConnected: true },
-    { id: 'ec', name: 'EC sensor', isConnected: true },
+  const [sensors, setSensors] = useState<SensorCardProp[]>([
+    { id: 'ph', name: 'Ph sensor' },
+    { id: 'temperature', name: 'Temperature sensor' },
+    { id: 'ec', name: 'EC sensor' },
   ]);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -57,7 +57,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
     setSensors(prevSensors =>
       prevSensors.map(sensor =>
         sensor.id === sensorId
-          ? { ...sensor, isConnected: !sensor.isConnected }
+          ? { ...sensor}
           : sensor
       )
     );
@@ -80,9 +80,9 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
         <View style={styles.measurementCard}>
           {/* Measurement Values */}
           <View style={[styles.measurementRow, { gap: gaugeGap }]}>
-            <HalfCircleGauge title="pH" value={measurementData.ph} unit="" min={4} max={9} extraHorizontalPadding={theme.spacing.md * 2}/>
-            <HalfCircleGauge title="Temperature" value={measurementData.temperature} unit="°C" min={0} max={50} extraHorizontalPadding={theme.spacing.md * 2}/>
-            <HalfCircleGauge title="EC" value={measurementData.ec} unit="ms/cm" min={0} max={500} extraHorizontalPadding={theme.spacing.md * 2}/>
+            <HalfCircleGauge title="pH" value={measurementData.ph} unit="" min={4} max={9} extraHorizontalPadding={theme.spacing.md * 2} />
+            <HalfCircleGauge title="Temperature" value={measurementData.temperature} unit="°C" min={0} max={50} extraHorizontalPadding={theme.spacing.md * 2} />
+            <HalfCircleGauge title="EC" value={measurementData.ec} unit="ms/cm" min={0} max={500} extraHorizontalPadding={theme.spacing.md * 2} />
           </View>
 
           {/* Measure Again Button */}
@@ -91,43 +91,27 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = () => {
             onPress={handleMeasureAgain}
             filledColor={theme.colors.primary}
             textColor={theme.colors.white}
-            // borderColor={theme.colors.primary}
             marginBottom={3}
-            // You can add more props as needed
+
           />
         </View>
 
         {/* Sensors Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sensors</Text>
+          <View style={styles.sensorHeaderContainer}>
+            <Text style={styles.sectionTitle}>Sensors</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' , gap: 8}}>
+              <Text style={styles.sectionSubtitle}>Board Frequency:</Text>
+              <TextFieldSensorValue
+                defaultValue={boardFrequency.toString()}
+                onChange={() => { }}
+              />
+            </View>
+          </View>
 
           {sensors.map((sensor) => (
-            <View key={sensor.id} style={styles.sensorCard}>
-              <View style={styles.sensorInfo}>
-                <Text style={styles.sensorName}>{sensor.name}</Text>
-                <Text style={styles.sensorStatus}>
-                  Status: {sensor.isConnected ? 'Connected' : 'Disconnected'}
-                </Text>
-              </View>
-              <View style={styles.sensorActions}>
-                <TouchableOpacity
-                  style={[
-                    styles.disconnectButton,
-                    !sensor.isConnected && styles.connectButton
-                  ]}
-                  onPress={() => handleSensorToggle(sensor.id)}
-                >
-                  <Text
-                    style={[
-                      styles.disconnectButtonText,
-                      !sensor.isConnected && styles.connectButtonText
-                    ]}
-                  >
-                    {sensor.isConnected ? 'Disconnect' : 'Connect'}
-                  </Text>
-                </TouchableOpacity>
-                <Text style={styles.chevron}>›</Text>
-              </View>
+            <View key={sensor.id} style={styles.sensorContainer}>
+              <SensorCard sensor={sensor} />
             </View>
           ))}
         </View>
@@ -149,7 +133,7 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.header1,
     fontFamily: theme.fontFamily.semibold,
     color: 'black',
-    marginBottom: theme.spacing.lg,
+    // marginBottom: theme.spacing.lg,
   },
   measurementCard: {
     backgroundColor: theme.colors.white,
@@ -236,33 +220,7 @@ const styles = StyleSheet.create({
   measureButtonDisabled: {
     opacity: 0.6,
   },
-  sensorCard: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sensorInfo: {
-    flex: 1,
-  },
-  sensorName: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.semibold,
-    marginBottom: theme.spacing.xxs,
-  },
-  sensorStatus: {
-    color: theme.colors.secondary,
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.regular,
-  },
-  sensorActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+
   disconnectButton: {
     backgroundColor: theme.colors.white,
     paddingVertical: theme.spacing.xs,
@@ -281,11 +239,22 @@ const styles = StyleSheet.create({
   connectButtonText: {
     color: theme.colors.white,
   },
-  chevron: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize['2xl'],
-    fontFamily: theme.fontFamily.bold,
+  sensorContainer: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.xs,
   },
+  sensorHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+  },
+  sectionSubtitle: {
+    fontSize: theme.fontSize.description,
+    fontFamily: theme.fontFamily.medium,
+    color: '#333',
+  }
 });
 
 export default CardBoardExpanded;

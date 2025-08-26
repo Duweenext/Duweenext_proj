@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ButtonModalL from '@/component-v2/Buttons/ButtonModalL';
+import ButtonModalL from '@/src/component/Buttons/ButtonModalL';
 import { theme } from '@/theme';
-import TextFieldModal from '../TextFields/TextFieldModal';
+import TextFieldModal from '@/src/component/TextFields/TextFieldModal';
 import { WifiConfig } from '@/src/interfaces/wifi';
 
 interface ManualAddBoardModalProps {

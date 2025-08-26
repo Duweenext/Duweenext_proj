@@ -22,22 +22,4 @@ func migrateDrop(db database.Database) {
 		log.Fatalf("Failed to drop table BoardRelationship: %v", err)
 	}
 	log.Println("Dropped table: Sensor")
-
-	// if err:= gormDB.Migrator().DropTable(&entities.Board{}); err != nil {
-	// 	log.Fatalf("Failed to drop table Board: %v", err)
-
-	// }
-	// log.Println("Dropped table: Board")
-	// Now you can safely drop the Board table.
-	// if err := gormDB.Migrator().DropTable(&entities.Board{}); err != nil {
-	// 	log.Fatalf("Failed to drop table Board: %v", err)
-	// }
-	// log.Println("Dropped table: Board")
-
-	// You can add your AutoMigrate calls here to recreate the tables.
-	// Example:
-	// if err := gormDB.AutoMigrate(&entities.Board{}, &entities.BoardRelationship{}); err != nil {
-	// 	log.Fatalf("Failed to migrate tables: %v", err)
-	// }
-	// log.Println("Successfully migrated tables.")
 }

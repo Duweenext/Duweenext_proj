@@ -32,18 +32,6 @@ export const mockBoards: ExtendedBoardData[] = [
     sensors: mockSensors
   },
   {
-    board_id: 2,
-    sensor_id: 2,
-    board_name: 'ESP32',
-    board_register_date: '2024-08-02',
-    board_status: 'failed',
-    created_at: '2024-08-02T00:00:00Z',
-    updated_at: '2024-08-08T13:22:00Z',
-    deleted_at: null,
-    running_time: 0,
-    sensors: []
-  },
-  {
     board_id: 3,
     sensor_id: 3,
     board_name: 'ESP32',

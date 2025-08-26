@@ -33,6 +33,7 @@ interface Esp32CardProps {
     onIconPress?: (e: GestureResponderEvent) => void;
     onButtonPress?: (e: GestureResponderEvent) => void;
     board?: Board;
+    frequency?: number;
 }
 
 // everything in one place:
@@ -74,6 +75,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     onIconPress,
     onButtonPress,
     board,
+    frequency = 15,
 }) => {
     const mode = board?.board_status || 'disconnected' as Mode;
     const boardName = board?.board_name || 'Unknown Board';
@@ -83,71 +85,76 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     const actionLabel = displayStatusActionLabel[mode];
 
     return (
-        <TouchableOpacity onPress={() => setExpanded(!expanded)}>
-            <View style={[styles.card, {
-                backgroundColor: cardBg,
-                borderBottomEndRadius: expanded ? 0 : parseInt(theme.borderRadius.lg, 10),
-                borderBottomStartRadius: expanded ? 0 : parseInt(theme.borderRadius.lg, 10),
-            }]}>
-                <View style={styles.content}>
-                    <Text style={[styles.title, { color: textColor }]}>
-                        {boardName}
-                    </Text>
-                    {mode === 'disconnected' && (
-                        <Text style={[styles.description, { color: textColor }]}>
-                            Last connected: {board?.updated_at || 'N/A'}
+        <View>
+
+
+            <TouchableOpacity onPress={() => setExpanded(!expanded)} disabled={mode !== 'connected'}>
+                <View style={[styles.card, {
+                    backgroundColor: cardBg,
+                    borderBottomEndRadius: expanded ? 0 : theme.borderRadius.lg,
+                    borderBottomStartRadius: expanded ? 0 : theme.borderRadius.lg,
+                }]}>
+                    <View style={styles.content}>
+                        <Text style={[styles.title, { color: textColor }]}>
+                            {boardName}
                         </Text>
-                    )}
-                    {mode === 'failed' ? (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
+                        {mode === 'disconnected' && (
                             <Text style={[styles.description, { color: textColor }]}>
-                                Why is it not connecting?
+                                Last connected: {board?.updated_at || 'N/A'}
                             </Text>
-                            <TouchableOpacity onPress={onIconPress}>
-                                <Ionicons name="help-circle-outline" size={18} color={iconColor} />
-                            </TouchableOpacity>
-                        </View>
+                        )}
+                        {mode === 'failed' ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
+                                <Text style={[styles.description, { color: textColor }]}>
+                                    Why is it not connecting?
+                                </Text>
+                                <TouchableOpacity onPress={onIconPress}>
+                                    <Ionicons name="help-circle-outline" size={18} color={iconColor} />
+                                </TouchableOpacity>
+                            </View>
 
-                    ) : (
+                        ) : (
+                            <Text style={[styles.description, { color: textColor }]}>
+                                Running: {runningTime}
+                            </Text>
+                        )}
                         <Text style={[styles.description, { color: textColor }]}>
-                            Running: {runningTime}
+                            Status: {displayStatusMap[mode]}
                         </Text>
-                    )}
-                    <Text style={[styles.description, { color: textColor }]}>
-                        Status: {displayStatusMap[mode]}
-                    </Text>
-                </View>
+                    </View>
 
-                {/* Last‐connected timestamp */}
-                <View style={styles.timestamp}>
-                    <Text style={[styles.description, { color: textColor }]}>
-                        {/* {lastConnected} */}
-                    </Text>
-                </View>
+                    {/* Last‐connected timestamp */}
+                    <View style={styles.timestamp}>
+                        <Text style={[styles.description, { color: textColor }]}>
+                            {/* {lastConnected} */}
+                        </Text>
+                    </View>
 
-                {/* Action button */}
-                <View style={styles.leftsection}>
-                    <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)}>
-                        <Ionicons 
-                            name={expanded ? "chevron-down" : "chevron-forward"} 
-                            size={24} 
-                            color={iconColor} 
+                    {/* Action button */}
+                    <View style={styles.leftsection}>
+                        <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)}>
+                            <Ionicons
+                                name={expanded ? "chevron-down" : "chevron-forward"}
+                                size={24}
+                                color={iconColor}
+                            />
+                        </TouchableOpacity>
+                        <ButtonCard
+                            text={actionLabel}
+                            filledColor={buttonBg}
+                            textColor={buttonText}
+                            onPress={onButtonPress}
                         />
-                    </TouchableOpacity>
-                    <ButtonCard
-                        text={actionLabel}
-                        filledColor={buttonBg}
-                        textColor={buttonText}
-                        onPress={onButtonPress}
-                    />
+                    </View>
                 </View>
-            </View>
 
-            {expanded && (
+            </TouchableOpacity>
+            {expanded && mode === "connected" && (
                 <CardBoardExpanded
+                boardFrequency={frequency}
                 />
             )}
-        </TouchableOpacity>
+        </View>
     );
 };
 
@@ -162,8 +169,8 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         justifyContent: 'space-between',
         padding: 16,
-        borderTopLeftRadius: parseInt(theme.borderRadius.lg, 10),
-        borderTopRightRadius: parseInt(theme.borderRadius.lg, 10),
+        borderTopLeftRadius: theme.borderRadius.lg,
+        borderTopRightRadius: theme.borderRadius.lg,
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
@@ -189,18 +196,19 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     title: {
-        fontSize: parseInt(theme.fontSize['header1'], 10),
+        fontSize: theme.fontSize['header1'],
         fontFamily: theme.fontFamily.medium,
     },
     description: {
         // marginTop: 4,
-        fontSize: parseInt(theme.fontSize.description, 10),
+        fontSize: theme.fontSize.description,
         fontFamily: theme.fontFamily.regular,
     },
     leftsection: {
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'flex-end',
+        gap: 18,
         // height: '100%',
         marginBottom: 8, // to align with content
     }

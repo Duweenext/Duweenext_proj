@@ -44,9 +44,6 @@ const SensorScreen = () => {
 
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       
-      {/* Header */}
-      {/* <SensorCenterHeader onBackPress={handleBackPress} /> */}
-      
       {/* Main Content */}
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Add Board Section */}

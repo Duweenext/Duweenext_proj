@@ -1,11 +1,9 @@
-// src/theme.ts
 import resolveConfig from 'tailwindcss/resolveConfig';
-import tailwindConfig from '../tailwind.config';  // adjust the path if needed
+import tailwindConfig from '../tailwind.config';
 
-// This gives you the default theme + all of your extend customizations:
 const fullConfig = resolveConfig(tailwindConfig as any);
 
-export const theme = fullConfig.theme as any;
+export const theme= fullConfig.theme as any;
 
 export const themeStyle = {
   fontSize: {
@@ -34,5 +32,19 @@ export const themeStyle = {
     success: "#A6F98D",
     white: "#FFFFFF",
     black: "#000000",
+  },
+  spacing: {
+    xxs:2,
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 24,
+  },
+  borderRadius: {
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
   },
   };

@@ -11,14 +11,11 @@ import { useTitle, getTitleFromPath } from '@/src/hooks/useTitle';
 
 SplashScreen.preventAutoHideAsync();
 
-// Re-export for backward compatibility
 export { getTitleFromPath };
 
 function AppContent() {
   const { isLoading } = useAuth();
   const title = useTitle();
-
-  
 
   if (isLoading) {
     return (
@@ -28,7 +25,6 @@ function AppContent() {
         resizeMode="cover"
       >
         <View style={{ padding: 20, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 10 }}>
-          {/* <TopBar title={title} showBackButton={false} /> */}
           <Slot />
         </View>
       </ImageBackground>

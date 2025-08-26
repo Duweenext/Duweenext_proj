@@ -16,14 +16,15 @@ const (
 
 type Board struct {
 	gorm.Model
-	BoardID            string           `gorm:"unique;not null"`
-	BoardName          *string
-	ConPassword        *string          `json:"-"`
-	BoardStatus        *BoardStatusEnum `gorm:"type:varchar(20);check:board_status IN ('active','inactive','disabled')"`
-	BoardRegisterDate  *time.Time
-	LastSeen           *time.Time
-	RunTime            *time.Time
-	SensorFrequency    *float64         `json:"sensor_frequency"` // Changed to float64
+	BoardID           string `gorm:"unique;not null"`
+	BoardName         *string
+	ConPassword       *string          `json:"-"`
+	BoardStatus       *BoardStatusEnum `gorm:"type:varchar(20);check:board_status IN ('active','inactive','disabled')"`
+	BoardRegisterDate *time.Time
+	LastSeen          *time.Time
+	RunTime           *time.Time
+	SensorFrequency   *float64 `json:"sensor_frequency"` // Changed to float64
+	Sensors           []Sensor `gorm:"foreignKey:BoardID;references:ID" json:"sensors,omitempty"`
 }
 
 type InsertBoardDto struct {

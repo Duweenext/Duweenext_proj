@@ -32,6 +32,10 @@ type InsertBoardDto struct {
 	SensorFrequency *float64 `json:"sensor_frequency"` // Changed to float64
 }
 
+type UpdateSensorFrequencyDto struct {
+	SensorFrequency *float64 `json:"sensor_frequency" validate:"required"`
+}
+
 type BoardResponseDto struct {
 	ID                uint             `json:"id"`
 	BoardID           string           `json:"board_id"`

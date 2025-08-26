@@ -3,21 +3,24 @@ package usecases
 import (
 	"main/duckweed/entities"
 	"main/duckweed/repositories"
+	"main/ports"
 )
 
 type BoardUseCaseInterface interface {
 	CreateBoard(dto entities.InsertBoardDto) (*entities.Board, error)
 	GetAllBoards() ([]entities.Board, error)
 	GetBoardByID(id uint) (*entities.Board, error)
-	GetBoardByBoardID(boardID string) (*entities.Board, error) 
+	GetBoardByBoardID(boardID string) (*entities.Board, error)
+	UpdateSensorFrequency(boardID string, dto entities.UpdateSensorFrequencyDto) error
 }
 
 type BoardUseCase struct {
 	repo repositories.BoardRepositoryInterface
+	publisher ports.MQTTPublisher
 }
 
-func NewBoardUseCase(repo repositories.BoardRepositoryInterface) BoardUseCaseInterface {
-	return &BoardUseCase{repo}
+func NewBoardUseCase(repo repositories.BoardRepositoryInterface, publisher ports.MQTTPublisher) BoardUseCaseInterface { 
+	return &BoardUseCase{repo: repo, publisher: publisher} 
 }
 
 func (uc *BoardUseCase) CreateBoard(dto entities.InsertBoardDto) (*entities.Board, error) {
@@ -38,4 +41,13 @@ func (uc *BoardUseCase) GetBoardByID(id uint) (*entities.Board, error) {
 
 func (uc *BoardUseCase) GetBoardByBoardID(boardID string) (*entities.Board, error) {
 	return uc.repo.FindByBoardID(boardID)
+}
+
+func (uc *BoardUseCase) UpdateSensorFrequency(boardID string, dto entities.UpdateSensorFrequencyDto) error {
+	err := uc.repo.UpdateSensorFrequency(boardID, *dto.SensorFrequency)
+	if err != nil {
+		return err
+	}
+	uc.publisher.PublishSensorFrequency(boardID, *dto.SensorFrequency) 
+	return nil
 }

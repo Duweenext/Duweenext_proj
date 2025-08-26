@@ -12,6 +12,7 @@ import (
 	"main/duckweed/handlers"
 	"main/duckweed/repositories"
 	"main/duckweed/usecases"
+	"main/mqtt"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +26,7 @@ type FiberServer struct {
 	app     *fiber.App
 	db      database.Database
 	conf    *config.Config
-	clients map[*websocket.Conn]map[string]bool // map to track connected clients
+	clients map[*websocket.Conn]map[string]bool
 	mutex   sync.Mutex
 }
 
@@ -42,6 +43,7 @@ func NewFiberServer(conf *config.Config, db database.Database) Server {
 
 	return server
 }
+
 
 func (s *FiberServer) Start() {
 	s.app.Use(recover.New())
@@ -78,6 +80,11 @@ func (s *FiberServer) Start() {
 		},
 		ContextKey: "user",
 	})
+	
+	// Initialize MQTT client and publisher
+	mqtt.Initialize(s.db.GetDb(), s.conf, s) 
+	mqttPublisher := &mqtt.Publisher{}
+
 
 	// Repositories
 	userRepo := repositories.NewUserRepository(s.db.GetDb())
@@ -93,7 +100,7 @@ func (s *FiberServer) Start() {
 	pondHealthUseCase := usecases.NewpondHealthUseCase(*pondHealthRepo)
 	educationUseCase := usecases.NewEducationUseCase(*educationRepo)
 	boardRelationshipUseCase := usecases.NewBoardRelationshipUseCase(boardRepo, boardRelationshipRepo, sensorRepo)
-	boardUseCase := usecases.NewBoardUseCase(boardRepo)
+	boardUseCase := usecases.NewBoardUseCase(boardRepo, mqttPublisher)
 	sensorLogUseCase := usecases.NewSensorLogUseCase(sensorLogRepo)
 	sensorUseCase := usecases.NewSensorUseCase(sensorRepo, boardRepo)
 
@@ -135,6 +142,8 @@ func (s *FiberServer) Start() {
 
 	// Board routes
 	api.Get("/board/:board_id", boardHandler.GetBoardByBoardID)
+	api.Put("/board/frequency/:board_id", boardHandler.UpdateSensorFrequency)
+
 
 	// Sensor Log routes
 	api.Get("/sensors", sensorHandler.GetAllSensors)
@@ -146,7 +155,7 @@ func (s *FiberServer) Start() {
 	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)
 
 	// Start background tasks
-	go s.monitorBoardStatus()
+	// go s.monitorBoardStatus() // This might need to be adapted depending on implementation
 
 	// Start server
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)

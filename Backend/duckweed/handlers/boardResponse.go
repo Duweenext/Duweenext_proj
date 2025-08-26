@@ -102,3 +102,17 @@ func (h *BoardHandler) GetBoardByBoardID(c *fiber.Ctx) error {
 		"data":    board,
 	})
 }
+
+func (h *BoardHandler) UpdateSensorFrequency(c *fiber.Ctx) error {
+	boardID := c.Params("board_id")
+	var dto entities.UpdateSensorFrequencyDto
+	if err := c.BodyParser(&dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	err := h.useCase.UpdateSensorFrequency(boardID, dto)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(fiber.StatusNoContent)
+}

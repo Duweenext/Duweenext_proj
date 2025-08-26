@@ -80,40 +80,47 @@ func (s *FiberServer) isUserSubscribedToBoard(userID uint, boardID string) bool 
 	return result.Error == nil // Return true if relationship exists
 }
 
-// BroadcastTelemetryData sends telemetry data to clients subscribed to a specific board.
-func (s *FiberServer) BroadcastTelemetryData(boardID string, data *entities.SensorLog) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (s *FiberServer) BroadcastTelemetryData(boardID string, data interface{}) {
+    s.mutex.Lock()
+    defer s.mutex.Unlock()
 
-	envelope := struct {
-		Type string              `json:"type"`
-		Data *entities.SensorLog `json:"data"`
-	}{
-		Type: "telemetry",
-		Data: data,
-	}
-	payload, err := json.Marshal(envelope)
-	if err != nil {
-		log.Println("Error marshaling telemetry data:", err)
-		return
-	}
+    sensorLog, ok := data.(*entities.SensorLog)
+    if !ok {
+        log.Println("Error: could not assert telemetry data to *entities.SensorLog")
+        return
+    }
 
-	for conn, boardMap := range s.clients {
-		if _, ok := boardMap[boardID]; ok {
-			if err := conn.WriteMessage(websocket.TextMessage, payload); err != nil {
-				log.Println("Error sending telemetry to client:", err)
-				conn.Close()
-				delete(s.clients, conn)
-			}
-		}
-	}
+    envelope := struct {
+        Type string              `json:"type"`
+        Data *entities.SensorLog `json:"data"`
+    }{
+        Type: "telemetry",
+        Data: sensorLog, 
+    }
+    
+    payload, err := json.Marshal(envelope)
+    if err != nil {
+        log.Println("Error marshaling telemetry data:", err)
+        return
+    }
+
+    for conn, boardMap := range s.clients {
+        if _, ok := boardMap[boardID]; ok {
+            if err := conn.WriteMessage(websocket.TextMessage, payload); err != nil {
+                log.Println("Error sending telemetry to client:", err)
+                conn.Close()
+                delete(s.clients, conn)
+            }
+        }
+    }
 }
 
-// BroadcastStatus sends board status updates to all connected clients.
-// Note: This broadcasts to ALL clients. You might want to refine this to broadcast only to subscribed users.
-func (s *FiberServer) BroadcastStatus(status *entities.Board) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (s *FiberServer) BroadcastStatus(boardData interface{}) {
+	status, ok := boardData.(*entities.Board)
+	if !ok {
+		log.Println("Error: could not assert boardData to *entities.Board")
+		return
+	}
 
 	envelope := struct {
 		Type string           `json:"type"`
@@ -129,11 +136,15 @@ func (s *FiberServer) BroadcastStatus(status *entities.Board) {
 		return
 	}
 
-	for client := range s.clients {
-		if err := client.WriteMessage(websocket.TextMessage, payload); err != nil {
-			log.Println("Broadcast Status Error:", err)
-			client.Close()
-			delete(s.clients, client)
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	for client, subscriptions := range s.clients {
+		if subscriptions[status.BoardID] { // Check if the client is subscribed to this board
+			if err := client.WriteMessage(websocket.TextMessage, payload); err != nil {
+				log.Println("Broadcast Status Error:", err)
+				client.Close()
+				delete(s.clients, client)
+			}
 		}
 	}
 }

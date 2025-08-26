@@ -116,3 +116,19 @@ func (h *BoardHandler) UpdateSensorFrequency(c *fiber.Ctx) error {
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+func (h *BoardHandler) TriggerMeasurement(c *fiber.Ctx) error {
+	boardID := c.Params("board_id")
+	if boardID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Board ID is required"})
+	}
+
+	err := h.useCase.TriggerMeasurement(boardID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+		"message": "Measurement command sent successfully. Awaiting data from device.",
+	})
+}

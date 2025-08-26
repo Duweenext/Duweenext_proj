@@ -7,4 +7,5 @@ type Broadcaster interface {
 
 type MQTTPublisher interface {
 	PublishSensorFrequency(boardID string, frequency float64)
+	PublishMeasureCommand(boardID string)
 }

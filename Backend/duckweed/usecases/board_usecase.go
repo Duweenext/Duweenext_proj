@@ -12,6 +12,7 @@ type BoardUseCaseInterface interface {
 	GetBoardByID(id uint) (*entities.Board, error)
 	GetBoardByBoardID(boardID string) (*entities.Board, error)
 	UpdateSensorFrequency(boardID string, dto entities.UpdateSensorFrequencyDto) error
+	TriggerMeasurement(boardID string) error
 }
 
 type BoardUseCase struct {
@@ -49,5 +50,10 @@ func (uc *BoardUseCase) UpdateSensorFrequency(boardID string, dto entities.Updat
 		return err
 	}
 	uc.publisher.PublishSensorFrequency(boardID, *dto.SensorFrequency) 
+	return nil
+}
+
+func (uc *BoardUseCase) TriggerMeasurement(boardID string) error {
+	uc.publisher.PublishMeasureCommand(boardID)
 	return nil
 }

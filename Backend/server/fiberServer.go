@@ -143,6 +143,7 @@ func (s *FiberServer) Start() {
 	// Board routes
 	api.Get("/board/:board_id", boardHandler.GetBoardByBoardID)
 	api.Put("/board/frequency/:board_id", boardHandler.UpdateSensorFrequency)
+	api.Post("/board/measure/:board_id", boardHandler.TriggerMeasurement)
 
 
 	// Sensor Log routes

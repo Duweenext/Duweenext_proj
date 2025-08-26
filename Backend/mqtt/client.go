@@ -61,6 +61,19 @@ func Initialize(database *gorm.DB, conf *config.Config, b ports.Broadcaster) mqt
 	return client
 }
 
+func (p *Publisher) PublishMeasureCommand(boardID string) {
+	topic := fmt.Sprintf("iot/%s/measure", boardID)
+	payload := "1" 
+	
+	token := mqttClient.Publish(topic, 1, false, payload)
+	token.Wait()
+	if token.Error() != nil {
+		log.Printf("Failed to publish measure command to topic '%s': %v", topic, token.Error())
+	} else {
+		log.Printf("Published measure command to topic: %s", topic)
+	}
+}
+
 func subscribe(client mqtt.Client, topic string, handler mqtt.MessageHandler) {
 	token := client.Subscribe(topic, 1, handler)
 	token.Wait()

@@ -163,7 +163,7 @@ export function useBle() {
         new Promise((_, rej) => setTimeout(() => rej(new Error('Provisioning ACK timeout')), ACK_TIMEOUT_MS)),
       ]);
 
-      return true;
+      return isConnected;
     } catch (err) {
       console.error("Wi-Fi provisioning failed:", err);
       throw err;

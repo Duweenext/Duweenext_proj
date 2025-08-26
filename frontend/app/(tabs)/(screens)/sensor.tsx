@@ -25,10 +25,6 @@ const SensorScreen = () => {
     // setShowBleModal(true);
   };
 
-  const handleManualSubmit = (boardId: string) => {
-    console.log('Manual board ID submitted:', boardId);
-  };
-
   const handleBoardIconPress = (board: ExtendedBoardData) => {
     console.log('Board icon pressed:', board.board_name);
   };
@@ -56,7 +52,6 @@ const SensorScreen = () => {
         {/* Add Board Section */}
         <AddBoardSection 
           onSelectBLE={handleBleSelect}
-          onManualSubmit={handleManualSubmit}
         />
         
         {/* Board Section */}

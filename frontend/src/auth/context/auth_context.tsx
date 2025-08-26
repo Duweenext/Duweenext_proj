@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, type PropsWithChildren } f
 import { useRouter, useSegments } from "expo-router";
 
 type User = {
-    id: string;
+    id: number;
     email: string;
     name: string;
     // Add other user properties as needed

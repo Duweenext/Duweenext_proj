@@ -12,6 +12,7 @@ import (
 	"main/duckweed/handlers"
 	"main/duckweed/repositories"
 	"main/duckweed/usecases"
+	"main/mqtt"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +26,7 @@ type FiberServer struct {
 	app     *fiber.App
 	db      database.Database
 	conf    *config.Config
-	clients map[*websocket.Conn]map[string]bool // map to track connected clients
+	clients map[*websocket.Conn]map[string]bool
 	mutex   sync.Mutex
 }
 
@@ -42,6 +43,7 @@ func NewFiberServer(conf *config.Config, db database.Database) Server {
 
 	return server
 }
+
 
 func (s *FiberServer) Start() {
 	s.app.Use(recover.New())
@@ -78,6 +80,11 @@ func (s *FiberServer) Start() {
 		},
 		ContextKey: "user",
 	})
+	
+	// Initialize MQTT client and publisher
+	mqtt.Initialize(s.db.GetDb(), s.conf, s) 
+	mqttPublisher := &mqtt.Publisher{}
+
 
 	// Repositories
 	userRepo := repositories.NewUserRepository(s.db.GetDb())
@@ -85,13 +92,17 @@ func (s *FiberServer) Start() {
 	educationRepo := repositories.NewEducationRepository(s.db.GetDb())
 	boardRepo := repositories.NewBoardRepository(s.db.GetDb())
 	boardRelationshipRepo := repositories.NewBoardRelationshipRepository(s.db.GetDb())
+	sensorLogRepo := repositories.NewSensorLogRepository(s.db.GetDb())
+	sensorRepo := repositories.NewSensorRepository(s.db.GetDb())
 
 	// Use cases
 	userUseCase := usecases.NewUserUseCase(*userRepo)
 	pondHealthUseCase := usecases.NewpondHealthUseCase(*pondHealthRepo)
 	educationUseCase := usecases.NewEducationUseCase(*educationRepo)
-	boardRelationshipUseCase := usecases.NewBoardRelationshipUseCase(boardRepo, boardRelationshipRepo)
-	boardUseCase := usecases.NewBoardUseCase(boardRepo)
+	boardRelationshipUseCase := usecases.NewBoardRelationshipUseCase(boardRepo, boardRelationshipRepo, sensorRepo)
+	boardUseCase := usecases.NewBoardUseCase(boardRepo, mqttPublisher)
+	sensorLogUseCase := usecases.NewSensorLogUseCase(sensorLogRepo)
+	sensorUseCase := usecases.NewSensorUseCase(sensorRepo, boardRepo)
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userUseCase)
@@ -99,6 +110,8 @@ func (s *FiberServer) Start() {
 	educationHandler := handlers.NewEducationHandler(educationUseCase)
 	boardRelationShipHandler := handlers.NewBoardRelationshipHandler(boardRelationshipUseCase)
 	boardHandler := handlers.NewBoardHandler(boardUseCase)
+	sensorLogHandler := handlers.NewSensorLogHandler(sensorLogUseCase)
+	sensorHandler := handlers.NewSensorHandler(sensorUseCase)
 
 
 	// Routes
@@ -123,16 +136,28 @@ func (s *FiberServer) Start() {
 
 	// Board Relationship routes
 	api.Post("/board-relationships", boardRelationShipHandler.CreateBoardRelationship)
+	api.Get("/relationships/user/:userID", boardRelationShipHandler.GetRelationshipsByUserID)
+	api.Put("/board-relationships/:id", boardRelationShipHandler.UpdateBoardRelationshipStatus)
+
 
 	// Board routes - specific routes first, then parameterized routes
 	api.Get("/board/all", boardHandler.GetAllBoards)
 	api.Get("/board/:board_id", boardHandler.GetBoardByBoardID)
+	api.Put("/board/frequency/:board_id", boardHandler.UpdateSensorFrequency)
+	api.Post("/board/measure/:board_id", boardHandler.TriggerMeasurement)
 
+
+	// Sensor Log routes
+	api.Get("/sensors", sensorHandler.GetAllSensors)
+	api.Post("/sensors", sensorHandler.CreateSensor)
+	api.Get("/sensors/:id", sensorHandler.GetSensorByID)
+	api.Put("/sensor/thresholds/:board_id", sensorHandler.UpdateSensorThresholds)
+	api.Get("/sensor/:sensor_type/:board_id/:days<int(1..365)>", sensorLogHandler.GetSensorData)	
 	// WebSocket Route
 	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)
 
 	// Start background tasks
-	go s.monitorBoardStatus()
+	// go s.monitorBoardStatus() // This might need to be adapted depending on implementation
 
 	// Start server
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)

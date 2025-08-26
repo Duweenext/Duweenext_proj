@@ -11,6 +11,7 @@ type BoardRepositoryInterface interface {
 	FindByID(id uint) (*entities.Board, error)
 	FindByBoardID(boardID string) (*entities.Board, error)
 	Create(board *entities.Board) (*entities.Board, error)
+	UpdateSensorFrequency(boardID string, frequency float64) error
 }
 
 type BoardRepository struct {
@@ -26,7 +27,7 @@ func (r *BoardRepository) FindByBoardID(boardID string) (*entities.Board, error)
 	err := r.db.Where("board_id = ?", boardID).First(&board).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil 
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -43,7 +44,13 @@ func (r *BoardRepository) Create(board *entities.Board) (*entities.Board, error)
 	if err := r.db.Create(board).Error; err != nil {
 		return nil, err
 	}
-	return board, nil
+
+	var createdBoard entities.Board
+	if err := r.db.First(&createdBoard, board.ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &createdBoard, nil
 }
 
 func (r *BoardRepository) FindAll() ([]entities.Board, error) {
@@ -56,4 +63,9 @@ func (r *BoardRepository) FindByID(id uint) (*entities.Board, error) {
 	var board entities.Board
 	err := r.db.Preload("Sensors").First(&board, id).Error
 	return &board, err
+}
+
+func (r *BoardRepository) UpdateSensorFrequency(boardID string, frequency float64) error {
+	result := r.db.Model(&entities.Board{}).Where("board_id = ?", boardID).Update("sensor_frequency", frequency)
+	return result.Error
 }

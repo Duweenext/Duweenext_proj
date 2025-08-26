@@ -4,51 +4,74 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
 	"main/config"
 	"main/duckweed/entities"
-	"main/server"
+	"main/ports"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"gorm.io/gorm"
 )
 
 var db *gorm.DB
-var serverInstance server.Server
+var broadcaster ports.Broadcaster 
 var mqttConfig *config.Config
+var mqttClient mqtt.Client
 
-func Initialize(database *gorm.DB, conf *config.Config, s server.Server) mqtt.Client {
+func Initialize(database *gorm.DB, conf *config.Config, b ports.Broadcaster) mqtt.Client {
 	db = database
-	serverInstance = s
+	broadcaster = b
 	mqttConfig = conf
+
+	// --- FIX 1: Ensure ClientID is always unique ---
+	// Appending a random number to the client ID prevents conflicts on reconnect.
+	uniqueClientID := conf.MQTT.ClientID + "-" + strconv.Itoa(rand.Intn(1000))
+	log.Printf("Connecting to MQTT with ClientID: %s", uniqueClientID)
+
 	opts := mqtt.NewClientOptions().
 		AddBroker(conf.MQTT.BrokerURL).
-		SetClientID(conf.MQTT.ClientID)
+		SetClientID(uniqueClientID) // Use the unique ID
 
-	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
-		fmt.Printf("Received unexpected message on topic: %s\n", msg.Topic())
-		fmt.Printf("Message: %s\n", msg.Payload())
-	})
+	// Add robust reconnect logic
+	opts.SetAutoReconnect(true)
+	opts.SetMaxReconnectInterval(10 * time.Second)
 
 	opts.OnConnect = func(c mqtt.Client) {
-		log.Println("Connected to MQTT broker")
+		log.Println("Successfully connected to MQTT broker")
 		subscribe(c, conf.MQTT.TopicTelemetry, handleTelemetryMessage)
 		subscribe(c, conf.MQTT.TopicStatus, handleStatusMessage)
 	}
-
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
-		log.Printf("Connection to MQTT broker lost: %v", err)
+		log.Printf("Connection to MQTT broker lost: %v. Retrying...", err)
 	})
+	opts.OnReconnecting = func(c mqtt.Client, opts *mqtt.ClientOptions) {
+		log.Println("Attempting to reconnect to MQTT broker...")
+	}
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		log.Fatalf("Failed to connect to MQTT broker: %v", token.Error())
 		return nil
 	}
-
+	mqttClient = client
 	return client
+}
+
+func (p *Publisher) PublishMeasureCommand(boardID string) {
+	topic := fmt.Sprintf("iot/%s/measure", boardID)
+	payload := "1" 
+	
+	token := mqttClient.Publish(topic, 1, false, payload)
+	token.Wait()
+	if token.Error() != nil {
+		log.Printf("Failed to publish measure command to topic '%s': %v", topic, token.Error())
+	} else {
+		log.Printf("Published measure command to topic: %s", topic)
+	}
 }
 
 func subscribe(client mqtt.Client, topic string, handler mqtt.MessageHandler) {
@@ -95,9 +118,9 @@ func handleTelemetryMessage(client mqtt.Client, msg mqtt.Message) {
 
 	sensorLog := &entities.SensorLog{
 		BoardID:     &board.BoardID,
-		Temperature: &dto.Temperature,
-		Ec:          &dto.Ec,
-		Ph:          &dto.Ph,
+		Temperature: dto.Temperature,
+		Ec:          dto.Ec,
+		Ph:          dto.Ph,
 	}
 
 	if err := db.Create(&sensorLog).Error; err != nil {
@@ -106,13 +129,57 @@ func handleTelemetryMessage(client mqtt.Client, msg mqtt.Message) {
 	}
 	log.Printf("Successfully saved sensor log for BoardID: %s", *sensorLog.BoardID)
 
-	if serverInstance != nil {
-		serverInstance.BroadcastTelemetryData(board.BoardID, sensorLog)
+	// After saving, check thresholds and broadcast telemetry
+	checkThresholdsAndNotify(&board, &dto)
+
+	if broadcaster != nil { 
+		broadcaster.BroadcastTelemetryData(board.BoardID, sensorLog) 
 	} else {
-		log.Println("serverInstance is nil, cannot broadcast WebSocket message")
+		log.Println("broadcaster is nil, cannot broadcast WebSocket message")
 	}
 
 	updateBoardLastSeen(board.ID)
+}
+
+// checkThresholdsAndNotify checks telemetry data against predefined sensor thresholds.
+func checkThresholdsAndNotify(board *entities.Board, telemetry *entities.InsertSensorLogDto) {
+	var sensors []entities.Sensor
+	if err := db.Where("board_id = ?", board.ID).Find(&sensors).Error; err != nil {
+		log.Printf("Could not retrieve sensors for board ID %d to check thresholds: %v", board.ID, err)
+		return
+	}
+
+	for _, sensor := range sensors {
+		var alertMessage string
+		switch sensor.SensorType {
+		case entities.SensorTypeTemperature:
+			if sensor.SensorThresholdMax != nil && telemetry.Temperature > *sensor.SensorThresholdMax {
+				alertMessage = fmt.Sprintf("Temperature (%.2f) exceeded maximum threshold (%.2f)", telemetry.Temperature, *sensor.SensorThresholdMax)
+			}
+			if sensor.SensorThresholdMin != nil && telemetry.Temperature < *sensor.SensorThresholdMin {
+				alertMessage = fmt.Sprintf("Temperature (%.2f) is below minimum threshold (%.2f)", telemetry.Temperature, *sensor.SensorThresholdMin)
+			}
+		case entities.SensorTypeEC:
+			if sensor.SensorThresholdMax != nil && telemetry.Ec > *sensor.SensorThresholdMax {
+				alertMessage = fmt.Sprintf("EC (%.2f) exceeded maximum threshold (%.2f)", telemetry.Ec, *sensor.SensorThresholdMax)
+			}
+			if sensor.SensorThresholdMin != nil && telemetry.Ec < *sensor.SensorThresholdMin {
+				alertMessage = fmt.Sprintf("EC (%.2f) is below minimum threshold (%.2f)", telemetry.Ec, *sensor.SensorThresholdMin)
+			}
+		case entities.SensorTypePH:
+			if sensor.SensorThresholdMax != nil && telemetry.Ph > *sensor.SensorThresholdMax {
+				alertMessage = fmt.Sprintf("pH (%.2f) exceeded maximum threshold (%.2f)", telemetry.Ph, *sensor.SensorThresholdMax)
+			}
+			if sensor.SensorThresholdMin != nil && telemetry.Ph < *sensor.SensorThresholdMin {
+				alertMessage = fmt.Sprintf("pH (%.2f) is below minimum threshold (%.2f)", telemetry.Ph, *sensor.SensorThresholdMin)
+			}
+		}
+
+		if alertMessage != "" {
+			// Print the alert to the console
+			log.Printf("[ALERT] Board %s: %s", board.BoardID, alertMessage)
+		}
+	}
 }
 
 func handleStatusMessage(client mqtt.Client, msg mqtt.Message) {
@@ -152,8 +219,8 @@ func handleStatusMessage(client mqtt.Client, msg mqtt.Message) {
 
 	log.Printf("Updated status for board %s to %s", boardIdStr, statusText)
 
-	if serverInstance != nil {
-		serverInstance.BroadcastStatus(&board)
+	if broadcaster != nil { 
+		broadcaster.BroadcastStatus(&board) 
 	}
 }
 
@@ -166,3 +233,21 @@ func updateBoardLastSeen(boardID uint) {
 		log.Printf("Updated LastSeen for board %d", boardID)
 	}
 }
+
+func (p *Publisher) PublishSensorFrequency(boardID string, frequency float64) {
+	topic := fmt.Sprintf("iot/%s/frequency", boardID)
+	payload, err := json.Marshal(map[string]float64{"frequency": frequency})
+	if err != nil {
+		log.Printf("Error marshaling frequency payload: %v", err)
+		return
+	}
+	token := mqttClient.Publish(topic, 1, false, payload)
+	token.Wait()
+	if token.Error() != nil {
+		log.Printf("Failed to publish frequency to topic '%s': %v", topic, token.Error())
+	} else {
+		log.Printf("Published frequency to topic: %s", topic)
+	}
+}
+
+type Publisher struct{}

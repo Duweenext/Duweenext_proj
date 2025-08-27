@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from
 import { theme } from '@/theme';
 import TextFieldSensorValue from '@/src/component/TextFields/TextFieldSensorValue';
 import SensorChart from './SensorChart';
-import { SensorCardProp } from './SensorCard';
+import { SensorDataBackend } from '@/src/api/hooks/useBoard';
 
 // Victory Native XL for high-performance charts
 // npm install victory-native react-native-svg
@@ -14,7 +14,7 @@ interface SensorThreshold {
 }
 
 interface SensorData {
-  id: string;
+  id: number;
   name: string;
   type: string;
   isConnected: boolean;
@@ -26,7 +26,7 @@ interface SensorData {
 
 interface SensorBoardExpandProps {
   boardId?: string;
-  sensor?: SensorCardProp;
+  sensor: SensorDataBackend;
 }
 
 const { width, height } = Dimensions.get('window');
@@ -34,17 +34,17 @@ const { width, height } = Dimensions.get('window');
 // Utility for responsive clamping
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId }) => {
+const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }) => {
   const [selectedSensor, setSelectedSensor] = useState<SensorData>({
-    id: 'temp_sensor_1',
-    name: 'Temperature sensor',
-    type: 'Temperature',
+    id: sensor?.id ?? 0,
+    name: sensor.sensor_type,
+    type: sensor.sensor_type,
     isConnected: true,
-    currentValue: 35,
-    unit: '°C',
+    // currentValue: sensor?.,
+    unit: '',
     threshold: {
-      max: 35,
-      min: 30
+      max: sensor?.sensor_threshold_max,
+      min: sensor?.sensor_threshold_min
     },
     historicalData: [
       { day: 'Day1', value: 5.6, x: 1, y: 5.6 },

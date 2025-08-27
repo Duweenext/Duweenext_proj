@@ -30,7 +30,7 @@ interface Esp32CardProps {
     runningTime?: string;
     onIconPress?: (e: GestureResponderEvent) => void;
     onButtonPress?: (e: GestureResponderEvent) => void;
-    board?: BoardRelationship;
+    board: BoardRelationship;
     frequency?: number;
 }
 
@@ -63,7 +63,6 @@ const variants: Record<
 
 const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     runningTime = '0 hours 0 minutes',
-    onIconPress,
     onButtonPress,
     board,
     frequency = 15,
@@ -77,8 +76,6 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
 
     return (
         <View>
-
-
             <TouchableOpacity onPress={() => setExpanded(!expanded)} disabled={mode !== 'active'}>
                 <View style={[styles.card, {
                     backgroundColor: cardBg,
@@ -131,6 +128,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
             {expanded && mode === "active" && (
                 <CardBoardExpanded
                     boardFrequency={frequency}
+                    board_id={board.board_id}
                 />
             )}
         </View>

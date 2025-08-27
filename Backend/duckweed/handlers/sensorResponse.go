@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"main/duckweed/entities"
 	"main/duckweed/usecases"
 	"strconv"
@@ -65,6 +66,20 @@ func (h *SensorHandler) GetSensorByID(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": sensor})
 }
 
+func (h *SensorHandler) GetSensorByBoardId(c *fiber.Ctx) error {
+	idStr := c.Params("board_id")
+	fmt.Print(idStr)
+
+	sensor, err := h.useCase.GetSensorByBoardID(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "Could not retrieve sensor"})
+	}
+	if sensor == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "error", "message": "Sensor not found"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "data": sensor})
+}
 
 func (h *SensorHandler) UpdateSensorThresholds(c *fiber.Ctx) error {
 	boardID := c.Params("board_id")

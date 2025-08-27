@@ -2,13 +2,9 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from '@/theme';
 import SensorBoardExpand from "./SensorBoardExpand";
+import { SensorDataBackend } from "@/src/api/hooks/useBoard";
 
-export interface SensorCardProp {
-    id: string;
-    name: string;
-}
-
-const SensorTab: React.FC<{ sensor: SensorCardProp }> = ({ sensor }) => {
+const SensorTab: React.FC<{ sensor: SensorDataBackend }> = ({ sensor }) => {
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -16,20 +12,19 @@ const SensorTab: React.FC<{ sensor: SensorCardProp }> = ({ sensor }) => {
             <TouchableOpacity onPress={() => setExpanded(!expanded)}>
                 <View key={sensor.id} style={[styles.sensorCard,
                     , {
-                    // backgroundColor: cardBg,
                     borderBottomEndRadius: expanded ? 0 : theme.borderRadius.lg,
                     borderBottomStartRadius: expanded ? 0 : theme.borderRadius.lg,
                 }
                 ]}>
                     <View style={styles.sensorInfo}>
-                        <Text style={styles.sensorName}>{sensor.name}</Text>
+                        <Text style={styles.sensorName}>{sensor.sensor_type}</Text>
                     </View>
                     <View style={styles.sensorActions}>
                         <Text style={styles.chevron}>›</Text>
                     </View>
                 </View>
             </TouchableOpacity>
-            {expanded && <SensorBoardExpand />}
+            {expanded && <SensorBoardExpand sensor={sensor} />}
         </View>
     );
 }

@@ -4,8 +4,9 @@ import { theme } from '@/theme'; // Adjust path as needed
 import SensorBoardExpand from '@/src/component/Card/CardSensorPrimary/SensorBoardExpand';
 import HalfCircleGauge from '../../Chart/GaugeChart';
 import ButtonModalL from '../../Buttons/ButtonModalL';
-import SensorCard, { SensorCardProp } from '../CardSensorPrimary/SensorCard';
+import SensorCard from '../CardSensorPrimary/SensorCard';
 import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
+import { useBoard } from '@/src/api/hooks/useBoard';
 
 interface MeasurementData {
   ph: number;
@@ -17,26 +18,30 @@ interface MeasurementData {
 
 interface MeasurementDashboardProps {
   boardFrequency: number;
+  board_id: string;
 }
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 // tiny util for responsive clamping
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency }) => {
-  // const {getReturnById} = useBoard();
+const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency , board_id}) => {
   const [measurementData, setMeasurementData] = useState<MeasurementData>({
     ph: 5.6,
     ec: 152,
     temperature: 32,
   });
 
-  const [sensors, setSensors] = useState<SensorCardProp[]>([
-    { id: 'ph', name: 'Ph sensor' },
-    { id: 'temperature', name: 'Temperature sensor' },
-    { id: 'ec', name: 'EC sensor' },
-  ]);
+  const { getSensorBasicInformation , getSensorGraphLog, sensorData} = useBoard();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getSensorBasicInformation(board_id);
+      const data2 = await getSensorGraphLog(board_id, 'Temperature', 7);
+    };
+    fetchData();
+  }, [getSensorBasicInformation, getSensorGraphLog])
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -53,22 +58,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
     }, 2000);
   };
 
-  const handleSensorToggle = (sensorId: string): void => {
-    setSensors(prevSensors =>
-      prevSensors.map(sensor =>
-        sensor.id === sensorId
-          ? { ...sensor}
-          : sensor
-      )
-    );
-  };
-
-  // ---- responsive values (using width from Dimensions) ----
-  const gaugeGap = clamp(Math.round(width * 0.02), 6, 16); // ~2% of width
-  const btnWidth = clamp(Math.round(width * 0.6), 220, 420); // 60% of screen
-  const btnPadV = clamp(Math.round(width * 0.035), 10, 18); // vertical padding
-  const btnRadius = clamp(Math.round(width * 0.06), 18, 28); // pill radius
-  const btnFont = clamp(Math.round(width * 0.045), 14, 18); // label size
+  const gaugeGap = clamp(Math.round(width * 0.02), 6, 16); 
 
   return (
     <ScrollView style={styles.container}>
@@ -76,7 +66,6 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Measurement</Text>
 
-        {/* Measurement Card */}
         <View style={styles.measurementCard}>
           {/* Measurement Values */}
           <View style={[styles.measurementRow, { gap: gaugeGap }]}>
@@ -109,7 +98,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
             </View>
           </View>
 
-          {sensors.map((sensor) => (
+          {sensorData?.map((sensor) => (
             <View key={sensor.id} style={styles.sensorContainer}>
               <SensorCard sensor={sensor} />
             </View>

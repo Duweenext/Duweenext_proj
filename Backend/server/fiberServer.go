@@ -139,6 +139,7 @@ func (s *FiberServer) Start() {
 	api.Get("/sensors", sensorHandler.GetAllSensors)
 	api.Post("/sensors", sensorHandler.CreateSensor)
 	api.Get("/sensors/:id", sensorHandler.GetSensorByID)
+	api.Get("/sensors/board/:board_id", sensorHandler.GetSensorByBoardId)
 	api.Put("/sensor/thresholds/:board_id", sensorHandler.UpdateSensorThresholds)
 	api.Get("/sensor/:sensor_type/:board_id/:days<int(1..365)>", sensorLogHandler.GetSensorData)
 	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)

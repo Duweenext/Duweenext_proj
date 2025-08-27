@@ -16,7 +16,6 @@ const (
 
 type Sensor struct {
 	gorm.Model
-	SensorID           string     `gorm:"unique;not null"`
 	SensorType         SensorType `gorm:"type:varchar(20)"`
 	SensorThresholdMax *float64
 	SensorThresholdMin *float64

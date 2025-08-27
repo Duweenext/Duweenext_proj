@@ -11,6 +11,7 @@ type SensorUseCaseInterface interface {
 	CreateSensor(dto entities.InsertSensorDto) (*entities.SensorResponseDto, error)
 	GetAllSensors() ([]entities.SensorResponseDto, error)
 	GetSensorByID(id uint) (*entities.SensorResponseDto, error)
+	GetSensorByBoardID(boardID string) ([]entities.SensorResponseDto, error)
 	UpdateSensorThresholds(boardStringID string, dto entities.UpdateSensorThresholdDto) (*entities.SensorResponseDto, error)
 }
 
@@ -39,12 +40,29 @@ func toSensorResponseDto(sensor entities.Sensor) entities.SensorResponseDto {
 	}
 }
 
+func (uc *SensorUseCase) GetSensorByBoardID(boardID string) ([]entities.SensorResponseDto, error) {
+	board, err := uc.boardRepo.FindByBoardID(boardID)
+	if err != nil || board == nil {
+		return nil, err
+	}
+	sensors, err := uc.sensorRepo.FindSensorByBoardID(board.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var responseDtos []entities.SensorResponseDto
+	for _, sensor := range sensors {
+		responseDtos = append(responseDtos, toSensorResponseDto(sensor))
+	}
+	return responseDtos, nil
+}
+
 func (uc *SensorUseCase) CreateSensor(dto entities.InsertSensorDto) (*entities.SensorResponseDto, error) {
 	sensorEntity := &entities.Sensor{
-		SensorType:       dto.SensorType,
+		SensorType:         dto.SensorType,
 		SensorThresholdMax: dto.SensorThresholdMax,
 		SensorThresholdMin: dto.SensorThresholdMin,
-		BoardID:          dto.BoardID,
+		BoardID:            dto.BoardID,
 	}
 
 	// Corrected: Changed uc.repo to uc.sensorRepo

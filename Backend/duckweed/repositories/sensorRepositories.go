@@ -1,18 +1,19 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"main/duckweed/entities"
+
+	"gorm.io/gorm"
 )
 
 type SensorRepositoryInterface interface {
 	FindByBoardID(boardID uint) ([]entities.Sensor, error)
 	Create(sensor *entities.Sensor) (*entities.Sensor, error)
 	FindAll() ([]entities.Sensor, error)
-	FindByID(id uint) (*entities.Sensor, error) 
+	FindByID(id uint) (*entities.Sensor, error)
 	FindByBoardIDAndType(boardID uint, sensorType entities.SensorType) (*entities.Sensor, error)
 	Update(sensor *entities.Sensor) (*entities.Sensor, error)
-	
+	FindSensorByBoardID(boardID uint) ([]entities.Sensor, error)
 }
 
 type SensorRepository struct {
@@ -24,6 +25,12 @@ func NewSensorRepository(db *gorm.DB) SensorRepositoryInterface {
 }
 
 func (r *SensorRepository) FindByBoardID(boardID uint) ([]entities.Sensor, error) {
+	var sensors []entities.Sensor
+	err := r.db.Where("board_id = ?", boardID).Find(&sensors).Error
+	return sensors, err
+}
+
+func (r *SensorRepository) FindSensorByBoardID(boardID uint) ([]entities.Sensor, error) {
 	var sensors []entities.Sensor
 	err := r.db.Where("board_id = ?", boardID).Find(&sensors).Error
 	return sensors, err
@@ -64,7 +71,7 @@ func (r *SensorRepository) FindByBoardIDAndType(boardID uint, sensorType entitie
 	err := r.db.Where("board_id = ? AND sensor_type = ?", boardID, sensorType).First(&sensor).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil 
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -77,4 +84,3 @@ func (r *SensorRepository) Update(sensor *entities.Sensor) (*entities.Sensor, er
 	}
 	return sensor, nil
 }
-

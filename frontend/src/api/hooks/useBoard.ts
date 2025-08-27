@@ -3,6 +3,15 @@ import { useCallback, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
 import { BoardRelationship } from "@/src/interfaces/board";
 
+
+export interface SensorDataBackend {
+    id: number;
+    sensor_type: string;
+    sensor_threshold_max: number;
+    sensor_threshold_min: number;
+    board_id: number;
+}
+
 export type BoardRegistrationData = {
   board_id: string;
   user_id: number;
@@ -14,6 +23,7 @@ export type BoardRegistrationData = {
 export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
+    const [sensorData, setSensorData] = useState<SensorDataBackend[] | null>(null);
 
     const [boards, setBoards] = useState<BoardRelationship[]>([]);
 
@@ -64,7 +74,6 @@ export const useBoard = () => {
         []
     );
 
-    // security fix need
     const getAllBoardByUserId = useCallback(
         async (userId: number) => {
             setLoading(true);
@@ -80,14 +89,53 @@ export const useBoard = () => {
             }
         },
         []
-    )
+    );
+
+    const getSensorBasicInformation = useCallback(
+        async (boardId: string) => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await axiosInstance.get(`/v1/sensors/board/${boardId}`);
+                console.log(res.data.data);
+                setSensorData(res.data.data);
+            } catch (err) {
+                setError(err);
+                throw err;
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    );
+
+    const getSensorGraphLog = useCallback(
+        async (boardId: string, sensor_type: string, days: number) => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await axiosInstance.get(`/v1/sensor/${sensor_type}/${boardId}/${days}`);
+                console.log(res.data.data);
+                return res.data.data;
+            } catch (err) {
+                setError(err);
+                throw err;
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    );
 
     return {
         loading,
         error,
         boards,
+        sensorData,
         verifyBoardInformation,
         createBoardRelationship,
-        getAllBoardByUserId
+        getAllBoardByUserId,
+        getSensorBasicInformation,
+        getSensorGraphLog
     };
 };

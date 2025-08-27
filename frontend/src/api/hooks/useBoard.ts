@@ -1,6 +1,7 @@
 import axiosInstance from "@/src/api/apiManager";
 import { useCallback, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
+import { BoardRelationship } from "@/src/interfaces/board";
 
 export type BoardRegistrationData = {
   board_id: string;
@@ -14,7 +15,7 @@ export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
 
-    const [boards, setBoards] = useState<any[]>([]);
+    const [boards, setBoards] = useState<BoardRelationship[]>([]);
 
     const verifyBoardInformation = useCallback(async (boardId: string) => {
         setLoading(true);
@@ -63,13 +64,14 @@ export const useBoard = () => {
         []
     );
 
-    const getAllBoard = useCallback(
-        async () => {
+    // security fix need
+    const getAllBoardByUserId = useCallback(
+        async (userId: number) => {
             setLoading(true);
             setError(null);
             try {
-                const res = await axiosInstance.get('/v1/boards');
-                return res.data;
+                const res = await axiosInstance.get(`/v1/relationships/user/${userId}`);
+                setBoards(res.data.data);
             } catch (err) {
                 setError(err);
                 throw err;
@@ -83,7 +85,9 @@ export const useBoard = () => {
     return {
         loading,
         error,
+        boards,
         verifyBoardInformation,
         createBoardRelationship,
+        getAllBoardByUserId
     };
 };

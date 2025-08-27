@@ -22,10 +22,10 @@ export interface Board {
 }
 
 export interface BoardRelationship {
-  connection_id: number;
-  board_id: number;
-  user_id: number;
-  board_register_date: string;
+  board_name?: string;
+  board_id: string;
+  con_method: 'manual' | 'bluetooth';
+  con_status: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

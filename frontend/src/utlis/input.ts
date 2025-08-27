@@ -55,4 +55,65 @@ export const sanitizeIntegerInput = (text: string): string => {
   return text.replace(/[^0-9]/g, '');
 };
 
+export const calculateRunningTime = (updatedAt: string): number => {
+  try {
+    // Parse the updated_at timestamp
+    const updatedTime = new Date(updatedAt);
+    const currentTime = new Date();
+    
+    // Calculate difference in milliseconds
+    const diffInMs = currentTime.getTime() - updatedTime.getTime();
+    
+    // Convert to seconds
+    const diffInSeconds = Math.floor(diffInMs / 1000);
+    
+    // Return 0 if negative (shouldn't happen, but safety check)
+    return Math.max(0, diffInSeconds);
+  } catch (error) {
+    console.error('Error calculating running time:', error);
+    return 0;
+  }
+};
+
+export const formatRunningTimeFromTimestamp = (updatedAt: string): string => {
+  const totalSeconds = calculateRunningTime(updatedAt);
+  
+  const days = Math.floor(totalSeconds / 86400); // 86400 seconds = 24 hours
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  
+  // If 24+ hours (1+ days), show only days
+  if (days >= 1) {
+    return `${days} day${days > 1 ? 's' : ''}`;
+  }
+  // If less than 24 hours, show hours/minutes/seconds
+  else if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  } else {
+    return `${seconds}s`;
+  }
+};
+
+// Alternative: More human-readable format
+export const formatRunningTimeHumanReadable = (updatedAt: string): string => {
+  const totalSeconds = calculateRunningTime(updatedAt);
+  
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  
+  if (days > 0) {
+    return `${days} day${days > 1 ? 's' : ''}, ${hours}h`;
+  } else if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m`;
+  } else {
+    return `${totalSeconds}s`;
+  }
+};
+
 

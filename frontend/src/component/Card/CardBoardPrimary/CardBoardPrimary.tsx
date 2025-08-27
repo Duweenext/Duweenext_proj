@@ -10,29 +10,27 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
-import { Board } from '@/src/interfaces/board';
+import { Board, BoardRelationship } from '@/src/interfaces/board';
 import CardBoardExpanded from './CardboardExpand';
 import ButtonCard from '../../Buttons/ButtonCard';
 
-type Mode = 'connected' | 'failed' | 'disconnected';
+type Mode = 'active' | 'inactive';
 
 const displayStatusMap = {
-    connected: 'Connected',
-    failed: 'Unable to connect',
-    disconnected: 'Disconnected',
+    active: 'Connected',
+    inactive: 'Disconnected',
 } as const;
 
 const displayStatusActionLabel = {
-    connected: 'Disconnect',
-    failed: 'Connect again',
-    disconnected: 'Connect',
+    active: 'Disconnect',
+    inactive: 'Connect',
 }
 
 interface Esp32CardProps {
     runningTime?: string;
     onIconPress?: (e: GestureResponderEvent) => void;
     onButtonPress?: (e: GestureResponderEvent) => void;
-    board?: Board;
+    board?: BoardRelationship;
     frequency?: number;
 }
 
@@ -47,21 +45,14 @@ const variants: Record<
         iconColor: string;
     }
 > = {
-    connected: {
+    active: {
         cardBg: theme.colors.primary,
         textColor: '#FFFFFF',
         buttonBg: '#FFFFFF',
         buttonText: theme.colors.primary,
         iconColor: '#FFFFFF',
     },
-    failed: {
-        cardBg: theme.colors.fail,
-        textColor: '#FFFFFF',
-        buttonBg: '#FFFFFF',
-        buttonText: theme.colors.fail,
-        iconColor: '#FFFFFF',
-    },
-    disconnected: {
+    inactive: {
         cardBg: theme.colors['background1'],
         textColor: '#000000',
         buttonBg: '#FFFFFF',
@@ -77,18 +68,18 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     board,
     frequency = 15,
 }) => {
-    const mode = board?.board_status || 'disconnected' as Mode;
+    const mode = board?.con_status || 'inactive' as Mode;
     const boardName = board?.board_name || 'Unknown Board';
     const [expanded, setExpanded] = useState(false);
     const { cardBg, textColor, buttonBg, buttonText, iconColor } =
-        variants[mode] || variants.disconnected;
+        variants[mode] || variants.inactive;
     const actionLabel = displayStatusActionLabel[mode];
 
     return (
         <View>
 
 
-            <TouchableOpacity onPress={() => setExpanded(!expanded)} disabled={mode !== 'connected'}>
+            <TouchableOpacity onPress={() => setExpanded(!expanded)} disabled={mode !== 'active'}>
                 <View style={[styles.card, {
                     backgroundColor: cardBg,
                     borderBottomEndRadius: expanded ? 0 : theme.borderRadius.lg,
@@ -98,26 +89,14 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                         <Text style={[styles.title, { color: textColor }]}>
                             {boardName}
                         </Text>
-                        {mode === 'disconnected' && (
+                        {mode === 'inactive' && (
                             <Text style={[styles.description, { color: textColor }]}>
                                 Last connected: {board?.updated_at || 'N/A'}
                             </Text>
                         )}
-                        {mode === 'failed' ? (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
-                                <Text style={[styles.description, { color: textColor }]}>
-                                    Why is it not connecting?
-                                </Text>
-                                <TouchableOpacity onPress={onIconPress}>
-                                    <Ionicons name="help-circle-outline" size={18} color={iconColor} />
-                                </TouchableOpacity>
-                            </View>
-
-                        ) : (
-                            <Text style={[styles.description, { color: textColor }]}>
-                                Running: {runningTime}
-                            </Text>
-                        )}
+                        <Text style={[styles.description, { color: textColor }]}>
+                            Running: {runningTime}
+                        </Text>
                         <Text style={[styles.description, { color: textColor }]}>
                             Status: {displayStatusMap[mode]}
                         </Text>
@@ -149,9 +128,9 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                 </View>
 
             </TouchableOpacity>
-            {expanded && mode === "connected" && (
+            {expanded && mode === "active" && (
                 <CardBoardExpanded
-                boardFrequency={frequency}
+                    boardFrequency={frequency}
                 />
             )}
         </View>

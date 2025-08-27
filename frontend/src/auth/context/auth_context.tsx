@@ -46,9 +46,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (!isFullyLoaded) return;
 
         const inAuthGroup = segments[0] === '(auth)';
-        const inTabsGroup = segments[0] === '(tabs)';
-        const inScreensGroup = segments[0] === '(screens)';
-        const isRootRoute = segments.length <= 1 && segments[0] !== '(auth)' && segments[0] !== '(tabs)' && segments[0] !== '(screens)';
+        const isRootRoute = segments.length <= 1 && segments[0] !== '(auth)' && segments[0] !== '(tabs)';
         
         if (!isAuthenticated && !inAuthGroup) {
             // User is not authenticated and not on auth screen, redirect to login

@@ -29,6 +29,7 @@ export interface BoardRelationship {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  sensor_frequency: number;
 }
 
 export interface BoardStatus {

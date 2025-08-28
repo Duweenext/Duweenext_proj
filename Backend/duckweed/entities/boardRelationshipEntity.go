@@ -39,14 +39,15 @@ type InsertBoardRelationshipDto struct {
 }
 
 type BoardRelationshipResponseDto struct {
-	ID        uint          `json:"id"`
-	BoardID   string        `json:"board_id"`
-	BoardName *string       `json:"board_name"`
-	UserID    uint          `json:"user_id"`
-	ConStatus ConStatusEnum `json:"con_status"`
-	ConMethod ConMethodEnum `json:"con_method"`
-	CreatedAt time.Time     `json:"created_at"`
-	UpdatedAt time.Time     `json:"updated_at"`
+	ID             uint          `json:"id"`
+	BoardID        string        `json:"board_id"`
+	BoardName      *string       `json:"board_name"`
+	UserID         uint          `json:"user_id"`
+	ConStatus      ConStatusEnum `json:"con_status"`
+	ConMethod      ConMethodEnum `json:"con_method"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
+	BoardFrequency *float64      `json:"sensor_frequency,omitempty"`
 }
 
 type UpdateBoardRelationshipStatusDto struct {

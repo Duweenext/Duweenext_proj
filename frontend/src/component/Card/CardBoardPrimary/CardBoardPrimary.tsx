@@ -65,7 +65,6 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     runningTime = '0 hours 0 minutes',
     onButtonPress,
     board,
-    frequency = 15,
 }) => {
     const mode = board?.con_status || 'inactive' as Mode;
     const boardName = board?.board_name || 'Unknown Board';
@@ -127,7 +126,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
             </TouchableOpacity>
             {expanded && mode === "active" && (
                 <CardBoardExpanded
-                    boardFrequency={frequency}
+                    boardFrequency={board.sensor_frequency}
                     board_id={board.board_id}
                 />
             )}

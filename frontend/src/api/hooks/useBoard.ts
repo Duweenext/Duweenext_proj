@@ -13,11 +13,11 @@ export interface SensorDataBackend {
 }
 
 export type BoardRegistrationData = {
-  board_id: string;
-  user_id: number;
-  con_method: string;
-  con_password: string;
-  board_name?: string;
+    board_id: string;
+    user_id: number;
+    con_method: string;
+    con_password: string;
+    board_name?: string;
 };
 
 export const useBoard = () => {
@@ -33,11 +33,11 @@ export const useBoard = () => {
         try {
             console.log("Verifying Board ID with API:", boardId);
             const res = await axiosInstance.get(`/v1/board/${boardId}`);
-            return res.data; 
+            return res.data;
         } catch (err) {
             if (axios.isAxiosError(err) && err.response?.status === 404) {
                 console.log("Board ID not found in database (404). Treating as a new board.");
-                return null; 
+                return null;
             }
             setError(err);
             throw err;
@@ -63,10 +63,10 @@ export const useBoard = () => {
                 if (axios.isAxiosError(err) && err.response?.data?.message) {
                     errorMessage = err.response.data.message;
                 }
-                
-                setError(new Error(errorMessage)); 
-                throw new Error(errorMessage); 
-                
+
+                setError(new Error(errorMessage));
+                throw new Error(errorMessage);
+
             } finally {
                 setLoading(false);
             }
@@ -127,6 +127,35 @@ export const useBoard = () => {
         []
     );
 
+    const setBoardFrequency = useCallback(
+        async (boardFrequency : number, boardId : string) => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await axiosInstance.put(`/v1/board/frequency/${boardId}`, {
+                    sensor_frequency : boardFrequency
+                });
+
+                return res.data.data;
+
+            } catch (err) {
+                console.error("Failed to create board relationship:", err);
+
+                let errorMessage = "An unknown error occurred.";
+                if (axios.isAxiosError(err) && err.response?.data?.message) {
+                    errorMessage = err.response.data.message;
+                }
+
+                setError(new Error(errorMessage));
+                throw new Error(errorMessage);
+
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    )
+
     return {
         loading,
         error,
@@ -136,6 +165,7 @@ export const useBoard = () => {
         createBoardRelationship,
         getAllBoardByUserId,
         getSensorBasicInformation,
-        getSensorGraphLog
+        getSensorGraphLog,
+        setBoardFrequency
     };
 };

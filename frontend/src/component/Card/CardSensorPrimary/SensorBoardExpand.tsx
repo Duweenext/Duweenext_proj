@@ -5,9 +5,6 @@ import TextFieldSensorValue from '@/src/component/TextFields/TextFieldSensorValu
 import SensorChart from './SensorChart';
 import { SensorDataBackend } from '@/src/api/hooks/useBoard';
 
-// Victory Native XL for high-performance charts
-// npm install victory-native react-native-svg
-
 interface SensorThreshold {
   max: number;
   min: number;
@@ -30,8 +27,6 @@ interface SensorBoardExpandProps {
 }
 
 const { width, height } = Dimensions.get('window');
-
-// Utility for responsive clamping
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
 const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }) => {
@@ -40,7 +35,6 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
     name: sensor.sensor_type,
     type: sensor.sensor_type,
     isConnected: true,
-    // currentValue: sensor?.,
     unit: '',
     threshold: {
       max: sensor?.sensor_threshold_max,

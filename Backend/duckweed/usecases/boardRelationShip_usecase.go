@@ -113,7 +113,7 @@ func (uc *BoardRelationshipUseCase) CreateBoardRelationship(dto entities.InsertB
 			}
 		}
 	}
-	
+
 	// THIS IS THE CRITICAL DEBUGGING LINE
 	log.Printf("[DEBUG-USECASE] Board check complete. Numeric ID to be used for sensors is: %d", board.ID)
 
@@ -172,19 +172,22 @@ func (uc *BoardRelationshipUseCase) GetRelationshipsByUserID(userID uint) ([]ent
 		}
 
 		var boardName *string
+		var boardFrequency *float64
 		if board != nil && board.BoardName != nil {
 			boardName = board.BoardName
+			boardFrequency = board.SensorFrequency
 		}
 
 		responseDtos = append(responseDtos, entities.BoardRelationshipResponseDto{
-			ID:        rel.ID,
-			UserID:    rel.UserID,
-			BoardID:   rel.BoardID,
-			BoardName: boardName,
-			ConStatus: rel.ConStatus,
-			ConMethod: rel.ConMethod,
-			CreatedAt: rel.CreatedAt,
-			UpdatedAt: rel.UpdatedAt,
+			ID:             rel.ID,
+			UserID:         rel.UserID,
+			BoardID:        rel.BoardID,
+			BoardName:      boardName,
+			ConStatus:      rel.ConStatus,
+			ConMethod:      rel.ConMethod,
+			CreatedAt:      rel.CreatedAt,
+			UpdatedAt:      rel.UpdatedAt,
+			BoardFrequency: boardFrequency,
 		})
 	}
 

@@ -7,14 +7,13 @@ import ButtonModalL from '../../Buttons/ButtonModalL';
 import SensorCard from '../CardSensorPrimary/SensorCard';
 import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
 import { useBoard } from '@/src/api/hooks/useBoard';
+import { Ionicons } from '@expo/vector-icons';
 
 interface MeasurementData {
   ph: number;
   ec: number;
   temperature: number;
 }
-
-
 
 interface MeasurementDashboardProps {
   boardFrequency: number;
@@ -33,7 +32,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
     temperature: 32,
   });
 
-  const { getSensorBasicInformation , getSensorGraphLog, sensorData} = useBoard();
+  const { getSensorBasicInformation , getSensorGraphLog, sensorData, setBoardFrequency, loading} = useBoard();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,21 +59,28 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
 
   const gaugeGap = clamp(Math.round(width * 0.02), 6, 16); 
 
+  const handleBoardFrequencyChange = (boardFrequencyInput: string) => {
+    const frequency = parseFloat(boardFrequencyInput);
+    if (!isNaN(frequency)) {
+      boardFrequency = frequency;
+    }
+  };
+
+  const updateBoardFrequency = async (boardFrequency: number) => {
+    await setBoardFrequency(boardFrequency, board_id);
+  };
   return (
     <ScrollView style={styles.container}>
-      {/* Measurement Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Measurement</Text>
 
         <View style={styles.measurementCard}>
-          {/* Measurement Values */}
           <View style={[styles.measurementRow, { gap: gaugeGap }]}>
             <HalfCircleGauge title="pH" value={measurementData.ph} unit="" min={4} max={9} extraHorizontalPadding={theme.spacing.md * 2} />
             <HalfCircleGauge title="Temperature" value={measurementData.temperature} unit="°C" min={0} max={50} extraHorizontalPadding={theme.spacing.md * 2} />
             <HalfCircleGauge title="EC" value={measurementData.ec} unit="ms/cm" min={0} max={500} extraHorizontalPadding={theme.spacing.md * 2} />
           </View>
 
-          {/* Measure Again Button */}
           <ButtonModalL
             text={isLoading ? "Measuring..." : "Measure Again"}
             onPress={handleMeasureAgain}
@@ -85,16 +91,32 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
           />
         </View>
 
-        {/* Sensors Section */}
         <View style={styles.section}>
           <View style={styles.sensorHeaderContainer}>
             <Text style={styles.sectionTitle}>Sensors</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' , gap: 8}}>
+            <View style={styles.frequencyContainer}>
               <Text style={styles.sectionSubtitle}>Board Frequency:</Text>
-              <TextFieldSensorValue
-                defaultValue={boardFrequency.toString()}
-                onChange={() => { }}
-              />
+              <View style={styles.frequencyInputContainer}>
+                <TextFieldSensorValue
+                  defaultValue={boardFrequency.toString()}
+                  onChange={handleBoardFrequencyChange}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.submitFrequencyButton,
+                    loading && styles.submitFrequencyButtonDisabled
+                  ]}
+                  onPress={() => updateBoardFrequency(boardFrequency)}
+                  disabled={loading}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons 
+                    name="checkmark" 
+                    size={16} 
+                    color={theme.colors.white} 
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -243,7 +265,38 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.description,
     fontFamily: theme.fontFamily.medium,
     color: '#333',
-  }
+  },
+  frequencyContainer: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8
+  },
+  frequencyInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  submitFrequencyButton: {
+    backgroundColor: theme.colors.success, // Green background
+    borderRadius: 6,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 32,
+    minHeight: 32,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  submitFrequencyButtonDisabled: {
+    backgroundColor: theme.colors.success,
+    opacity: 0.6,
+  },
 });
 
 export default CardBoardExpanded;

@@ -149,34 +149,42 @@ func (s *FiberServer) BroadcastStatus(boardData interface{}) {
 	}
 }
 
-// monitorBoardStatus periodically checks for inactive boards and updates their status.
 func (s *FiberServer) monitorBoardStatus() {
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
+    ticker := time.NewTicker(30 * time.Second) 
+    defer ticker.Stop()
 
-	for {
-		<-ticker.C
-		var boards []entities.Board
-		if err := s.db.GetDb().Find(&boards).Error; err != nil {
-			log.Printf("Error checking board statuses: %v", err)
-			continue
-		}
+    for {
+        <-ticker.C
 
-		now := time.Now()
-		for i := range boards {
-			board := &boards[i]
-			if board.LastSeen != nil && now.Sub(*board.LastSeen) > time.Minute {
-				if board.BoardStatus == nil || *board.BoardStatus != entities.BoardStatusInactive {
-					inactiveStatus := entities.BoardStatusInactive
-					board.BoardStatus = &inactiveStatus
-					if err := s.db.GetDb().Save(board).Error; err != nil {
-						log.Printf("Error updating board status to offline for %s: %v", board.BoardID, err)
-						continue
-					}
-					log.Printf("Marked board %s as OFFLINE", board.BoardID)
-					s.BroadcastStatus(board)
-				}
-			}
-		}
-	}
+        oneMinuteAgo := time.Now().Add(-1 * time.Minute)
+        inactiveStatus := entities.BoardStatusInactive
+        activeStatus := entities.BoardStatusActive 
+
+        var boardsToUpdate []entities.Board
+        err := s.db.GetDb().
+            Where("last_seen < ? AND (board_status = ? OR board_status IS NULL)", oneMinuteAgo, activeStatus).
+            Find(&boardsToUpdate).Error
+
+        if err != nil {
+            log.Printf("Error querying for inactive boards: %v", err)
+            continue
+        }
+
+        if len(boardsToUpdate) == 0 {
+            continue 
+        }
+
+        log.Printf("Found %d board(s) to mark as inactive.", len(boardsToUpdate))
+
+        for i := range boardsToUpdate {
+            board := &boardsToUpdate[i] 
+            board.BoardStatus = &inactiveStatus
+            if err := s.db.GetDb().Save(board).Error; err != nil {
+                log.Printf("Error updating board status to inactive for %s: %v", board.BoardID, err)
+            } else {
+                log.Printf("Marked board %s as INACTIVE", board.BoardID)
+                s.BroadcastStatus(board)
+            }
+        }
+    }
 }

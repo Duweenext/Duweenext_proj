@@ -144,6 +144,9 @@ func (s *FiberServer) Start() {
 	api.Get("/sensor/:sensor_type/:board_id/:days<int(1..365)>", sensorLogHandler.GetSensorData)
 	apivisit.Get("/ws/:userId/:boardId", s.websocketHandler)
 
+	go s.monitorBoardStatus()
+
 	serverUrl := fmt.Sprintf(":%d", s.conf.Server.Port)
+	log.Println("Server is starting on", serverUrl)
 	log.Fatal(s.app.Listen(serverUrl))
 }

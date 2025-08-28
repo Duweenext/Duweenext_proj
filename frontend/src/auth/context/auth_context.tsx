@@ -19,6 +19,7 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
+const DISABLE_AUTH_FOR_DEVELOPMENT = true;
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
     const [[isLoading, session], setSession] = useStorageState('session');
@@ -38,26 +39,27 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setUser(null);
     };
 
-    const isAuthenticated = !!session;
+    const isAuthenticated = true;
     const isFullyLoaded = !isLoading && !isUserLoading;
 
     // Route protection logic
-    useEffect(() => {
-        if (!isFullyLoaded) return;
+    // useEffect(() => {
+    //     if (!isFullyLoaded) return;
+    //     if (DISABLE_AUTH_FOR_DEVELOPMENT) return;
 
-        const inAuthGroup = segments[0] === '(auth)';
-        const isRootRoute = segments.length <= 1 && segments[0] !== '(auth)' && segments[0] !== '(tabs)';
+    //     const inAuthGroup = segments[0] === '(auth)';
+    //     const isRootRoute = segments.length <= 1 && segments[0] !== '(auth)' && segments[0] !== '(tabs)';
         
-        if (!isAuthenticated && !inAuthGroup) {
-            // User is not authenticated and not on auth screen, redirect to login
-            console.log('Redirecting to login - not authenticated');
-            router.replace('/(auth)/login');
-        } else if (isAuthenticated && (inAuthGroup || isRootRoute)) {
-            // User is authenticated but on auth screen or root, redirect to main app
-            console.log('Redirecting to tabs - already authenticated');
-            router.replace('/(tabs)');
-        }
-    }, [isAuthenticated, segments, isFullyLoaded]);
+    //     if (!isAuthenticated && !inAuthGroup) {
+    //         // User is not authenticated and not on auth screen, redirect to login
+    //         console.log('Redirecting to login - not authenticated');
+    //         router.replace('/(tabs)');
+    //     } else if (isAuthenticated && (inAuthGroup || isRootRoute)) {
+    //         // User is authenticated but on auth screen or root, redirect to main app
+    //         console.log('Redirecting to tabs - already authenticated');
+    //         router.replace('/(tabs)');
+    //     }
+    // }, [isAuthenticated, segments, isFullyLoaded]);
 
     const parsedUser = user ? JSON.parse(user) : null;
 

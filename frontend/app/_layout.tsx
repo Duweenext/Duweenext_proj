@@ -19,15 +19,15 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <ImageBackground
-        source={require('@/assets/images/background.png')}
-        style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
-        resizeMode="cover"
-      >
+      // <ImageBackground
+      //   source={require('@/assets/images/background.png')}
+      //   style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+      //   resizeMode="cover"
+      // >
         <View style={{ padding: 20, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 10 }}>
           <Slot />
         </View>
-      </ImageBackground>
+      // </ImageBackground>
     );
   }
 

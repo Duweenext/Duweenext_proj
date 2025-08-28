@@ -1,3 +1,4 @@
+import { images } from '@/src/constants/images';
 import React from 'react';
 import { ImageBackground, StyleSheet } from 'react-native';
 
@@ -8,9 +9,11 @@ interface BackgroundWrapperProps {
 const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({ children }) => {
   return (
     <ImageBackground
-      source={require('@/assets/images/background.png')}
+      source={images.background}
       style={styles.background}
-      resizeMode="cover"
+      imageStyle={{ 
+        resizeMode: 'cover' // Change from 'contain' to 'cover'
+      }}
     >
       {children}
     </ImageBackground>
@@ -20,6 +23,8 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({ children }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
 });
 

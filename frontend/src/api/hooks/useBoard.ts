@@ -3,6 +3,9 @@ import { useCallback, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
 import { BoardRelationship } from "@/src/interfaces/board";
 
+export interface SensorDataCard extends SensorDataBackend {
+    board_uuid: string;
+}
 
 export interface SensorDataBackend {
     id: number;
@@ -51,7 +54,7 @@ export const useBoard = () => {
             setLoading(true);
             setError(null);
             try {
-                console.log("Creating board relationship with data:", data);
+                // console.log("Creating board relationship with data:", data);
                 const res = await axiosInstance.post('/v1/board-relationships', data);
 
                 return res.data.data;
@@ -156,6 +159,37 @@ export const useBoard = () => {
         []
     )
 
+    const setBoardThreshold = useCallback(
+        async (type: string, max: number, min: number, boardId: string) => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await axiosInstance.put(`/v1/sensor/thresholds/${boardId}`, {
+                    sensor_type: type,
+                    sensor_threshold_min: min,
+                    sensor_threshold_max: max
+                });
+
+                return res.data.data;
+
+            } catch (err) {
+                console.error("Failed to create board relationship:", err);
+
+                let errorMessage = "An unknown error occurred.";
+                if (axios.isAxiosError(err) && err.response?.data?.message) {
+                    errorMessage = err.response.data.message;
+                }
+
+                setError(new Error(errorMessage));
+                throw new Error(errorMessage);
+
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    )
+
     return {
         loading,
         error,
@@ -166,6 +200,7 @@ export const useBoard = () => {
         getAllBoardByUserId,
         getSensorBasicInformation,
         getSensorGraphLog,
-        setBoardFrequency
+        setBoardFrequency,
+        setBoardThreshold
     };
 };

@@ -122,7 +122,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
 
           {sensorData?.map((sensor) => (
             <View key={sensor.id} style={styles.sensorContainer}>
-              <SensorCard sensor={sensor} />
+              <SensorCard sensor={sensor} board_uuid={board_id}/>
             </View>
           ))}
         </View>

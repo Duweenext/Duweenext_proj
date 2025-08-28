@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from '@/theme';
 import SensorBoardExpand from "./SensorBoardExpand";
-import { SensorDataBackend } from "@/src/api/hooks/useBoard";
+import { SensorDataBackend, SensorDataCard } from "@/src/api/hooks/useBoard";
 
-const SensorTab: React.FC<{ sensor: SensorDataBackend }> = ({ sensor }) => {
+const SensorTab: React.FC<{ sensor: SensorDataBackend , board_uuid: string}> = ({ sensor , board_uuid}) => {
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -24,7 +24,7 @@ const SensorTab: React.FC<{ sensor: SensorDataBackend }> = ({ sensor }) => {
                     </View>
                 </View>
             </TouchableOpacity>
-            {expanded && <SensorBoardExpand sensor={sensor} />}
+            {expanded && <SensorBoardExpand sensor={sensor} boardId={board_uuid}/>}
         </View>
     );
 }

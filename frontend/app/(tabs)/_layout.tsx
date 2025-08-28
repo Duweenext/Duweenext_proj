@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import TopBar from '@/src/component/NavBar/TopBar';
 import BackgroundWrapper from '@/src/component/Layout/BackgroundWrapper';
 import { theme } from '@/src/theme';
+// import { transparent } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -113,7 +114,7 @@ function TabIcon({
 
 const _Layout = () => {
     return (
-        <BackgroundWrapper>
+        // <BackgroundWrapper>
             <Tabs
                 screenOptions={{
                     tabBarItemStyle: {
@@ -138,7 +139,7 @@ const _Layout = () => {
                         backdropFilter: 'blur(10px)',
                     },
                     sceneStyle: {
-                        backgroundColor: theme.colors.white,
+                        backgroundColor: 'black',
                     },
                 }}
             >
@@ -188,7 +189,7 @@ const _Layout = () => {
                 }}
             />
         </Tabs>
-        </BackgroundWrapper>
+    // </BackgroundWrapper>
     );
 };
 

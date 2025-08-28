@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from
 import { theme } from '@/theme';
 import TextFieldSensorValue from '@/src/component/TextFields/TextFieldSensorValue';
 import SensorChart from './SensorChart';
-import { SensorDataBackend } from '@/src/api/hooks/useBoard';
+import { SensorDataBackend, useBoard } from '@/src/api/hooks/useBoard';
+import { Ionicons } from '@expo/vector-icons';
 
 interface SensorThreshold {
   max: number;
@@ -22,7 +23,7 @@ interface SensorData {
 }
 
 interface SensorBoardExpandProps {
-  boardId?: string;
+  boardId: string;
   sensor: SensorDataBackend;
 }
 
@@ -30,6 +31,7 @@ const { width, height } = Dimensions.get('window');
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
 const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }) => {
+  const { setBoardThreshold , loading} = useBoard();
   const [selectedSensor, setSelectedSensor] = useState<SensorData>({
     id: sensor?.id ?? 0,
     name: sensor.sensor_type,
@@ -74,6 +76,10 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
     }));
   };
 
+  const changeBoardThreshold = () => {
+    setBoardThreshold(selectedSensor.type, selectedSensor.threshold.max, selectedSensor.threshold.min, boardId);
+  }
+
   return (
     <ScrollView style={styles.container}>
       {isExpanded && (
@@ -84,6 +90,7 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
                 <View style={styles.infoIcon}>
                   <Text style={styles.infoText}>?</Text>
                 </View>
+                
               </View>
               
               <View style={styles.thresholdRow}>
@@ -93,7 +100,23 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
                     defaultValue={selectedSensor.threshold.max.toString()}
                     onChange={handleMaxThresholdChange}
                   />
+                  
                   <Text style={styles.unitText}>{selectedSensor.unit}</Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.submitButton,
+                      loading && styles.submitButtonDisabled
+                    ]}
+                    onPress={changeBoardThreshold}
+                    disabled={loading}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons 
+                      name="checkmark" 
+                      size={16} 
+                      color={theme.colors.white} 
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -105,6 +128,21 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
                     onChange={handleMinThresholdChange}
                   />
                   <Text style={styles.unitText}>{selectedSensor.unit}</Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.submitButton,
+                      loading && styles.submitButtonDisabled
+                    ]}
+                    onPress={changeBoardThreshold}
+                    disabled={loading}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons 
+                      name="checkmark" 
+                      size={16} 
+                      color={theme.colors.white} 
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -347,6 +385,26 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: theme.fontSize.data_text,
     fontFamily: theme.fontFamily.medium,
+  },
+  submitButton: {
+    backgroundColor: '#1A736A',
+    borderRadius: 6,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    opacity: 0.6,
   },
 });
 

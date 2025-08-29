@@ -18,33 +18,33 @@ export const mockSensors: SensorData[] = [
   { name: 'EC sensor', value: 20, status: 'connected' },
 ];
 
-export const mockBoards: ExtendedBoardData[] = [
-  {
-    board_id: 1,
-    sensor_id: 1,
-    board_name: 'ESP32',
-    board_register_date: '2024-08-01',
-    board_status: 'connected',
-    created_at: '2024-08-01T00:00:00Z',
-    updated_at: '2024-08-08T13:22:00Z',
-    deleted_at: null,
-    running_time: 45, // in hours
-    sensors: mockSensors
-  },
-  {
-    board_id: 3,
-    sensor_id: 3,
-    board_name: 'ESP32',
-    board_register_date: '2024-08-03',
-    board_status: 'disconnected',
-    created_at: '2024-08-03T00:00:00Z',
-    updated_at: '2024-08-05T11:09:00Z',
-    deleted_at: null,
-    running_time: 0,
-    last_connected: '05 April 2024    11:09 PM',
-    sensors: []
-  },
-];
+// export const mockBoards: ExtendedBoardData[] = [
+//   {
+//     board_id: 1,
+//     sensor_id: 1,
+//     board_name: 'ESP32',
+//     board_register_date: '2024-08-01',
+//     board_status: 'connected',
+//     created_at: '2024-08-01T00:00:00Z',
+//     updated_at: '2024-08-08T13:22:00Z',
+//     deleted_at: null,
+//     running_time: 45, // in hours
+//     sensors: mockSensors
+//   },
+//   {
+//     board_id: 3,
+//     sensor_id: 3,
+//     board_name: 'ESP32',
+//     board_register_date: '2024-08-03',
+//     board_status: 'disconnected',
+//     created_at: '2024-08-03T00:00:00Z',
+//     updated_at: '2024-08-05T11:09:00Z',
+//     deleted_at: null,
+//     running_time: 0,
+//     last_connected: '05 April 2024    11:09 PM',
+//     sensors: []
+//   },
+// ];
 
 export const formatRunningTime = (hours: number): string => {
   const wholeHours = Math.floor(hours);

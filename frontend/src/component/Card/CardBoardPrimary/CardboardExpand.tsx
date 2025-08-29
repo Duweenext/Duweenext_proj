@@ -8,6 +8,7 @@ import SensorCard from '../CardSensorPrimary/SensorCard';
 import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
 import { useBoard } from '@/src/api/hooks/useBoard';
 import { Ionicons } from '@expo/vector-icons';
+import { useSensor } from '@/src/api/hooks/useSensor';
 
 interface MeasurementData {
   ph: number;
@@ -32,15 +33,15 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
     temperature: 32,
   });
 
-  const { getSensorBasicInformation , getSensorGraphLog, sensorData, setBoardFrequency, loading} = useBoard();
+  const { getSensorBasicInformation , sensorData, loading} = useSensor();
+  const { setBoardFrequency } = useBoard();
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getSensorBasicInformation(board_id);
-      const data2 = await getSensorGraphLog(board_id, 'Temperature', 7);
+      await getSensorBasicInformation(board_id);
     };
     fetchData();
-  }, [getSensorBasicInformation, getSensorGraphLog])
+  }, [getSensorBasicInformation])
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 

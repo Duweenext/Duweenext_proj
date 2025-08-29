@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from '@/theme';
 import SensorBoardExpand from "./SensorBoardExpand";
-import { SensorDataBackend, SensorDataCard } from "@/src/api/hooks/useBoard";
+import { SensorDataBackend } from "@/src/api/hooks/useSensor";
 
 const SensorTab: React.FC<{ sensor: SensorDataBackend , board_uuid: string}> = ({ sensor , board_uuid}) => {
     const [expanded, setExpanded] = useState(false);

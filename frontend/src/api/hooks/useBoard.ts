@@ -1,19 +1,9 @@
 import axiosInstance from "@/src/api/apiManager";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
-import { BoardRelationship } from "@/src/interfaces/board";
-
-export interface SensorDataCard extends SensorDataBackend {
-    board_uuid: string;
-}
-
-export interface SensorDataBackend {
-    id: number;
-    sensor_type: string;
-    sensor_threshold_max: number;
-    sensor_threshold_min: number;
-    board_id: number;
-}
+import { BoardConnectionStatus, BoardRelationship } from "@/src/interfaces/board";
+import { eventBus } from "@/src/event/eventBus";
+import { useAuth } from "@/src/auth/context/auth_context";
 
 export type BoardRegistrationData = {
     board_id: string;
@@ -26,7 +16,7 @@ export type BoardRegistrationData = {
 export const useBoard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
-    const [sensorData, setSensorData] = useState<SensorDataBackend[] | null>(null);
+    const {user} = useAuth();
 
     const [boards, setBoards] = useState<BoardRelationship[]>([]);
 
@@ -54,8 +44,13 @@ export const useBoard = () => {
             setLoading(true);
             setError(null);
             try {
-                // console.log("Creating board relationship with data:", data);
+                console.log("Creating board relationship with data:", data);
                 const res = await axiosInstance.post('/v1/board-relationships', data);
+
+                eventBus.emit('board-added', {
+                    action: 'success',
+                    data: data
+                });
 
                 return res.data.data;
 
@@ -66,6 +61,11 @@ export const useBoard = () => {
                 if (axios.isAxiosError(err) && err.response?.data?.message) {
                     errorMessage = err.response.data.message;
                 }
+
+                eventBus.emit('board-added', {
+                    action: 'error',
+                    data: data
+                });
 
                 setError(new Error(errorMessage));
                 throw new Error(errorMessage);
@@ -83,43 +83,8 @@ export const useBoard = () => {
             setError(null);
             try {
                 const res = await axiosInstance.get(`/v1/relationships/user/${userId}`);
+                console.log("Fetched boards for user:", res.data.data);
                 setBoards(res.data.data);
-            } catch (err) {
-                setError(err);
-                throw err;
-            } finally {
-                setLoading(false);
-            }
-        },
-        []
-    );
-
-    const getSensorBasicInformation = useCallback(
-        async (boardId: string) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await axiosInstance.get(`/v1/sensors/board/${boardId}`);
-                console.log(res.data.data);
-                setSensorData(res.data.data);
-            } catch (err) {
-                setError(err);
-                throw err;
-            } finally {
-                setLoading(false);
-            }
-        },
-        []
-    );
-
-    const getSensorGraphLog = useCallback(
-        async (boardId: string, sensor_type: string, days: number) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await axiosInstance.get(`/v1/sensor/${sensor_type}/${boardId}/${days}`);
-                console.log(res.data.data);
-                return res.data.data;
             } catch (err) {
                 setError(err);
                 throw err;
@@ -139,35 +104,9 @@ export const useBoard = () => {
                     sensor_frequency : boardFrequency
                 });
 
-                return res.data.data;
-
-            } catch (err) {
-                console.error("Failed to create board relationship:", err);
-
-                let errorMessage = "An unknown error occurred.";
-                if (axios.isAxiosError(err) && err.response?.data?.message) {
-                    errorMessage = err.response.data.message;
-                }
-
-                setError(new Error(errorMessage));
-                throw new Error(errorMessage);
-
-            } finally {
-                setLoading(false);
-            }
-        },
-        []
-    )
-
-    const setBoardThreshold = useCallback(
-        async (type: string, max: number, min: number, boardId: string) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await axiosInstance.put(`/v1/sensor/thresholds/${boardId}`, {
-                    sensor_type: type,
-                    sensor_threshold_min: min,
-                    sensor_threshold_max: max
+                eventBus.emit('board-frequency-updated', {
+                    action: 'success',
+                    boardId
                 });
 
                 return res.data.data;
@@ -180,6 +119,11 @@ export const useBoard = () => {
                     errorMessage = err.response.data.message;
                 }
 
+                eventBus.emit('board-frequency-updated', {
+                    action: 'error',
+                    boardId
+                });
+
                 setError(new Error(errorMessage));
                 throw new Error(errorMessage);
 
@@ -190,17 +134,81 @@ export const useBoard = () => {
         []
     )
 
+    const setBoardConnection = useCallback(
+        async ( relationship_id: number, connection_status: BoardConnectionStatus) => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await axiosInstance.put(`/v1/board-relationships/${relationship_id}`, {
+                    con_status: connection_status
+                });
+
+                eventBus.emit('board-connection-updated', {
+                    action: 'success',
+                    relationshipId: relationship_id
+                });
+
+                return res.data.data;
+
+            } catch (err) {
+                console.error("Failed to create board relationship:", err);
+
+                let errorMessage = "An unknown error occurred.";
+                if (axios.isAxiosError(err) && err.response?.data?.message) {
+                    errorMessage = err.response.data.message;
+                }
+
+                eventBus.emit('board-connection-updated', {
+                    action: 'error',
+                    relationshipId: relationship_id
+                });
+
+                setError(new Error(errorMessage));
+                throw new Error(errorMessage);
+
+            } finally {
+                setLoading(false);
+            }
+        },
+        []
+    )
+
+    useEffect(() => {
+        const unsubscribeAll = eventBus.subscribeMultiple(
+            ['board-frequency-updated', 'board-connection-updated', 'board-added', 'board-deleted'],
+            (eventType, data) => {
+                switch (eventType) {
+                    case 'board-added':
+                    case 'board-deleted':
+                    case 'board-connection-updated':
+                        if (user?.id) {
+                            getAllBoardByUserId(user.id);
+                        }
+                        break;
+                    case 'board-frequency-updated':
+                        if (data?.action === 'success') {
+                            console.log(`useBoard: ${eventType} succeeded`);
+                        } else if (data?.action === 'error') {
+                            console.log(`useBoard: ${eventType} failed`);
+                        }
+                        break;
+                }
+            }
+        );
+
+        return () => {
+            unsubscribeAll();
+        };
+    }, []);
+
     return {
         loading,
         error,
         boards,
-        sensorData,
         verifyBoardInformation,
         createBoardRelationship,
         getAllBoardByUserId,
-        getSensorBasicInformation,
-        getSensorGraphLog,
         setBoardFrequency,
-        setBoardThreshold
+        setBoardConnection
     };
 };

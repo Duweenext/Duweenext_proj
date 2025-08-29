@@ -15,7 +15,7 @@ export interface Board {
   sensor_id: number;
   board_name: string;
   board_register_date: string;
-  board_status: BoardStatusType;
+  board_status: BoardConnectionStatus;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -25,11 +25,12 @@ export interface BoardRelationship {
   board_name?: string;
   board_id: string;
   con_method: 'manual' | 'bluetooth';
-  con_status: 'active' | 'inactive';
+  con_status: BoardConnectionStatus;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
   sensor_frequency: number;
+  id: number; //relationship id
 }
 
 export interface BoardStatus {
@@ -75,4 +76,5 @@ export interface User {
   deleted_at: string | null;
 }
 
-export type BoardStatusType = 'disconnected' | 'connected' | 'failed';
+
+export type BoardConnectionStatus =  'active' | 'inactive';

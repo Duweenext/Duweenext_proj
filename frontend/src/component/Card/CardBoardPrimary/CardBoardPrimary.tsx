@@ -1,5 +1,5 @@
 // components/Esp32Card.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
-import { Board, BoardRelationship } from '@/src/interfaces/board';
+import { BoardConnectionStatus, BoardRelationship } from '@/src/interfaces/board';
 import CardBoardExpanded from './CardboardExpand';
 import ButtonCard from '../../Buttons/ButtonCard';
-
-type Mode = 'active' | 'inactive';
+import { useBoard } from '@/src/api/hooks/useBoard';
+import { formatRunningTimeFromTimestamp } from '@/src/utlis/input';
 
 const displayStatusMap = {
     active: 'Connected',
@@ -29,14 +29,13 @@ const displayStatusActionLabel = {
 interface Esp32CardProps {
     runningTime?: string;
     onIconPress?: (e: GestureResponderEvent) => void;
-    onButtonPress?: (e: GestureResponderEvent) => void;
     board: BoardRelationship;
     frequency?: number;
 }
 
 // everything in one place:
 const variants: Record<
-    Mode,
+    BoardConnectionStatus,
     {
         cardBg: string;
         textColor: string;
@@ -62,16 +61,44 @@ const variants: Record<
 };
 
 const CardBoardPrimary: React.FC<Esp32CardProps> = ({
-    runningTime = '0 hours 0 minutes',
-    onButtonPress,
     board,
 }) => {
-    const mode = board?.con_status || 'inactive' as Mode;
+
+    const mode = board?.con_status || 'inactive' as BoardConnectionStatus;
     const boardName = board?.board_name || 'Unknown Board';
     const [expanded, setExpanded] = useState(false);
     const { cardBg, textColor, buttonBg, buttonText, iconColor } =
         variants[mode] || variants.inactive;
     const actionLabel = displayStatusActionLabel[mode];
+    const [lastActive, setLastActive] = useState<string | null>(null);
+
+    const { setBoardConnection, loading } = useBoard();
+
+    const handleSetBoardConnection = async (status: BoardConnectionStatus) => {
+        await setBoardConnection(board.id, status);
+        setLastActive(formatRunningTimeFromTimestamp(board.updated_at));
+    }
+
+    const [tick, setTick] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if(board.con_status === 'active') {
+                setTick(prev => prev + 1);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+
+    const runningTimeActive = useMemo(() => {
+        if (board.con_status === 'active') {
+            return formatRunningTimeFromTimestamp(board.updated_at);
+        }
+    }, [board.updated_at, board.con_status, tick]);
+
+    // const runningTimeInactive = formatRunningTimeFromTimestamp(board.updated_at);
 
     return (
         <View>
@@ -91,21 +118,16 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                             </Text>
                         )}
                         <Text style={[styles.description, { color: textColor }]}>
-                            Running: {runningTime}
+                            Running: {board.con_status === 'active' ? runningTimeActive : lastActive}
                         </Text>
                         <Text style={[styles.description, { color: textColor }]}>
                             Status: {displayStatusMap[mode]}
                         </Text>
                     </View>
-
-                    {/* Last‐connected timestamp */}
                     <View style={styles.timestamp}>
                         <Text style={[styles.description, { color: textColor }]}>
-                            {/* {lastConnected} */}
                         </Text>
                     </View>
-
-                    {/* Action button */}
                     <View style={styles.leftsection}>
                         <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)}>
                             <Ionicons
@@ -118,7 +140,9 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                             text={actionLabel}
                             filledColor={buttonBg}
                             textColor={buttonText}
-                            onPress={onButtonPress}
+                            onPress={async () => {
+                                await handleSetBoardConnection(mode === 'active' ? 'inactive' : 'active');
+                            }}
                         />
                     </View>
                 </View>

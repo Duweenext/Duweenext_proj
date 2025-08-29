@@ -12,7 +12,7 @@ import { formatRunningTimeFromTimestamp } from '@/src/utlis/input';
 const SensorScreen = () => {
 
   const {t} = useTranslation();
-  const { getAllBoardByUserId , boards} = useBoard();
+  const { getAllBoardByUserId , boards, loading} = useBoard();
 
   const { user} = useAuth();
 
@@ -50,7 +50,7 @@ const SensorScreen = () => {
             <CardBoardPrimary
               key={board.board_id}
               board={board}
-              runningTime={formatRunningTimeFromTimestamp(board.updated_at)}
+              // runningTime={formatRunningTimeFromTimestamp(board.updated_at)}
             />
           ))}
         </View>

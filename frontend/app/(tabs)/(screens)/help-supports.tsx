@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { themeStyle } from '@/theme';
-import TopBar from '@/src/component/NavBar/TopBar';
 
 export default function HelpSupports() {
   const section = {

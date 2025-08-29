@@ -6,7 +6,6 @@ type User = {
     id: number;
     email: string;
     name: string;
-    // Add other user properties as needed
 };
 
 type AuthContextType = {
@@ -19,7 +18,6 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
-const DISABLE_AUTH_FOR_DEVELOPMENT = true;
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
     const [[isLoading, session], setSession] = useStorageState('session');
@@ -55,7 +53,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
             console.log('Redirecting to login - not authenticated');
             router.replace('/(auth)/welcome');
         } else if (isAuthenticated && (inAuthGroup || isRootRoute)) {
-            // User is authenticated but on auth screen or root, redirect to main app
             console.log('Redirecting to tabs - already authenticated');
             router.replace('/(tabs)');
         }

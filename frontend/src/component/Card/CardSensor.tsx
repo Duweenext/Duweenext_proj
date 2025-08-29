@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
-import { Sensor } from '@/src/interfaces/board'; // adjust path to your Sensor interface
+import { Sensor } from '@/src/interfaces/sensor';
 
 interface SensorCardProps {
   sensor: Sensor;

@@ -4,7 +4,8 @@ import { theme } from '@/theme';
 import TextFieldSensorValue from '@/src/component/TextFields/TextFieldSensorValue';
 import SensorChart from './SensorChart';
 import { Ionicons } from '@expo/vector-icons';
-import { BackendSensorLogData, SensorDataBackend, useSensor } from '@/src/api/hooks/useSensor';
+import { useSensor } from '@/src/api/hooks/useSensor';
+import { BackendSensorLogData, SensorDataBackend } from '@/src/interfaces/sensor';
 
 interface SensorThreshold {
   max: number;
@@ -345,7 +346,9 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
           {/* ✅ Chart Section with Real Data */}
           {selectedSensor.historicalData.length > 0 ? (
             <SensorChart 
-              data={selectedSensor.historicalData} 
+              boardId={sensor.board_id}
+              sensorType={selectedSensor.type}
+              initialResolution='day'
               title={`${selectedSensor.name} Trends (${selectedSensor.historicalData.length} points)`}
             />
           ) : (

@@ -28,3 +28,14 @@ export interface EducationTopic {
   tagline?: string;
   sections: EduSection[];
 }
+
+export interface Education {
+  post_id: number;
+  post_title: string;
+  post_detail: string;
+  image_url: string;
+  quote: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}

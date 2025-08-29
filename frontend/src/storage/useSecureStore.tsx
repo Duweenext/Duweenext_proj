@@ -19,7 +19,6 @@ function useAsyncState<T>(
   ) as UseStateHook<T>;
 }
 
-// ✅ Platform-specific storage functions
 export async function setStorageItemAsync(key: string, value: string | null) {
   try {
     if (value == null) {

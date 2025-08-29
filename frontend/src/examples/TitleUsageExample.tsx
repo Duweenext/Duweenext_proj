@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Text, View } from 'react-native';
-import { useTitle, getTitleFromPath } from '@/src/hooks/useTitle';
+import { useTitle, getTitleFromPath } from '@/src/utlis/useTitle';
 
 // Method 1: Using the hook (inside React components)
 export function ComponentWithHook() {

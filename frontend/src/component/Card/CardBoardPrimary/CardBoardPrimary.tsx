@@ -72,7 +72,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     const actionLabel = displayStatusActionLabel[mode];
     const [lastActive, setLastActive] = useState<string | null>(null);
 
-    const { setBoardConnection, loading } = useBoard();
+    const { setBoardConnection} = useBoard();
 
     const handleSetBoardConnection = async (status: BoardConnectionStatus) => {
         await setBoardConnection(board.id, status);
@@ -98,8 +98,6 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
         }
     }, [board.updated_at, board.con_status, tick]);
 
-    // const runningTimeInactive = formatRunningTimeFromTimestamp(board.updated_at);
-
     return (
         <View>
             <TouchableOpacity onPress={() => setExpanded(!expanded)} disabled={mode !== 'active'}>
@@ -114,7 +112,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                         </Text>
                         {mode === 'inactive' && (
                             <Text style={[styles.description, { color: textColor }]}>
-                                Last connected: {board?.updated_at || 'N/A'}
+                                Last connected: {board?.updated_at.split("T")[0] || 'N/A'}
                             </Text>
                         )}
                         <Text style={[styles.description, { color: textColor }]}>

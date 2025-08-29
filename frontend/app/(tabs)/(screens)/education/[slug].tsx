@@ -128,7 +128,7 @@ export default function EducationDetail() {
             elevation: 16, // Android stacking
           }}
         >
-          {/* <TopBar title="Education" /> */}
+          {/* <TopBar title="" /> */}
         </View>
       </View>
     </>

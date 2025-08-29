@@ -9,6 +9,7 @@ import AddBoardModal from '../Modals/AddBoardModal';
 import BleConfigModal from '../Modals/bleModal';
 import ManualAddBoardModal from '../Modals/ManualAddBoardModal';
 import ConnectionPasswordModal from '@/src/component/Modals/ConnectionPasswordModal';
+import { useAuth } from '@/src/auth/context/auth_context';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -26,6 +27,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     verifyBoardInformation, 
     createBoardRelationship, 
   } = useBoard();
+
+  const {user} = useAuth();
   
   // State for the LOGICAL Board ID (from characteristic)
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
@@ -45,11 +48,12 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const handleConnectedPasswordModal = () => setModalVisible("connect-password");
 
   const handleManualSubmit = async (password: string) => {
+    if(user?.id)
     await createBoardRelationship({ 
             board_id: selectedBoardId, 
             con_method: "manual",
             con_password: password,
-            user_id: 10, 
+            user_id: user.id, 
         });
   }
 
@@ -57,10 +61,9 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     setSelectedBoardId(boardId);
     setSelectedMacAddress(""); 
     try {
-      const res = await verifyBoardInformation(boardId);
+      await verifyBoardInformation(boardId);
       setIsBoardExist(true); 
       handleConnectedPasswordModal();
-      console.log("Manual board ID submitted:", boardId);
     } catch (error) {
       console.error("Board verification failed with an unexpected error:", error);
       Alert.alert("Error", "An unexpected error occurred while verifying the board.");
@@ -89,11 +92,12 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         wifiPassword: values.wifiPassword,
       });
 
+      if(user?.id)
       await createBoardRelationship({ 
         board_id: selectedBoardId, 
         con_method: "wifi",
         con_password: values.connectionPassword,
-        user_id: 10,
+        user_id: user.id,
         board_name: values.boardModelName,
       });
 

@@ -2,7 +2,7 @@ import axios from "axios";
 import { getItem } from '@/src/storage/useSecureStore';
 
 const axiosInstance = axios.create({
-  baseURL: "http://127.0.0.1:8080",
+  baseURL: "https://fa68b2623087.ngrok-free.app",
   responseType: "json",
   timeout: 10000,
   headers: {

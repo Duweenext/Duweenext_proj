@@ -138,9 +138,6 @@ const SignUpScreen: React.FC = () => {
         };
         
         await authLogin(token, userData);
-        console.log('Session stored after registration');
-        console.log('Token:', token);
-        console.log('User data:', userData);
         
         // Navigate to main app after successful registration and login
         router.replace('/(tabs)');

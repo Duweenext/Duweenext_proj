@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Share, Text, TouchableOpacity, Modal, Pressable, Image, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
+// import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { themeStyle } from '@/src/theme';
 import UploadBox from '@/src/component/pond/components/UploadBox';
@@ -11,7 +11,6 @@ import LatestResultCard from '@/src/component/pond/components/LatestResultCard';
 import HistoryList from '@/src/component/pond/components/HistoryList';
 import { usePondAnalysis } from '@/src/component/pond/usePondAnalysis';
 import { mockService } from '@/src/component/pond/services';
-import TopBar from '@/src/component/NavBar/TopBar';
 
 const IconBtn = ({ icon, onPress, disabled }: any) => (
   <TouchableOpacity
@@ -100,7 +99,7 @@ function CalendarModal({
           style={{ width: '100%', maxWidth: 360, borderRadius: 16, overflow: 'hidden', backgroundColor: themeStyle.colors.white }}
         >
           <View style={{ padding: 10 }}>
-            <DateTimePicker
+            {/* <DateTimePicker
               value={temp}
               mode="date"
               display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
@@ -114,7 +113,7 @@ function CalendarModal({
               }}
               minimumDate={minimumDate}
               maximumDate={maximumDate}
-            />
+            /> */}
             {Platform.OS === 'ios' && (
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
                 <TouchableOpacity

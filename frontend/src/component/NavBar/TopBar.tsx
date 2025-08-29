@@ -1,5 +1,5 @@
 
-import { useTitle } from '@/src/hooks/useTitle';
+import { useTitle } from '@/src/utlis/useTitle';
 import { themeStyle } from '@/src/theme';
 import { useRouter } from 'expo-router';
 import React from 'react';

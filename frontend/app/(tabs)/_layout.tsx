@@ -1,13 +1,9 @@
 import React from 'react';
-import { View, Text, ImageBackground, Image, Dimensions, PixelRatio } from 'react-native';
-import { Redirect, Tabs } from 'expo-router';
+import { View, Text, ImageBackground, Image, Dimensions } from 'react-native';
+import { Tabs } from 'expo-router';
 import { images } from '@/src/constants/images';
 import { icons } from '@/src/constants/icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import TopBar from '@/src/component/NavBar/TopBar';
-import BackgroundWrapper from '@/src/component/Layout/BackgroundWrapper';
-import { theme } from '@/src/theme';
-// import { transparent } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -22,7 +18,6 @@ const responsiveHeight = Math.min(screenHeight * 0.08, 300);
 const responsivePadding = getResponsiveSize(1);
 const responsiveMarginTop = getResponsiveSize(14);
 
-const responsiveTabBarHeight = Math.max(screenHeight * 0.08, 60);
 const responsiveTabBarMargin = Math.max(screenWidth * 0.05, 20);
 const responsiveTabBarMarginBottom = Math.max(screenHeight * 0.018, 1);
 
@@ -88,15 +83,15 @@ function TabIcon({
                 height: '100%',
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginTop: responsiveMarginTop + 2, // Slightly more margin for unfocused state
+                marginTop: responsiveMarginTop + 2, 
                 borderRadius: 999,
                 flexDirection: 'column',
-                paddingHorizontal: 4, // Add some horizontal padding
+                paddingHorizontal: 4,
             }}
         >
             <Image
                 source={icon}
-                style={{ width: 28, height: 28, tintColor: '#A8B5DB' }} // size-7 & tint
+                style={{ width: 28, height: 28, tintColor: '#A8B5DB' }} 
             />
             <Text
                 style={{
@@ -114,7 +109,6 @@ function TabIcon({
 
 const _Layout = () => {
     return (
-        // <BackgroundWrapper>
             <Tabs
                 screenOptions={{
                     tabBarItemStyle: {
@@ -139,7 +133,7 @@ const _Layout = () => {
                         backdropFilter: 'blur(10px)',
                     },
                     sceneStyle: {
-                        backgroundColor: 'black',
+                        backgroundColor: 'transparent',
                     },
                 }}
             >
@@ -185,11 +179,9 @@ const _Layout = () => {
                     tabBarIcon: ({ focused }) => (
                         <TabIcon focused={focused} icon={icons.educate} title="Screen" />
                     ),
-                    // header: () => <TopBar title="Screen" />,
                 }}
             />
         </Tabs>
-    // </BackgroundWrapper>
     );
 };
 

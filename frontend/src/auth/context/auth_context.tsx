@@ -40,20 +40,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const isAuthenticated = !!session;
     const isFullyLoaded = !isLoading && !isUserLoading;
 
-    // Route protection logic
     useEffect(() => {
         if (!isFullyLoaded) return;
-        // if (DISABLE_AUTH_FOR_DEVELOPMENT) return;
 
         const inAuthGroup = segments[0] === '(auth)';
         const isRootRoute = segments.length <= 1 && segments[0] !== '(auth)' && segments[0] !== '(tabs)';
         
         if (!isAuthenticated && !inAuthGroup) {
-            // User is not authenticated and not on auth screen, redirect to login
-            console.log('Redirecting to login - not authenticated');
             router.replace('/(auth)/welcome');
         } else if (isAuthenticated && (inAuthGroup || isRootRoute)) {
-            console.log('Redirecting to tabs - already authenticated');
             router.replace('/(tabs)');
         }
     }, [isAuthenticated, segments, isFullyLoaded]);

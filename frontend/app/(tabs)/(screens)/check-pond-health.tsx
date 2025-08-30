@@ -172,7 +172,7 @@ export default function CheckPondHealthScreen() {
 
   // ---- WEB: invisible inputs that open the native calendar immediately ----
   const webFromRef = useRef<HTMLInputElement | null>(null);
-  const webToRef   = useRef<HTMLInputElement | null>(null);
+  const webToRef = useRef<HTMLInputElement | null>(null);
 
   // Render hidden inputs only on web (no modal, no extra click)
   const WebDateInputs = Platform.OS === 'web' ? (

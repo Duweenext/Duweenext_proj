@@ -48,13 +48,9 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
 
   const [password, setPassword] = React.useState<string>("");
 
-  const closeAndReset = () => {
-    onClose();
-  };
-
   const onSubmitForm = (data: { connectionPassword: string }) => {
     onSubmit(data.connectionPassword);
-    // closeAndReset();
+    onClose();
   };
 
   return (
@@ -63,7 +59,7 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={closeAndReset}
+      onRequestClose={onClose}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -74,7 +70,7 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
           <View style={styles.header}>
             <Text style={styles.title}>Connection Password</Text>
             <TouchableOpacity
-              onPress={closeAndReset}
+              onPress={onClose}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Close dialog"

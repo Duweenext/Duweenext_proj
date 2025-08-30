@@ -20,8 +20,6 @@ export default function Index() {
   return (
     <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 100 }}>
-        
-        {/* Navigation Cards */}
         <View style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
@@ -45,7 +43,6 @@ export default function Index() {
           />
         </View>
 
-        {/* Activity Overview */}
         <View style={{
           backgroundColor: '#1f2937',
           borderRadius: 12,

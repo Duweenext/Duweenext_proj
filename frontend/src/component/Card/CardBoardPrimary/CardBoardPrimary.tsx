@@ -123,8 +123,8 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                         </Text>
                     </View>
                     <View style={styles.timestamp}>
-                        <Text style={[styles.description, { color: textColor }]}>
-                        </Text>
+                        {/* <Text style={[styles.description, { color: textColor }]}>
+                        </Text> */}
                     </View>
                     <View style={styles.leftsection}>
                         <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)}>

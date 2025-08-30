@@ -21,7 +21,8 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
   const handleSubmit = () => {
     if (boardId.trim()) {
       onSubmit(boardId.trim());
-      setBoardId(''); // Reset input after submit
+      setBoardId(''); 
+      onClose();
     }
   };
 

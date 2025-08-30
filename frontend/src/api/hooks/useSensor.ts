@@ -80,78 +80,6 @@ export const useSensor = () => {
         []
     )
 
-    const getAggregatedSensorData = useCallback(
-        async (
-            sensorType: string,
-            boardId: number,
-            startDate: string,
-            endDate: string,
-            resolution: 'year' | 'month' | 'week' | 'day' | 'hour' = 'day',
-            timezone: string = 'Asia/Bangkok'
-        ) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const params = new URLSearchParams({
-                    start_date: startDate,
-                    end_date: endDate,
-                    resolution,
-                    timezone,
-                });
-
-                const res = await axiosInstance.get(
-                    `/v1/sensor/${sensorType}/${boardId}?${params}`
-                );
-                
-                console.log('Aggregated sensor data:', res.data);
-                
-                if (res.data.status === 'success') {
-                    setAggregatedSensorData(res.data.data);
-                    return res.data as SensorDataResponse;
-                } else {
-                    throw new Error(res.data.message || 'Failed to fetch sensor data');
-                }
-            } catch (err) {
-                console.error('Error fetching aggregated sensor data:', err);
-                setError(err);
-                throw err;
-            } finally {
-                setLoading(false);
-            }
-        },
-        []
-    );
-
-    const getDefaultDateRange = useCallback((resolution: string) => {
-        const endDate = new Date();
-        let startDate: Date;
-
-        switch (resolution) {
-            case 'year':
-                startDate = new Date(endDate.getFullYear() - 10, 0, 1);
-                break;
-            case 'month':
-                startDate = new Date(endDate.getFullYear() - 2, endDate.getMonth(), 1);
-                break;
-            case 'week':
-                startDate = new Date(endDate.getTime() - 6 * 30 * 24 * 60 * 60 * 1000); // 6 months
-                break;
-            case 'day':
-                startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days
-                break;
-            case 'hour':
-                startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days
-                break;
-            default:
-                startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-        }
-
-        return {
-            startDate: startDate.toISOString().split('T')[0],
-            endDate: endDate.toISOString().split('T')[0],
-        };
-    }, []);
-
     return {
         loading,
         error,
@@ -161,7 +89,5 @@ export const useSensor = () => {
         getSensorBasicInformation,
         getSensorGraphLog,
         setBoardThreshold, 
-        getAggregatedSensorData,
-        getDefaultDateRange,
     };
 };

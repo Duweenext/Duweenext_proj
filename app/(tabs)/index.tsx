@@ -50,16 +50,22 @@ export default function Index() {
             title="Sensor"
             icon={icons.sensor}
             onNav={() => router.push("/(tabs)/(screens)/sensor")}
+            image_width={45}
+            image_height={45}
           />
           <TabBox
             title="Check Pond Health"
             icon={icons.camera}
             onNav={() => router.push("/(tabs)/(screens)/check-pond-health")}
+            image_height={35}
+            image_width={35}
           />
           <TabBox
             title="Notification History"
             icon={icons.assistant}
             onNav={() => router.push("/(tabs)/(screens)/notification_setting")}
+            image_height={50}
+            image_width={50}
           />
         </View>
 

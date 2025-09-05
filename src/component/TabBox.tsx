@@ -5,9 +5,11 @@ interface Props {
     title: string,
     icon: any,
     onNav: () => void
+    image_width?: number
+    image_height?: number
 }
 
-const TabBox = ({ title, icon, onNav }: Props) => {
+const TabBox = ({ title, icon, onNav , image_width = 32, image_height = 32}: Props) => {
     return (
         <TouchableOpacity
             style={{
@@ -26,8 +28,8 @@ const TabBox = ({ title, icon, onNav }: Props) => {
             <Image 
                 source={icon} 
                 style={{ 
-                    width: 32, 
-                    height: 32, 
+                    width: image_width, 
+                    height: image_height, 
                     tintColor: '#ffffff',
                     marginBottom: 8,
                 }} 

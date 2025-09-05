@@ -8,6 +8,12 @@ import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/src/auth/context/auth_context';
 import { getTitleFromPath } from '@/src/utlis/useTitle';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
+import CustomToast from '@/src/component/Modals/CustomToast';
 // import messaging from '@react-native-firebase/messaging';
 
 SplashScreen.preventAutoHideAsync();
@@ -68,13 +74,13 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        padding: 20, 
-        backgroundColor: 'rgba(255,255,255,0.8)', 
-        borderRadius: 10 
+        padding: 20,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        borderRadius: 10
       }}>
         <Text>Loading...</Text>
       </View>
@@ -88,10 +94,12 @@ function AppContent() {
       resizeMode="cover"
     >
       <Slot />
-
+      <Toast />
     </ImageBackground>
   );
 }
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -112,12 +120,20 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </PaperProvider>
-    </GestureHandlerRootView>
+    <QueryClientProvider client={queryClient}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <PaperProvider>
+          <AuthProvider>
+            <AppContent />
+            <Toast
+              config={{
+                customToast: (props) => <CustomToast {...props} />,
+                newToast: (props) => <CustomToast {...props} />,
+              }}
+            />
+          </AuthProvider>
+        </PaperProvider>
+      </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }

@@ -1,9 +1,11 @@
-import axiosInstance from "@/src/api/apiManager";
+import {axiosMainInstance} from "@/src/api/apiManager";
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
 import { BoardConnectionStatus, BoardRelationship } from "@/src/interfaces/board";
 import { eventBus } from "@/src/event/eventBus";
 import { useAuth } from "@/src/auth/context/auth_context";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Toast from "react-native-toast-message";
 
 export type BoardRegistrationData = {
     board_id: string;
@@ -13,204 +15,157 @@ export type BoardRegistrationData = {
     board_name?: string;
 };
 
-export const useBoard = () => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<any>(null);
-    const {user} = useAuth();
+const boardKeys = {
+    all: ['boards'] as const,
+    user: (userId?: number) => [...boardKeys.all, 'user', userId] as const,
+    info: (boardId: string) => [...boardKeys.all, 'info', boardId] as const,
+};
 
-    const [boards, setBoards] = useState<BoardRelationship[]>([]);
+type UseBoardReturn = {
+    // data
+    boards: BoardRelationship[] | undefined;
+    loading: boolean;
+    frequencyLoading: boolean;
+    error: unknown;
 
-    const verifyBoardInformation = useCallback(async (boardId: string) => {
-        setLoading(true);
-        setError(null);
-        try {
-            console.log("Verifying Board ID with API:", boardId);
-            const res = await axiosInstance.get(`/v1/board/${boardId}`);
-            return res.data;
-        } catch (err) {
-            if (axios.isAxiosError(err) && err.response?.status === 404) {
-                console.log("Board ID not found in database (404). Treating as a new board.");
-                return null;
-            }
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    // queries / helpers
+    verifyBoardInformation: (boardId: string) => Promise<any | null>;
+    refetchBoards: () => Promise<void>;
 
-    const createBoardRelationship = useCallback(
-        async (data: BoardRegistrationData) => {
-            setLoading(true);
-            setError(null);
-            try {
-                console.log("Creating board relationship with data:", data);
-                const res = await axiosInstance.post('/v1/board-relationships', data);
+    // mutations
+    createBoardRelationship: (payload: BoardRegistrationData) => Promise<any>;
+    setBoardFrequency: (boardId: string, boardFrequency: number) => Promise<any>;
+    setBoardConnection: (relationship_id: number, status: BoardConnectionStatus) => Promise<any>;
+};
 
-                eventBus.emit('board-added', {
-                    action: 'success',
-                    data: data
-                });
+export function useBoard(): UseBoardReturn {
+    const { user } = useAuth();
+    const userId = user?.id;
+    const qc = useQueryClient();
 
-                return res.data.data;
+    // 1) List boards for current user
+    const {
+        data: boards,
+        isFetching: loading,
+        error,
+        refetch,
+    } = useQuery({
+        queryKey: boardKeys.user(userId),
+        enabled: !!userId,
+        staleTime: 60_000,
+        gcTime: 5 * 60_000,
+        queryFn: async () => {
+            if (!userId) return [] as BoardRelationship[];
+            const res = await axiosMainInstance.get(`/v1/relationships/user/${userId}`);
+            return res.data.data as BoardRelationship[];
+        },
+        select: (data) =>
+            [...data].sort((a, b) => (a.board_status === 'active' ? -1 : 1)),
+    });
 
-            } catch (err) {
-                console.error("Failed to create board relationship:", err);
-
-                let errorMessage = "An unknown error occurred.";
-                if (axios.isAxiosError(err) && err.response?.data?.message) {
-                    errorMessage = err.response.data.message;
+    // 2) Verify single board — returns null on 404
+    const verifyBoardInformation = (boardId: string) =>
+        qc.fetchQuery({
+            queryKey: boardKeys.info(boardId),
+            staleTime: 0,
+            retry: false,
+            queryFn: async () => {
+                try {
+                    const res = await axiosMainInstance.get(`/v1/board/${boardId}`);
+                    return res.data; // keep your previous shape
+                } catch (err) {
+                    if (axios.isAxiosError(err) && err.response?.status === 404) return null;
+                    throw err;
                 }
+            },
+        });
 
-                eventBus.emit('board-added', {
-                    action: 'error',
-                    data: data
-                });
-
-                setError(new Error(errorMessage));
-                throw new Error(errorMessage);
-
-            } finally {
-                setLoading(false);
-            }
+    // 3) Create relationship
+    const createBoardRelationshipMut = useMutation({
+        mutationFn: async (payload: BoardRegistrationData) => {
+            const res = await axiosMainInstance.post('/v1/board-relationships', payload);
+            return res.data.data;
         },
-        []
-    );
-
-    const getAllBoardByUserId = useCallback(
-        async (userId: number) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await axiosInstance.get(`/v1/relationships/user/${userId}`);
-                console.log("Fetched boards for user:", res.data.data);
-                setBoards(res.data.data);
-            } catch (err) {
-                setError(err);
-                throw err;
-            } finally {
-                setLoading(false);
-            }
+        onSuccess: () => {
+            if (userId) qc.invalidateQueries({ queryKey: boardKeys.user(userId) });
+            Toast.show({
+                type: 'success',
+                text1: 'Board added !!',
+                text2: 'New Board Added successfully.',
+            });
         },
-        []
-    );
-
-    const setBoardFrequency = useCallback(
-        async (boardFrequency : number, boardId : string, onSuccess: () => void, onError: (error: Error) => void) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await axiosInstance.put(`/v1/board/frequency/${boardId}`, {
-                    sensor_frequency : boardFrequency
-                });
-
-                eventBus.emit('board-frequency-updated', {
-                    action: 'success',
-                    boardId
-                });
-
-                onSuccess();
-                return res.data.data;
-
-            } catch (err) {
-                console.error("Failed to create board relationship:", err);
-
-                let errorMessage = "An unknown error occurred.";
-                if (axios.isAxiosError(err) && err.response?.data?.message) {
-                    errorMessage = err.response.data.message;
-                }
-
-                eventBus.emit('board-frequency-updated', {
-                    action: 'error',
-                    boardId
-                });
-
-                setError(new Error(errorMessage));
-                onError(new Error(errorMessage));
-                throw new Error(errorMessage);
-
-            } finally {
-                setLoading(false);
-            }
+        onError: (error: any) => {
+            Toast.show({
+                type: 'error',
+                text1: 'Add failed',
+                text2: error.message ?? 'Something went wrong.',
+            });
         },
-        []
-    )
+    });
 
-    const setBoardConnection = useCallback(
-        async ( relationship_id: number, connection_status: BoardConnectionStatus) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await axiosInstance.put(`/v1/board-relationships/${relationship_id}`, {
-                    con_status: connection_status
-                });
-
-                eventBus.emit('board-connection-updated', {
-                    action: 'success',
-                    relationshipId: relationship_id
-                });
-
-                return res.data.data;
-
-            } catch (err) {
-                console.error("Failed to create board relationship:", err);
-
-                let errorMessage = "An unknown error occurred.";
-                if (axios.isAxiosError(err) && err.response?.data?.message) {
-                    errorMessage = err.response.data.message;
-                }
-
-                eventBus.emit('board-connection-updated', {
-                    action: 'error',
-                    relationshipId: relationship_id
-                });
-
-                setError(new Error(errorMessage));
-                throw new Error(errorMessage);
-
-            } finally {
-                setLoading(false);
-            }
+    // 4) Update frequency
+    const setBoardFrequencyMut = useMutation({
+        mutationFn: async ({ boardId, boardFrequency }: { boardId: string; boardFrequency: number }) => {
+            const res = await axiosMainInstance.put(`/v1/board/frequency/${boardId}`, {
+                sensor_frequency: boardFrequency,
+            });
+            return res.data.data;
         },
-        []
-    )
+        onSuccess: () => {
+            if (userId) qc.invalidateQueries({ queryKey: boardKeys.user(userId) });
+            Toast.show({
+                type: 'success',
+                text1: 'Frequency Updated !!',
+                text2: 'Frequency has been updated successfully.',
+            });
+        },
+        onError: (error: any) => {
+            Toast.show({
+                type: 'error',
+                text1: 'Update failed',
+                text2: error.message ?? 'Something went wrong.',
+            });
+        },
+    });
 
+    // 5) Update connection
+    const setBoardConnectionMut = useMutation({
+        mutationFn: async ({ relationship_id, status }: { relationship_id: number; status: BoardConnectionStatus }) => {
+            const res = await axiosMainInstance.put(`/v1/board-relationships/${relationship_id}`, {
+                con_status: status,
+            });
+            return res.data.data;
+        },
+        onSuccess: () => {
+            if (userId) qc.invalidateQueries({ queryKey: boardKeys.user(userId) });
+        },
+    });
+
+    // Optional: if other parts of the app might change boards, you can invalidate here.
+    // Remove this whole effect if you don't need event-driven refreshes.
     useEffect(() => {
-        const unsubscribeAll = eventBus.subscribeMultiple(
-            ['board-frequency-updated', 'board-connection-updated', 'board-added', 'board-deleted'],
-            (eventType, data) => {
-                switch (eventType) {
-                    case 'board-added':
-                    case 'board-deleted':
-                    case 'board-connection-updated':
-                        if (user?.id) {
-                            getAllBoardByUserId(user.id);
-                        }
-                        break;
-                    case 'board-frequency-updated':
-                        if (data?.action === 'success') {
-                            console.log(`useBoard: ${eventType} succeeded`);
-                        } else if (data?.action === 'error') {
-                            console.log(`useBoard: ${eventType} failed`);
-                        }
-                        break;
-                }
-            }
-        );
-
-        return () => {
-            unsubscribeAll();
-        };
+        // no-op placeholder; keep or delete
     }, []);
 
     return {
-        loading,
-        error,
         boards,
+        loading,
+        frequencyLoading: setBoardFrequencyMut.isPending,
+        error,
+
         verifyBoardInformation,
-        createBoardRelationship,
-        getAllBoardByUserId,
-        setBoardFrequency,
-        setBoardConnection
+
+        refetchBoards: async () => {
+            if (userId) await refetch();
+        },
+
+        createBoardRelationship: (payload: BoardRegistrationData) =>
+            createBoardRelationshipMut.mutateAsync(payload),
+
+        setBoardFrequency: (boardId: string, boardFrequency: number) =>
+            setBoardFrequencyMut.mutateAsync({ boardId, boardFrequency }),
+
+        setBoardConnection: (relationship_id: number, status: BoardConnectionStatus) =>
+            setBoardConnectionMut.mutateAsync({ relationship_id, status }),
     };
-};
+}

@@ -25,7 +25,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
 
   const spacing = useMemo(() => SPACING_PER_SCALE[scale], [scale]);
 
-  const { getSensorGraphLog, sensorGraphData } = useSensor();
+  const { getSensorGraphLog, mergedGraph } = useSensor(boardId);
 
   const scrollRef = useRef<any>(null);
   const metricsRef = useRef<ScrollMetrics>({ x: 0, w: 1, cw: 1 });
@@ -37,7 +37,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
   const [isJumpingToDate, setIsJumpingToDate] = useState(false);
 
   const fetchGraphLog = async (end: Date, count: number) => {
-    await getSensorGraphLog(boardId, end.toISOString(), scale, count)
+    await getSensorGraphLog(end.toISOString(), scale, count)
       .then(() => {
         setIsInitialized(true);
         console.log('✅ Initial load complete');
@@ -126,7 +126,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
         scrollRef.current?.scrollTo({ x: (metricsRef.current.x + dx), animated: false });
       });
 
-      await getSensorGraphLog(boardId, left.toISOString(), scale, count);
+      await getSensorGraphLog(left.toISOString(), scale, count);
     } finally {
       isExtending.current = false;
     }
@@ -172,7 +172,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
         return newAxisSlots;
       });
 
-      await getSensorGraphLog(boardId, newEnd.toISOString(), scale, count);
+      await getSensorGraphLog(newEnd.toISOString(), scale, count);
     } finally {
       isExtending.current = false;
     }
@@ -216,7 +216,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
     const ecMap = new Map<number, { sum: number; c: number }>();
     const phMap = new Map<number, { sum: number; c: number }>();
 
-    (sensorGraphData ?? []).forEach(row => {
+    (mergedGraph ?? []).forEach(row => {
       const t = new Date(row.created_at);
       const b = truncateToBucket(t, scale).getTime();
       
@@ -246,7 +246,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
     });
 
     return { tempMap, ecMap, phMap };
-  }, [sensorGraphData, scale]);
+  }, [mergedGraph, scale]);
 
   const { tempMap, ecMap, phMap } = useMemo(() => processAllSensorData(), [processAllSensorData]);
 
@@ -336,7 +336,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
       const newSlots = Array.from({ length: count }, (_, i) => addStep(newStart, scale, i));
 
       setAxisSlots(newSlots);
-      await getSensorGraphLog(boardId, truncatedTarget.toISOString(), scale, count);
+      await getSensorGraphLog(truncatedTarget.toISOString(), scale, count);
 
       requestAnimationFrame(() => {
         const targetIndex = Math.floor(count / 2);

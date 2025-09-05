@@ -1,33 +1,33 @@
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import { getItem } from '@/src/storage/useSecureStore';
 
-const axiosInstance = axios.create({
-  baseURL: "https://duckweed.shiroha.biz",
-  responseType: "json",
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-axiosInstance.interceptors.request.use(
-  async (config) => {
+function withAuth(instance: AxiosInstance) {
+  instance.interceptors.request.use(async (config) => {
     try {
-
-      const token = await getItem('session');
-      
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (error) {
-      console.error('Error getting auth token:', error);
+      const token = await getItem("session");
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    } catch (e) {
+      console.error("Error getting auth token:", e);
     }
-    
     return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  });
+  return instance;
+}
+
+export const axiosMainInstance = withAuth(
+  axios.create({
+    baseURL: "https://duckweed.shiroha.biz",
+    responseType: "json",
+    timeout: 10_000,
+    headers: { "Content-Type": "application/json" },
+  })
 );
 
-export default axiosInstance;
+export const axiosImageProInstance = withAuth(
+  axios.create({
+    baseURL: "https://imgprosduckweed.shiroha.biz",
+    responseType: "json",
+    timeout: 20_000, // often longer for images; adjust as you like
+    headers: { "Content-Type": "application/json" },
+  })
+);

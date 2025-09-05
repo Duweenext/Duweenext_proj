@@ -23,7 +23,11 @@
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.BLUETOOTH_SCAN"
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.ACCESS_WIFI_STATE",
+        "android.permission.CHANGE_WIFI_STATE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
@@ -59,7 +63,8 @@
       "expo-asset",
       "react-native-ble-plx",
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      "react-native-wifi-reborn"
     ],
     "experiments": {
       "typedRoutes": true

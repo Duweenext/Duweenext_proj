@@ -3,10 +3,11 @@ import React from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { themeStyle } from '@/src/theme';
 import { AnalysisResult, AnalysisStatus } from '../types';
+import { PondDiagnoseResponse } from '@/src/api/hooks/useImageProcessing';
 
 type Props = {
-  status: AnalysisStatus;
-  result: AnalysisResult | null;
+  loading: boolean;
+  result: PondDiagnoseResponse | undefined;
   onOpenEducation?: (slug: string) => void;
 };
 
@@ -18,8 +19,7 @@ const LABEL_MAP: Record<string, string> = {
   uncertain: 'Uncertain',
 };
 
-export default function LatestResultCard({ status, result, onOpenEducation }: Props) {
-  const loading = status === 'uploading' || status === 'processing';
+export default function LatestResultCard({ loading, result, onOpenEducation }: Props) {
 
   return (
     <View style={{
@@ -38,17 +38,18 @@ export default function LatestResultCard({ status, result, onOpenEducation }: Pr
       {!loading && result && (
         <>
           <Text style={{ color: themeStyle.colors.white, marginTop: 6 }}>
-            Health Status: {LABEL_MAP[result.label] ?? result.label} ({Math.round(result.confidence * 100)}%)
+            {/* Health Status: {LABEL_MAP[result.health_status] ?? result.health_status} ({Math.round(result.detected_classes * 100)}%) */}
+            Health Status: {LABEL_MAP[result.health_status] ?? result.health_status}
           </Text>
-          <Text style={{ color: themeStyle.colors.white, marginTop: 10 }}>{result.tips[0]}</Text>
-          {result.educationLinks?.[0] && (
+          <Text style={{ color: themeStyle.colors.white, marginTop: 10 }}>{result.description_and_recommendation}</Text>
+          {/* {result.educationLinks?.[0] && (
             <Text
               onPress={() => onOpenEducation?.(result.educationLinks[0].slug)}
               style={{ color: '#d8f5ff', marginTop: 12, textDecorationLine: 'underline' }}
             >
               Learn more in Education →
             </Text>
-          )}
+          )} */}
         </>
       )}
     </View>

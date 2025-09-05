@@ -24,6 +24,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     loading, 
     verifyBoardInformation, 
     createBoardRelationship, 
+    refetchBoards,
+    boards,
   } = useBoard();
 
   const {user} = useAuth();
@@ -67,6 +69,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   };
 
   const handleConnectBoard = async (boardId: string, macAddress: string) => {
+    console.log("Selected Board ID: " + boardId)
     setSelectedBoardId(boardId);
     setSelectedMacAddress(macAddress);
     try {
@@ -100,7 +103,11 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
       console.log("WiFi provisioning completed successfully!");
       console.log("WiFi provisioning completed successfully!");
 
-      if(user?.id) {
+      await refetchBoards();
+
+      const isThisBoardUsedToRegister = boards?.some(board => board.board_id === selectedBoardId);
+      console.log("Is this board used to register? ", isThisBoardUsedToRegister, boards);
+      if(user?.id && isThisBoardUsedToRegister) {
         console.log("Creating board relationship...");
         await createBoardRelationship({ 
           board_id: selectedBoardId, 

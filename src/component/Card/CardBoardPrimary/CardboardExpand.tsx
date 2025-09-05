@@ -9,15 +9,9 @@ import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
 import { useBoard } from '@/src/api/hooks/useBoard';
 import { Ionicons } from '@expo/vector-icons';
 import { useSensor } from '@/src/api/hooks/useSensor';
-import IconButton from '../../Buttons/IconButton';
-import Toast from 'react-native-toast-message';
 import DropDownTemplate from '../../Dropdown/DropDownTemplate';
+import LoadingSpinner from '../../Others/LoadingIndicator';
 
-interface MeasurementData {
-  ph: number;
-  ec: number;
-  temperature: number;
-}
 
 interface MeasurementDashboardProps {
   boardFrequency: number;
@@ -28,44 +22,42 @@ const { width } = Dimensions.get('window');
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency, board_id }) => {
-
+const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ 
+  boardFrequency,
+  board_id,
+}) => {
   const [frequency, setFrequency] = useState<number>(boardFrequency);
   const [isCustomEditFrequency, setIsCustomEditFrequency] = useState<boolean>(false);
-  const { getSensorBasicInformation, measureCurrent, sensorData, currentSensorData, loading, currentLoading } = useSensor();
-  const { setBoardFrequency } = useBoard();
+  const { getSensorBasicInformation, measureCurrent, sensorData, currentSensorData, sensorDataLoading, currentLoading } = useSensor(board_id);
+  const { setBoardFrequency, frequencyLoading } = useBoard();
 
   useEffect(() => {
     const fetchData = async () => {
-      await getSensorBasicInformation(board_id);
+      await getSensorBasicInformation();
     };
     fetchData();
-  }, [getSensorBasicInformation])
+  }, [getSensorBasicInformation]);
+
+  useEffect(() => {
+    const fetchCurrentSensorData = async () => {
+      await measureCurrent().then(() => {
+      });
+    }
+    if(!currentLoading)
+    {
+      fetchCurrentSensorData();
+    }
+  }, [])
 
   const handleMeasureAgain = async (): Promise<void> => {
-    await measureCurrent(board_id);
+    await measureCurrent();
   };
 
   const gaugeGap = clamp(Math.round(width * 0.02), 6, 16);
 
   const updateBoardFrequency = async (boardFrequency: number) => {
     setIsCustomEditFrequency(false);
-    await setBoardFrequency(boardFrequency, board_id,
-      () => {
-        Toast.show({
-          type: 'success',
-          text1: 'Success',
-          text2: 'Board frequency updated successfully.'
-        });
-      },
-      (error: Error) => {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: error.message || 'Failed to update board frequency.'
-        })
-      }
-    );
+    await setBoardFrequency(board_id, boardFrequency);
   };
 
   return (
@@ -98,41 +90,39 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({ boardFrequency
             onSelect={(value) => {
               if (value === 'custom') {
                 setIsCustomEditFrequency(true);
+              } else {
+                const match = value.match(/every (\d+) second/);
+                if (match) {
+                  const newFrequency = parseInt(match[1], 10);
+                  setFrequency(newFrequency);
+                }
               }
             }}
           />
-          : <TextFieldSensorValue
-            defaultValue={frequency}
-            onChange={(value: number) => setFrequency(value)}
-            height={35}
-            width={150}
-            fontSize={12}
-          />}
+            : <TextFieldSensorValue
+              defaultValue={frequency}
+              onChange={(value: number) => setFrequency(value)}
+              height={38}
+              width={150}
+              fontSize={12}
+            />}
 
-          {!isCustomEditFrequency ?
-            <IconButton
-              onPress={() => {
-                setIsCustomEditFrequency(true);
-              }}
-              source={require('@/assets/icons/pencil.png')}
-              size={24}
-              iconSize={20}
 
-            /> : <TouchableOpacity
-              style={[
-                styles.submitFrequencyButton,
-                loading && styles.submitFrequencyButtonDisabled
-              ]}
-              onPress={() => updateBoardFrequency(frequency)}
-              disabled={loading}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="checkmark"
-                size={16}
-                color={theme.colors.white}
-              />
-            </TouchableOpacity>}
+          <TouchableOpacity
+            style={[
+              styles.submitFrequencyButton,
+              sensorDataLoading && styles.submitFrequencyButtonDisabled
+            ]}
+            onPress={() => updateBoardFrequency(frequency)}
+            disabled={frequencyLoading}
+            activeOpacity={0.7}
+          >
+            {frequencyLoading ? <LoadingSpinner size='small' color='white' /> : <Ionicons
+              name="checkmark"
+              size={16}
+              color={theme.colors.white}
+            />}
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -162,9 +152,9 @@ const styles = StyleSheet.create({
     // marginTop: theme.spacing.sm,
     gap: theme.spacing.md,
   },
-  frequencySection : {
+  frequencySection: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
     marginTop: theme.spacing.sm,
   },
@@ -293,7 +283,7 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.header2,
     fontFamily: theme.fontFamily.semibold,
     color: '#333',
-    alignSelf: 'center'
+    // alignSelf: 'center'
   },
   frequencyContainer: {
     flexDirection: 'row',
@@ -303,7 +293,7 @@ const styles = StyleSheet.create({
   submitFrequencyButton: {
     backgroundColor: theme.colors.primary, // Green background
     borderRadius: 6,
-    padding: 8,
+    padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 32,

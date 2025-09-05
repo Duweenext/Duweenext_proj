@@ -98,7 +98,7 @@ const generateTestSensorData = (sensorType: string): BackendSensorLogData[] => {
 };
 
 const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }) => {
-  const { setBoardThreshold, sensorGraphData , loading} = useSensor();
+  const { setBoardThreshold, mergedGraph , sensorDataLoading} = useSensor(boardId);
   const [selectedSensor, setSelectedSensor] = useState<SensorData>({
     id: sensor?.id ?? 0,
     name: sensor.sensor_type,
@@ -117,7 +117,7 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
       { day: 'Day5', value: 7.5, x: 5, y: 7.5 },
       { day: 'Day6', value: 8.1, x: 6, y: 8.1 },
       { day: 'Day7', value: 7.9, x: 7, y: 7.9 },
-    ]
+    ],
   });
 
   function getValueFromBackendData(data: BackendSensorLogData, sensorType: string): number {
@@ -156,7 +156,7 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
   };
 
     useEffect(() => {
-    if (sensorGraphData && sensorGraphData.length > 0) {
+    if (mergedGraph && mergedGraph.length > 0) {
 
       const testData = generateTestSensorData(sensor.sensor_type);
       
@@ -169,7 +169,7 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
         currentValue: latestValue,
       }));
     }
-  }, [sensorGraphData, sensor.sensor_type]);
+  }, [mergedGraph, sensor.sensor_type]);
 
   const handleMaxThresholdChange = (value: string) => {
     setSelectedSensor(prev => ({
@@ -191,8 +191,8 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
     }));
   };
 
-  const changeBoardThreshold = () => {
-    setBoardThreshold(selectedSensor.type, selectedSensor.threshold.max, selectedSensor.threshold.min, boardId);
+  const changeBoardThreshold = async () => {
+    await setBoardThreshold(selectedSensor.type, selectedSensor.threshold.max, selectedSensor.threshold.min);
   }
 
   return (
@@ -219,10 +219,10 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
                 <TouchableOpacity
                   style={[
                     styles.submitButton,
-                    loading && styles.submitButtonDisabled
+                    sensorDataLoading && styles.submitButtonDisabled
                   ]}
                   onPress={changeBoardThreshold}
-                  disabled={loading}
+                  disabled={sensorDataLoading}
                   activeOpacity={0.7}
                 >
                   <Ionicons 
@@ -247,10 +247,10 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
                 <TouchableOpacity
                   style={[
                     styles.submitButton,
-                    loading && styles.submitButtonDisabled
+                    sensorDataLoading && styles.submitButtonDisabled
                   ]}
                   onPress={changeBoardThreshold}
-                  disabled={loading}
+                  disabled={sensorDataLoading}
                   activeOpacity={0.7}
                 >
                   <Ionicons 
@@ -274,10 +274,10 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
           ) : (
             <View style={styles.chartPlaceholder}>
               <Text style={styles.chartPlaceholderText}>
-                {loading ? '📊 Loading sensor data...' : '📊 No data available'}
+                {sensorDataLoading ? '📊 Loading sensor data...' : '📊 No data available'}
               </Text>
               <Text style={styles.chartSubtext}>
-                {loading ? 'Please wait while we fetch your sensor readings' : 'Check your sensor connection and try again'}
+                {sensorDataLoading ? 'Please wait while we fetch your sensor readings' : 'Check your sensor connection and try again'}
               </Text>
             </View>
           )}

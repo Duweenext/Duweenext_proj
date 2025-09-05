@@ -46,13 +46,12 @@ const TextFieldSensorValue = <T = string>({
           borderRadius: borderRadius,
           borderWidth: 1,
           paddingHorizontal: 12,
-          // paddingVertical: 6,
           backgroundColor: 'white',
           fontSize: fontSize,
           color: '#1A736A',  
           borderColor: '#E5E7EB',
-          alignItems: 'center',
-          alignContent: 'center',
+          // alignItems: 'center',
+          // alignContent: 'center',
         }}
       />
     </View>

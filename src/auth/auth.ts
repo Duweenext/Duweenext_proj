@@ -1,7 +1,5 @@
-import axios, { AxiosError } from "axios";
-import axiosInstance from "../api/apiManager";
-import * as SecureStore from "expo-secure-store";
-import { setStorageItemAsync } from "@/src/utlis/storage";
+import axios from "axios";
+import {axiosMainInstance} from "../api/apiManager";
 
 interface Data {
   username: string;
@@ -11,7 +9,7 @@ interface Data {
 
 export const user_login = async (data: Data) => {
   try {
-    const response = await axiosInstance.post("/visit/login", data, {
+    const response = await axiosMainInstance.post("/visit/login", data, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -36,7 +34,7 @@ export const user_login = async (data: Data) => {
 
 export const user_register = async (data: Data) => {
   try {
-    const response = await axiosInstance.post("/visit/register", data, {
+    const response = await axiosMainInstance.post("/visit/register", data, {
       headers: {
         "Content-Type": "application/json",
       },

@@ -11,14 +11,14 @@ export type AnalysisStatus = 'idle' | 'validating' | 'uploading' | 'processing' 
 export interface EducationLink { title: string; slug: string; }
 
 export interface AnalysisResult {
-  id: string;                // job_id or uuid
-  label: PondLabel | string; // keep open for future classes
-  confidence: number;        // 0..1
+  id: string;                
+  label: PondLabel | string; 
+  confidence: number;  
   tips: string[];
   educationLinks: EducationLink[];
   modelVersion: string;
-  processedAt: string;       // ISO
-  imageUri: string;          // local cache or remote
+  processedAt: string;    
+  imageUri: string;      
 }
 
 export interface PendingJob {

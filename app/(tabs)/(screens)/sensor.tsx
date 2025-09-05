@@ -7,30 +7,20 @@ import BoardSectionHeader from '@/src/component/Screens/BoardSectionHeader';
 import CardBoardPrimary from '@/src/component/Card/CardBoardPrimary/CardBoardPrimary';
 import { useBoard } from '@/src/api/hooks/useBoard';
 import { useAuth } from '@/src/auth/context/auth_context';
-import { formatRunningTimeFromTimestamp } from '@/src/utlis/input';
 import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
 
 const SensorScreen = () => {
 
   const { t } = useTranslation();
-  const { getAllBoardByUserId, boards, loading } = useBoard();
+  const {boards, loading , refetchBoards} = useBoard();
 
   const { user } = useAuth();
-  const fetchBoards = async (user_id: number) => {
-    const res = await getAllBoardByUserId(user_id);
-    console.log('Fetched boards for user:', res);
-  }
+
   const handleRefresh = async () => {
     if (user?.id) {
-      await fetchBoards(user.id);
+      await refetchBoards();
     }
   };
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchBoards(user.id);
-    }
-  }, [getAllBoardByUserId]);
 
   return (
     <PullToRefreshScreen onRefresh={handleRefresh}>

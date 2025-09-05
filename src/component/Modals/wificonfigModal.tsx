@@ -1,5 +1,5 @@
 // WifiConfigModal.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   View,
@@ -9,9 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  PermissionsAndroid,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useForm, Controller } from 'react-hook-form';
 import { theme } from '@/theme';
 import TextFieldModal from '../TextFields/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
@@ -104,12 +104,12 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
             <Text style={styles.label}>Wifi name</Text>
             <View style={styles.inputWrap}>
 
-                  <TextFieldModal
-                    onChangeText={setWifiName}
-                    value={wifiName}
-                    placeholder="Enter wifi name"
-                    borderColor={theme.colors.black}
-                  />
+              <TextFieldModal
+                onChangeText={setWifiName}
+                value={wifiName}
+                placeholder="Enter wifi name"
+                borderColor={theme.colors.black}
+              />
 
             </View>
             {errors?.ssid && <Text style={styles.error}>{errors.ssid}</Text>}
@@ -118,12 +118,12 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
             <Text style={[styles.label, { marginTop: 12 }]}>Wifi password</Text>
             <View style={styles.inputWrap}>
 
-                  <TextFieldModal
-                    onChangeText={setWifiPassword}
-                    value={wifiPassword}
-                    placeholder="Enter Wifi password"
-                    borderColor={theme.colors.black}
-                  />
+              <TextFieldModal
+                onChangeText={setWifiPassword}
+                value={wifiPassword}
+                placeholder="Enter Wifi password"
+                borderColor={theme.colors.black}
+              />
 
               <TouchableOpacity
                 onPress={() => setShowWifi((s) => !s)}
@@ -138,12 +138,12 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
               <Text style={[styles.label, { marginTop: 12 }]}>Connection password</Text>
               <View style={styles.inputWrap}>
 
-                    <TextFieldModal
-                      onChangeText={setConnectionPassword}
-                      value={connectionPassword}
-                      placeholder="Enter Connection password"
-                      borderColor={theme.colors.black}
-                    />
+                <TextFieldModal
+                  onChangeText={setConnectionPassword}
+                  value={connectionPassword}
+                  placeholder="Enter Connection password"
+                  borderColor={theme.colors.black}
+                />
 
                 <TouchableOpacity
                   onPress={() => setShowConn((s) => !s)}
@@ -157,19 +157,19 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
               <Text style={[styles.label, { marginTop: 12 }]}>Board name</Text>
               <View style={styles.inputWrap}>
 
-                    <TextFieldModal
-                      onChangeText={setBoardModelName}
-                      value={boardModelName}
-                      placeholder="Enter Board Model Name"
-                      borderColor={theme.colors.black}
-                    />
+                <TextFieldModal
+                  onChangeText={setBoardModelName}
+                  value={boardModelName}
+                  placeholder="Enter Board Model Name"
+                  borderColor={theme.colors.black}
+                />
               </View>
             </View>
             {errors?.wifiPassword && <Text style={styles.error}>{errors.wifiPassword}</Text>}
 
             {/* Connection password */}
-           
-            {!isBoardIdExists && 
+
+            {/* {!isBoardIdExists && 
             <View>
               <Text style={[styles.label, { marginTop: 12 }]}>Connection password</Text>
               <View style={styles.inputWrap}>
@@ -201,13 +201,13 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                     />
               </View>
             </View>
-            }
-            {errors?.connectionPassword && (
+            } */}
+            {/* {errors?.connectionPassword && (
               <Text style={styles.error}>{errors.connectionPassword}</Text>
-            )}
+            )} */}
 
             {/* Submit */}
-            <View style={{justifyContent: 'center', flexDirection: 'row', padding: 5}}>
+            <View style={{ justifyContent: 'center', flexDirection: 'row', padding: 5 }}>
               <ButtonModalL
                 text='Submit'
                 textColor={theme.colors.white}

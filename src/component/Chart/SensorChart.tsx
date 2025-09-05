@@ -25,7 +25,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
 
   const spacing = useMemo(() => SPACING_PER_SCALE[scale], [scale]);
 
-  const { getSensorGraphLog, sensorGraphData } = useSensor();
+  const { getSensorGraphLog, mergedGraph } = useSensor(boardId);
 
   const scrollRef = useRef<any>(null);
   const metricsRef = useRef<ScrollMetrics>({ x: 0, w: 1, cw: 1 });
@@ -37,7 +37,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
   const [isJumpingToDate, setIsJumpingToDate] = useState(false);
 
   const fetchGraphLog = async (end: Date, count: number) => {
-    await getSensorGraphLog(boardId, end.toISOString(), scale, count)
+    await getSensorGraphLog(end.toISOString(), scale, count)
       .then(() => {
         setIsInitialized(true);
         console.log('✅ Initial load complete');
@@ -127,7 +127,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
         scrollRef.current?.scrollTo({ x: (metricsRef.current.x + dx), animated: false });
       });
 
-      await getSensorGraphLog(boardId, left.toISOString(), scale, count);
+      await getSensorGraphLog(left.toISOString(), scale, count);
     } finally {
       isExtending.current = false;
     }
@@ -173,7 +173,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
         return newAxisSlots;
       });
 
-      await getSensorGraphLog(boardId, newEnd.toISOString(), scale, count);
+      await getSensorGraphLog(newEnd.toISOString(), scale, count);
     } finally {
       isExtending.current = false;
     }
@@ -223,7 +223,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
 
   const sums = useMemo(() => {
     const m = new Map<number, { sum: number; c: number }>();
-    (sensorGraphData ?? []).forEach(row => {
+    (mergedGraph ?? []).forEach(row => {
       const t = new Date(row.created_at);
       const b = truncateToBucket(t, scale).getTime();
       const y = Number(pickY(row));
@@ -233,7 +233,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
       m.set(b, acc);
     });
     return m;
-  }, [sensorGraphData, scale, pickY]);
+  }, [mergedGraph, scale, pickY]);
 
   const points = useMemo(() => {
     return axisSlots.map(slot => {
@@ -285,7 +285,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
       const newSlots = Array.from({ length: count }, (_, i) => addStep(newStart, scale, i));
 
       setAxisSlots(newSlots);
-      await getSensorGraphLog(boardId, truncatedTarget.toISOString(), scale, count);
+      await getSensorGraphLog(truncatedTarget.toISOString(), scale, count);
 
       requestAnimationFrame(() => {
         const targetIndex = Math.floor(count / 2);

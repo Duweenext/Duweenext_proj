@@ -66,23 +66,29 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     const mode = board?.board_status || 'inactive' as BoardConnectionStatus;
     const boardName = board?.board_name || 'Unknown Board';
     const [expanded, setExpanded] = useState(false);
+    const [hasMeasuredOnce, setHasMeasuredOnce] = useState(false);
     const { cardBg, textColor, buttonBg, buttonText, iconColor } =
         variants[mode] || variants.inactive;
     const actionLabel = displayStatusActionLabel[mode];
     const [lastActive, setLastActive] = useState<string | null>(null);
 
-    const { setBoardConnection} = useBoard();
+    const { setBoardConnection } = useBoard();
 
     const handleSetBoardConnection = async (status: BoardConnectionStatus) => {
         await setBoardConnection(board.id, status);
         setLastActive(formatRunningTimeFromTimestamp(board.updated_at));
     }
 
+    const handleExpand = async () => {
+        setExpanded(!expanded);
+        // setHasMeasuredOnce(true);
+    };
+
     const [tick, setTick] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if(board.board_status === 'active') {
+            if (board.board_status === 'active') {
                 setTick(prev => prev + 1);
             }
         }, 1000);
@@ -99,7 +105,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
 
     return (
         <View>
-            <TouchableOpacity onPress={() => setExpanded(!expanded)} disabled={mode !== 'active'}>
+            <TouchableOpacity onPress={handleExpand} disabled={mode !== 'active'}>
                 <View style={[styles.card, {
                     backgroundColor: cardBg,
                     borderBottomEndRadius: expanded ? 0 : theme.borderRadius.lg,
@@ -120,10 +126,6 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                         <Text style={[styles.description, { color: textColor }]}>
                             Status: {displayStatusMap[mode]}
                         </Text>
-                    </View>
-                    <View style={styles.timestamp}>
-                        {/* <Text style={[styles.description, { color: textColor }]}>
-                        </Text> */}
                     </View>
                     <View style={styles.leftsection}>
                         <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)}>

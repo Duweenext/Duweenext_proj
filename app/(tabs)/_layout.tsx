@@ -133,7 +133,7 @@ const _Layout = () => {
                         backdropFilter: 'blur(10px)',
                     },
                     sceneStyle: {
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'black',
                     },
                 }}
             >

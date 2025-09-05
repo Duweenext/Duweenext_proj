@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/src/auth/context/auth_context';
 import { getTitleFromPath } from '@/src/utlis/useTitle';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import messaging from '@react-native-firebase/messaging';
+// import messaging from '@react-native-firebase/messaging';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,54 +17,54 @@ export { getTitleFromPath };
 function AppContent() {
   const { isLoading } = useAuth();
 
-  const requestUserPermission = async () => {
-    const authStatus = await messaging().requestPermission();
-    const enabled = 
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-    if(enabled)
-    {
-      console.log('User has enabled notifications');
-    }
+  // const requestUserPermission = async () => {
+  //   const authStatus = await messaging().requestPermission();
+  //   const enabled = 
+  //       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+  //       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  //   if(enabled)
+  //   {
+  //     console.log('User has enabled notifications');
+  //   }
 
-    return {enabled, authStatus};
-  }
+  //   return {enabled, authStatus};
+  // }
 
-  useEffect(() => {
-    const requesting = async () => {
-      await requestUserPermission().then(({enabled, authStatus}) => {
-        if (enabled) {
-          messaging().getToken().then(token => {
-            console.log('FCM Token:', token);
-          });
-        }
-        else{
-          console.log('Permission not granted', authStatus);
-        }
-      });
+  // useEffect(() => {
+  //   const requesting = async () => {
+  //     await requestUserPermission().then(({enabled, authStatus}) => {
+  //       if (enabled) {
+  //         messaging().getToken().then(token => {
+  //           console.log('FCM Token:', token);
+  //         });
+  //       }
+  //       else{
+  //         console.log('Permission not granted', authStatus);
+  //       }
+  //     });
 
-      messaging().getInitialNotification().then(async (remoteMessage) => {
-        if (remoteMessage) {
-          console.log('Notification caused app to open from quit state:', remoteMessage.notification);
-        }
-      });
+  //     messaging().getInitialNotification().then(async (remoteMessage) => {
+  //       if (remoteMessage) {
+  //         console.log('Notification caused app to open from quit state:', remoteMessage.notification);
+  //       }
+  //     });
 
-      messaging().onNotificationOpenedApp(async (remoteMessage) => {
-        console.log('Notification caused app to open from background state:', remoteMessage.notification);
-      });
+  //     messaging().onNotificationOpenedApp(async (remoteMessage) => {
+  //       console.log('Notification caused app to open from background state:', remoteMessage.notification);
+  //     });
 
-      messaging().setBackgroundMessageHandler(async remoteMessage => {
-        console.log('Message handled in the background!', remoteMessage);
-      });
+  //     messaging().setBackgroundMessageHandler(async remoteMessage => {
+  //       console.log('Message handled in the background!', remoteMessage);
+  //     });
 
-      const unsubscribe = messaging().onMessage(async remoteMessage => {
-        Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
-      });
+  //     const unsubscribe = messaging().onMessage(async remoteMessage => {
+  //       Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
+  //     });
 
-      return unsubscribe;
-    }
-    requesting();
-  }, []);
+  //     return unsubscribe;
+  //   }
+  //   requesting();
+  // }, []);
 
   if (isLoading) {
     return (

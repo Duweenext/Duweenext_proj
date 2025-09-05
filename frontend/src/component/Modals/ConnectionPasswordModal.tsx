@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -9,9 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/theme';
 import TextFieldModal from '../TextFields/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
@@ -47,20 +45,15 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
   boardId,
   submitting = false,
 }) => {
-  const { control, handleSubmit, formState: { errors, isValid }, reset } =
-    useForm({
-      resolver: zodResolver(connectionPasswordSchema),
-      mode: 'onChange',
-      defaultValues: { connectionPassword: '', boardModelName: '' },
-    });
+
+  const [password, setPassword] = useState<string>('');
 
   const closeAndReset = () => {
-    reset();
     onClose();
   };
 
-  const onSubmitForm = (data: { connectionPassword: string }) => {
-    onSubmit(data.connectionPassword);
+  const onSubmitForm = (connectionPassword: string ) => {
+    onSubmit(connectionPassword);
     closeAndReset();
   };
 
@@ -93,23 +86,14 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
           <View style={styles.content}>
             <View>
               <Text style={styles.label}>Connection password</Text>
-              <Controller
-                control={control}
-                name="connectionPassword"
-                render={({ field: { onChange, value } }) => (
                   <TextFieldModal
                     mode="password-old"
-                    onChangeText={onChange}
-                    value={value}
+                    onChangeText={setPassword}
+                    value={password}
                     placeholder="Enter connection password"
                     borderColor={theme.colors.black}
                     secureToggle={true}
                   />
-                )}
-              />
-              {errors.connectionPassword && (
-                <Text style={styles.error}>{errors.connectionPassword.message}</Text>
-              )}
             </View>
             <View style={styles.buttonContainer}>
               <ButtonModalL
@@ -117,7 +101,7 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
                 textColor={theme.colors.white}
                 filledColor={theme.colors.black}
                 size='L'
-                onPress={handleSubmit(onSubmitForm)}
+                onPress={() => onSubmitForm(password ?? '')}
                 marginBottom={0}
               />
             </View>

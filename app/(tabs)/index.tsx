@@ -80,30 +80,36 @@ export default function Index() {
         // getWifiLists();
       }
     }}>
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 100 }}>
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginVertical: 24,
-            gap: 12,
-          }}>
-            <TabBox
-              title="Sensor"
-              icon={icons.sensor}
-              onNav={() => router.push("/(tabs)/(screens)/sensor")}
-            />
-            <TabBox
-              title="Check Pond Health"
-              icon={icons.camera}
-              onNav={() => router.push("/(tabs)/(screens)/check-pond-health")}
-            />
-            <TabBox
-              title="Notification History"
-              icon={icons.assistant}
-              onNav={() => router.push("/(tabs)/(screens)/notification_setting")}
-            />
-          </View>
+    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 100 }}>
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginVertical: 24,
+          gap: 12,
+        }}>
+          <TabBox
+            title="Sensor"
+            icon={icons.sensor}
+            onNav={() => router.push("/(tabs)/(screens)/sensor")}
+            image_width={45}
+            image_height={45}
+          />
+          <TabBox
+            title="Check Pond Health"
+            icon={icons.camera}
+            onNav={() => router.push("/(tabs)/(screens)/check-pond-health")}
+            image_height={35}
+            image_width={35}
+          />
+          <TabBox
+            title="Notification History"
+            icon={icons.assistant}
+            onNav={() => router.push("/(tabs)/(screens)/notification_setting")}
+            image_height={50}
+            image_width={50}
+          />
+        </View>
 
           <View style={{
             backgroundColor: '#fff',

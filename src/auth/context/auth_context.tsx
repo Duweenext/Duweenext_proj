@@ -7,7 +7,6 @@ type User = {
     email: string;
     name: string;
 };
-
 type AuthContextType = {
     login: (token: string, user?: User) => Promise<void>;
     logout: () => Promise<void>;

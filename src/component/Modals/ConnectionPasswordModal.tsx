@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -9,17 +9,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/theme';
 import TextFieldModal from '@/src/component/TextFields/TextFieldModal';
 import ButtonModalL from '@/src/component/Buttons/ButtonModalL';
-
-const connectionPasswordSchema = z.object({
-  connectionPassword: z.string().min(1, ''),
-  boardModelName: z.string().optional(),
-});
 
 interface ConnectionPasswordModalProps {
   visible: boolean;

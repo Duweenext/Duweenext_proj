@@ -15,6 +15,11 @@ import CardBoardExpanded from './CardboardExpand';
 import ButtonCard from '../../Buttons/ButtonCard';
 import { useBoard } from '@/src/api/hooks/useBoard';
 import { formatRunningTimeFromTimestamp } from '@/src/utlis/input';
+import TextFieldPrimary from '../../TextFields/TextFieldPrimary';
+import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
+import IconButton from '../../Buttons/IconButton';
+import UnderlineTextField from '../../TextFields/TextFieldUnderline';
+import DeleteConfirmModal from '../../Modals/ConfirmDelete';
 
 const displayStatusMap = {
     active: 'Connected',
@@ -64,27 +69,45 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     board,
 }) => {
     const mode = board?.board_status || 'inactive' as BoardConnectionStatus;
-    const boardName = board?.board_name || 'Unknown Board';
+    const [boardName, setBoardName] = useState(board.board_name || 'Unnamed Board');
     const [expanded, setExpanded] = useState(false);
-    const [hasMeasuredOnce, setHasMeasuredOnce] = useState(false);
+    const [isEditBoardName, setIsEditBoardName] = useState(false);
     const { cardBg, textColor, buttonBg, buttonText, iconColor } =
         variants[mode] || variants.inactive;
-    const actionLabel = displayStatusActionLabel[mode];
     const [lastActive, setLastActive] = useState<string | null>(null);
+    const [modal, setModal] = useState<"delete" | "">();
+    const [isTitleMultiline, setIsTitleMultiline] = React.useState(false);
 
-    const { setBoardConnection } = useBoard();
+    const [titleWidth, setTitleWidth] = useState<number | undefined>(undefined);
 
-    const handleSetBoardConnection = async (status: BoardConnectionStatus) => {
-        await setBoardConnection(board.id, status);
+    useEffect(() => {
         setLastActive(formatRunningTimeFromTimestamp(board.updated_at));
-    }
+    }, [])
+
+    const onTitleTextLayout = (e: any) => {
+        const line = e.nativeEvent.lines?.[0];
+        if (line?.width) setTitleWidth(Math.ceil(line.width));
+        const wrapped = (e?.nativeEvent?.lines?.length ?? 1) > 1;
+        setIsTitleMultiline(wrapped);
+    };
+
+    const { loading, editBoardName, deleteBoard, refetchBoards } = useBoard();
 
     const handleExpand = async () => {
         setExpanded(!expanded);
-        // setHasMeasuredOnce(true);
     };
 
     const [tick, setTick] = useState(0);
+
+    const handleEditBoardName = async () => {
+        await editBoardName(board.board_id, boardName);
+        setIsEditBoardName(false);
+    }
+
+    const handleDeleteCardBoard = async () => {
+        await deleteBoard(board.id);
+        await refetchBoards();
+    }
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -96,7 +119,6 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
         return () => clearInterval(interval);
     }, []);
 
-
     const runningTimeActive = useMemo(() => {
         if (board.board_status === 'active') {
             return formatRunningTimeFromTimestamp(board.updated_at);
@@ -105,44 +127,102 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
 
     return (
         <View>
-            <TouchableOpacity onPress={handleExpand} disabled={mode !== 'active'}>
+            <TouchableOpacity onPress={handleExpand} disabled={mode !== 'active' || isEditBoardName}>
                 <View style={[styles.card, {
                     backgroundColor: cardBg,
                     borderBottomEndRadius: expanded ? 0 : theme.borderRadius.lg,
                     borderBottomStartRadius: expanded ? 0 : theme.borderRadius.lg,
                 }]}>
                     <View style={styles.content}>
-                        <Text style={[styles.title, { color: textColor }]}>
-                            {boardName}
-                        </Text>
-                        {mode === 'inactive' && (
+                        <View style={{ flexDirection: 'row', gap: 8, alignItems: isTitleMultiline ? 'flex-start' : 'center', justifyContent: 'space-between', width: '100%' }}>
+                            <View style={{ flexDirection: isTitleMultiline ? 'column' : 'row', gap: isTitleMultiline ? 0 : 8, alignItems: isTitleMultiline ? 'flex-start' : 'center', maxWidth: '80%' }}>
+                                {!isEditBoardName ?
+                                    <Text
+                                        style={[styles.title, { color: textColor }]}
+                                        numberOfLines={3}
+                                        onTextLayout={onTitleTextLayout}
+                                    >
+                                        {boardName}
+                                    </Text> :
+                                    <UnderlineTextField
+                                        value={boardName}
+                                        onChangeText={setBoardName}
+                                        // match text visuals
+                                        inputStyle={{
+                                            color: textColor,
+                                            fontSize: theme.fontSize.header1,
+                                            fontFamily: theme.fontFamily.medium,
+                                            lineHeight: theme.fontSize.header1 * 1.2,
+                                            paddingHorizontal: 0,
+                                            paddingVertical: 0, // avoid height drift
+                                        }}
+                                        // reuse measured width (fallback to a min width)
+                                        style={{ width: Math.max(titleWidth ?? 10, 120) }}
+                                        width={titleWidth} // optional: if your component reads `width` prop
+                                        placeholder=""
+                                    />
+                                }
+                                {!isEditBoardName ?
+                                    <ButtonCard
+                                        text={'edit'}
+                                        filledColor={theme.colors.warning}
+                                        borderColor=''
+                                        width={50}
+                                        height={20}
+                                        textColor={buttonText}
+                                        onPress={() => {
+                                            setIsEditBoardName(true);
+                                        }}
+                                    /> :
+                                    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginBottom: 4 }}>
+                                        <IconButton
+                                            source={require('@/assets/icons/check.png')}
+                                            size={20}
+                                            tintColor={mode === 'active' ? theme.colors.background2 : theme.colors.primary}
+                                            onPress={handleEditBoardName}
+                                        />
+                                        <IconButton
+                                            source={require('@/assets/icons/cancel.png')}
+                                            size={20}
+                                            tintColor={theme.colors.fail}
+                                            onPress={() => {
+                                                setBoardName(board.board_name || 'Unnamed Board');
+                                                setIsEditBoardName(false);
+                                            }}
+                                        />
+                                    </View>
+                                }
+                            </View>
+                            <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)} disabled={mode !== 'active' || isEditBoardName}>
+                                <Ionicons
+                                    name={expanded ? "chevron-down" : "chevron-forward"}
+                                    size={24}
+                                    color={iconColor}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                        <View>
+                            {mode === 'inactive' && (
+                                <Text style={[styles.description, { color: textColor }]}>
+                                    Last connected: {fromISOTimeToLocaleString(board?.updated_at) || 'N/A'}
+                                </Text>
+                            )}
                             <Text style={[styles.description, { color: textColor }]}>
-                                Last connected: {board?.updated_at.split("T")[0] || 'N/A'}
+                                Running: {board.board_status === 'active' ? runningTimeActive : lastActive}
                             </Text>
-                        )}
-                        <Text style={[styles.description, { color: textColor }]}>
-                            Running: {board.board_status === 'active' ? runningTimeActive : lastActive}
-                        </Text>
-                        <Text style={[styles.description, { color: textColor }]}>
-                            Status: {displayStatusMap[mode]}
-                        </Text>
-                    </View>
-                    <View style={styles.leftsection}>
-                        <TouchableOpacity style={styles.iconButton} onPress={() => setExpanded(!expanded)}>
-                            <Ionicons
-                                name={expanded ? "chevron-down" : "chevron-forward"}
-                                size={24}
-                                color={iconColor}
+                            <Text style={[styles.description, { color: textColor }]}>
+                                Status: {displayStatusMap[mode]}
+                            </Text>
+                        </View>
+                        <View style={[styles.leftsection, { gap: mode === "inactive" ? 32 : 18 }]}>
+
+                            <ButtonCard
+                                text={'delete'}
+                                filledColor={buttonBg}
+                                textColor={buttonText}
+                                onPress={() => setModal("delete")}
                             />
-                        </TouchableOpacity>
-                        <ButtonCard
-                            text={actionLabel}
-                            filledColor={buttonBg}
-                            textColor={buttonText}
-                            onPress={async () => {
-                                await handleSetBoardConnection(mode === 'active' ? 'inactive' : 'active');
-                            }}
-                        />
+                        </View>
                     </View>
                 </View>
 
@@ -153,6 +233,15 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                     board_id={board.board_id}
                 />
             )}
+
+            <DeleteConfirmModal
+                visible={modal === "delete"}
+                title="Delete this board?"
+                message="This action cannot be undone."
+                loading={loading}
+                onCancel={() => setModal("")}
+                onConfirm={handleDeleteCardBoard}
+            />
         </View>
     );
 };
@@ -187,7 +276,7 @@ const styles = StyleSheet.create({
     },
     content: {
         marginHorizontal: 8,
-        gap: 2,
+        // gap: 3,
     },
     timestamp: {
         justifyContent: 'flex-start',
@@ -205,10 +294,15 @@ const styles = StyleSheet.create({
     },
     leftsection: {
         flexDirection: 'column',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        gap: 18,
+        bottom: 0,
+        alignSelf: 'flex-end',
         // height: '100%',
-        marginBottom: 8, // to align with content
+        position: 'absolute',
     }
 });
+
+
+const fromISOTimeToLocaleString = (isoTime: string) => {
+    const date = new Date(isoTime);
+    return date.toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: true });
+};

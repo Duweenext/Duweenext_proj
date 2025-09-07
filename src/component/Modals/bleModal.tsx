@@ -116,7 +116,7 @@ const BleConfigModal: React.FC<BleConfigModalProp> = ({
                   data={data}
                   renderItem={renderItem}
                   keyExtractor={(item) => item.id}
-                  ListEmptyComponent={<Text style={styles.empty}>{isScanning ? "Scanning..." : "No devices found."}</Text>}
+                  ListEmptyComponent={isScanning ? <LoadingSpinner message="Scanning..." /> : <Text style={styles.empty}>{"No devices found."}</Text>}
                 />
               </>
             )}

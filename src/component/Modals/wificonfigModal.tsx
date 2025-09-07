@@ -1,22 +1,20 @@
 // WifiConfigModal.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  PermissionsAndroid,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
-import TextFieldModal from '../TextFields/TextFieldModal';
+import TextFieldModal from '../TextFields/TextFieldModal/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
 import { WifiConfig } from '@/src/interfaces/wifi';
-
+import { z } from "zod";
 
 export type WifiFormData = {
   ssid: string;
@@ -30,7 +28,6 @@ interface WifiConfigModalProps {
   onClose: () => void;
   onSubmit: (data: WifiConfig) => void;
   boardId: string;
-  submitting?: boolean;
   isBoardIdExists?: boolean;
 }
 
@@ -45,27 +42,64 @@ const COLORS = {
   error: '#ef4444',
 };
 
+export const wifiSchema = z.object({
+  ssid: z.string().trim()
+    .min(1, "Wi-Fi name is required")
+    .max(32, "Max 32 characters")
+    .regex(/^[A-Za-z0-9 ._-]+$/, "Use letters, numbers, space, dot, hyphen, underscore"),
+  wifiPassword: z.string().min(1, "At least 1 character"),
+  connectionPassword: z.string().optional(),     // conditional rule added in superRefine
+  boardModelName: z.string().trim().min(1, "Board name is required"),
+  isExist: z.boolean(),
+}).superRefine((val, ctx) => {
+  if (!val.isExist && (!val.connectionPassword || val.connectionPassword.trim() === "")) {
+    ctx.addIssue({ path: ["connectionPassword"], code: z.ZodIssueCode.custom, message: "Connection password is required" });
+  }
+});
+
+export type WifiForm = z.infer<typeof wifiSchema>;
+
+const mapZodErrors = (issues: z.ZodIssue[]) => {
+  const out: Record<string, string> = {};
+  for (const i of issues) {
+    const key = String(i.path[0] ?? "form");
+    if (!out[key]) out[key] = i.message; 
+  }
+  return out;
+};
+
 const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
   visible,
   onClose,
   onSubmit,
   boardId,
-  submitting = false,
   isBoardIdExists = true,
 }) => {
 
-  const [errors, setErrors] = useState<WifiConfig>();
+  const [errors, setErrors] = useState<Record<string, string>>();
   const [wifiName, setWifiName] = useState<string>('');
   const [wifiPassword, setWifiPassword] = useState<string>('');
   const [connectionPassword, setConnectionPassword] = useState<string>('');
   const [boardModelName, setBoardModelName] = useState<string>('');
 
-  const [showWifi, setShowWifi] = useState(false);
-  const [showConn, setShowConn] = useState(false);
+  const validateInput = () => {
+    const form = {
+      ssid: wifiName,
+      wifiPassword,
+      connectionPassword,
+      boardModelName,
+      isExist: isBoardIdExists,
+    };
+
+    const res = wifiSchema.safeParse(form);
+    if (!res.success) {
+      setErrors(mapZodErrors(res.error.issues));
+      return false;
+    }
+    return true;
+  }
 
   const closeAndReset = () => {
-    setShowWifi(false);
-    setShowConn(false);
     onClose();
   };
 
@@ -109,6 +143,8 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 value={wifiName}
                 placeholder="Enter wifi name"
                 borderColor={theme.colors.black}
+                inputKind='ssid'
+                type='text'
               />
 
             </View>
@@ -123,37 +159,25 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 value={wifiPassword}
                 placeholder="Enter Wifi password"
                 borderColor={theme.colors.black}
+                type='password'
               />
+              {errors?.wifiPassword && <Text style={styles.error}>{errors.wifiPassword}</Text>}
 
-              <TouchableOpacity
-                onPress={() => setShowWifi((s) => !s)}
-                style={styles.eyeBtn}
-                accessibilityRole="button"
-                accessibilityLabel={showWifi ? 'Hide Wifi password' : 'Show Wifi password'}
-              >
-                <Ionicons name={showWifi ? 'eye-off' : 'eye'} size={22} color="#6B7280" />
-              </TouchableOpacity>
             </View>
             <View>
-              <Text style={[styles.label, { marginTop: 12 }]}>Connection password</Text>
-              <View style={styles.inputWrap}>
+              {!isBoardIdExists && <View>
+                <Text style={[styles.label, { marginTop: 12 }]}>Connection password</Text>
+                <View style={styles.inputWrap}>
 
-                <TextFieldModal
-                  onChangeText={setConnectionPassword}
-                  value={connectionPassword}
-                  placeholder="Enter Connection password"
-                  borderColor={theme.colors.black}
-                />
-
-                <TouchableOpacity
-                  onPress={() => setShowConn((s) => !s)}
-                  style={styles.eyeBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel={showConn ? 'Hide Connection password' : 'Show Connection password'}
-                >
-                  <Ionicons name={showConn ? 'eye-off' : 'eye'} size={22} color="#6B7280" />
-                </TouchableOpacity>
-              </View>
+                  <TextFieldModal
+                    onChangeText={setConnectionPassword}
+                    value={connectionPassword}
+                    placeholder="Enter Connection password"
+                    borderColor={theme.colors.black}
+                    type='password'
+                  />
+                </View>
+              </View>}
               <Text style={[styles.label, { marginTop: 12 }]}>Board name</Text>
               <View style={styles.inputWrap}>
 
@@ -165,47 +189,7 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 />
               </View>
             </View>
-            {errors?.wifiPassword && <Text style={styles.error}>{errors.wifiPassword}</Text>}
-
-            {/* Connection password */}
-
-            {/* {!isBoardIdExists && 
-            <View>
-              <Text style={[styles.label, { marginTop: 12 }]}>Connection password</Text>
-              <View style={styles.inputWrap}>
-
-                    <TextFieldModal
-                      onChangeText={setConnectionPassword}
-                      value={connectionPassword}
-                      placeholder="Enter Connection password"
-                      borderColor={theme.colors.black}
-                    />
-                <TouchableOpacity
-                  onPress={() => setShowConn((s) => !s)}
-                  style={styles.eyeBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel={showConn ? 'Hide Connection password' : 'Show Connection password'}
-                >
-                  <Ionicons name={showConn ? 'eye-off' : 'eye'} size={22} color="#6B7280" />
-                </TouchableOpacity>
-              </View>
-
-              <Text style={[styles.label, { marginTop: 12 }]}>Board name</Text>
-              <View style={styles.inputWrap}>
-
-                    <TextFieldModal
-                      onChangeText={setBoardModelName}
-                      value={boardModelName}
-                      placeholder="Enter Board Model Name"
-                      borderColor={theme.colors.black}
-                    />
-              </View>
-            </View>
-            } */}
-            {/* {errors?.connectionPassword && (
-              <Text style={styles.error}>{errors.connectionPassword}</Text>
-            )} */}
-
+            {errors?.boardModelName && <Text style={styles.error}>{errors.boardModelName}</Text>}
             {/* Submit */}
             <View style={{ justifyContent: 'center', flexDirection: 'row', padding: 5 }}>
               <ButtonModalL
@@ -214,6 +198,7 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                 filledColor={theme.colors.black}
                 size='L'
                 onPress={() => {
+                  if (validateInput()) {
                   onSubmit({
                     ssid: wifiName.trim(),
                     connectionPassword: connectionPassword.trim(),
@@ -221,6 +206,7 @@ const WifiConfigModal: React.FC<WifiConfigModalProps> = ({
                     boardModelName: boardModelName.trim(),
                     isExist: isBoardIdExists,
                   });
+                  }
                 }}
               />
             </View>

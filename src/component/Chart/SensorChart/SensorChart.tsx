@@ -5,16 +5,19 @@ import { SensorDataBackend, sensorLogScale } from '@/src/interfaces/sensor';
 import { useSensor } from '@/src/api/hooks/useSensor';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { themeStyle } from '@/src/theme';
-import RowButtonGroup from '../Buttons/ButtonFilter';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import RowButtonGroup from '../../Buttons/ButtonFilter';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getSensorSuffix } from '../Card/CardSensorPrimary/SensorBoardExpand';
+import { getSensorSuffix } from '../../Card/CardSensorPrimary/SensorBoardExpand';
 import {
   addStep, formatCurrentDate, formatLabel, truncateToBucket,
   AGGRESSIVE_TRIM_THRESHOLD,
-  EDGE_LEFT, EDGE_RIGHT, MAX_TOTAL_SLOTS, ScrollMetrics, 
-  sensorOption, SLOT_COUNT, SPACING_PER_SCALE, TRIM_AMOUNT
+  EDGE_LEFT, EDGE_RIGHT, MAX_TOTAL_SLOTS, ScrollMetrics,
+  sensorOption, SLOT_COUNT, SPACING_PER_SCALE, TRIM_AMOUNT,
+  truncateToBucketUTC, addStepUTC
 } from '@/src/utils/chartUtils';
+
+
 
 type SensorChartProp = { boardId: string; sensor: SensorDataBackend };
 
@@ -22,34 +25,61 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
   const [scale, setScale] = useState<sensorLogScale>('day');
   const [axisSlots, setAxisSlots] = useState<Date[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const isAndroid = Platform.OS === 'android';
+  const needsDateTime = (scale: sensorLogScale) =>
+    scale === 'minute' || scale === 'hour' || scale === 'all';
+  const [androidPickerStage, setAndroidPickerStage] = useState<'idle' | 'date' | 'time'>('idle');
+  const tempPickedDateRef = useRef<Date | null>(null);
 
   const spacing = useMemo(() => SPACING_PER_SCALE[scale], [scale]);
 
-  const { getSensorGraphLog, mergedGraph } = useSensor(boardId);
+  const { getSensorGraphLog, mergedGraph, clearMergedGraph } = useSensor(boardId, scale);
 
   const scrollRef = useRef<any>(null);
   const metricsRef = useRef<ScrollMetrics>({ x: 0, w: 1, cw: 1 });
   const cooldown = useRef(0);
   const isExtending = useRef(false);
+  const isFlingingRef = useRef(false);
+  const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastScrollX = useRef(0);
+  const fetchVersionRef = useRef(0);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isJumpingToDate, setIsJumpingToDate] = useState(false);
+  const jumpingRef = useRef(false);
 
+  // console.log('Merged graph:', mergedGraph);
   const fetchGraphLog = async (end: Date, count: number) => {
-    await getSensorGraphLog(end.toISOString(), scale, count)
-      .then(() => {
-        setIsInitialized(true);
-        console.log('✅ Initial load complete');
-      })
-      .catch(err => console.error('❌ Initial load failed:', err));
+    const v = ++fetchVersionRef.current; // bump version for this fetch
+    try {
+      await getSensorGraphLog(end.toISOString(), scale, count);
+      // Only accept this fetch if still current
+      if (fetchVersionRef.current !== v) return;
+      setIsInitialized(true);
+    } catch (err) {
+      if (fetchVersionRef.current !== v) return; // ignore stale error
+      console.error('❌ load failed:', err);
+    }
   }
 
   useEffect(() => {
-    const end = truncateToBucket(new Date(), scale);
+    if (!mergedGraph?.length) return;
+    const newest = mergedGraph.reduce<Date>((a, r) => {
+      const t = new Date(r.created_at);
+      return t > a ? t : a;
+    }, new Date(0));
+    const target = truncateToBucketUTC(new Date(newest), scale);
     const count = SLOT_COUNT[scale];
-    const start = addStep(end, scale, -(count - 1));
-    const init = Array.from({ length: count }, (_, i) => addStep(start, scale, i));
+    const start = addStepUTC(target, scale, -Math.floor(count / 2));
+    setAxisSlots(Array.from({ length: count }, (_, i) => addStepUTC(start, scale, i)));
+  }, [mergedGraph, scale]);
+
+  useEffect(() => {
+    const end = truncateToBucketUTC(new Date(), scale);
+    const count = SLOT_COUNT[scale];
+    const start = addStepUTC(end, scale, -(count - 1));
+    const init = Array.from({ length: count }, (_, i) => addStepUTC(start, scale, i));
 
     setAxisSlots(init);
     setIsInitialized(false);
@@ -60,18 +90,18 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
 
   useEffect(() => {
     if (!isInitialized || axisSlots.length === 0) return;
+    if (isJumpingToDate || jumpingRef.current) return;
 
     const currentCenter = axisSlots[Math.floor(axisSlots.length / 2)];
-    const truncatedCenter = truncateToBucket(currentCenter, scale);
+    const truncatedCenter = truncateToBucketUTC(currentCenter, scale);
 
     const count = SLOT_COUNT[scale];
-    const newStart = addStep(currentCenter, scale, -Math.floor(count / 2));
+    const newStart = addStepUTC(currentCenter, scale, -Math.floor(count / 2));
     const newSlots = Array.from({ length: count }, (_, i) => addStep(newStart, scale, i));
 
     setAxisSlots(newSlots);
 
     fetchGraphLog(truncatedCenter, count);
-
   }, [scale]);
 
   const getCurrentDateFromScroll = useCallback((): Date | null => {
@@ -89,11 +119,26 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
 
   const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
-    metricsRef.current = {
-      x: contentOffset?.x ?? 0,
-      w: layoutMeasurement?.width ?? 1,
-      cw: contentSize?.width ?? 1,
-    };
+    const x = contentOffset?.x ?? 0;
+    const w = layoutMeasurement?.width ?? 1;
+    const cw = contentSize?.width ?? 1;
+
+    // detect movement
+    const dx = Math.abs(x - lastScrollX.current);
+    lastScrollX.current = x;
+
+    // if we see movement, consider it "flinging" until idle
+    if (dx > 0.5) {
+      isFlingingRef.current = true;
+    }
+
+    // reset / start idle timer (fires when scrolling pauses)
+    if (scrollIdleTimer.current) clearTimeout(scrollIdleTimer.current);
+    scrollIdleTimer.current = setTimeout(() => {
+      isFlingingRef.current = false;
+    }, 120); // 100–150ms works well
+
+    metricsRef.current = { x, w, cw };
   }, []);
 
   const extendLeft = useCallback(async () => {
@@ -114,18 +159,32 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
 
         if (newAxisSlots.length > AGGRESSIVE_TRIM_THRESHOLD) {
           const trimmed = newAxisSlots.slice(0, -(TRIM_AMOUNT + 20));
+          if (!isFlingingRef.current) {
+            requestAnimationFrame(() => {
+              scrollRef.current?.scrollTo({ x: (metricsRef.current.x + dx), animated: false });
+            });
+          }
           return trimmed;
         } else if (newAxisSlots.length > MAX_TOTAL_SLOTS) {
           const trimmed = newAxisSlots.slice(0, -TRIM_AMOUNT);
+          if (!isFlingingRef.current) {
+            requestAnimationFrame(() => {
+              scrollRef.current?.scrollTo({ x: (metricsRef.current.x + dx), animated: false });
+            });
+          }
           return trimmed;
         }
 
         return newAxisSlots;
       });
 
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ x: (metricsRef.current.x + dx), animated: false });
-      });
+      if (!isFlingingRef.current) {
+        requestAnimationFrame(() => {
+          scrollRef.current?.scrollTo({ x: (metricsRef.current.x + dx), animated: false });
+        });
+      }
+
+      console.log('Extending left to:', left.toISOString());
 
       await getSensorGraphLog(left.toISOString(), scale, count);
     } finally {
@@ -153,26 +212,29 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
           const trimAmount = TRIM_AMOUNT + 20;
           const trimmed = newAxisSlots.slice(trimAmount);
 
-          const adjustedX = metricsRef.current.x - (trimAmount * spacing);
-          requestAnimationFrame(() => {
-            scrollRef.current?.scrollTo({ x: Math.max(0, adjustedX), animated: false });
-          });
-
+          if (!isFlingingRef.current) {
+            const adjustedX = metricsRef.current.x - (trimAmount * spacing);
+            requestAnimationFrame(() => {
+              scrollRef.current?.scrollTo({ x: Math.max(0, adjustedX), animated: false });
+            });
+          }
           return trimmed;
         } else if (newAxisSlots.length > MAX_TOTAL_SLOTS) {
           const trimmed = newAxisSlots.slice(TRIM_AMOUNT);
 
-          const adjustedX = metricsRef.current.x - (TRIM_AMOUNT * spacing);
-          requestAnimationFrame(() => {
-            scrollRef.current?.scrollTo({ x: Math.max(0, adjustedX), animated: false });
-          });
-
+          if (!isFlingingRef.current) {
+            const adjustedX = metricsRef.current.x - (TRIM_AMOUNT * spacing);
+            requestAnimationFrame(() => {
+              scrollRef.current?.scrollTo({ x: Math.max(0, adjustedX), animated: false });
+            });
+          }
           return trimmed;
         }
 
         return newAxisSlots;
       });
 
+      console.log('Extending right to:', newEnd.toISOString());
       await getSensorGraphLog(newEnd.toISOString(), scale, count);
     } finally {
       isExtending.current = false;
@@ -200,17 +262,12 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
 
     if (leftRatio < EDGE_LEFT) {
       extendLeft();
-      cooldown.current = now + 500;
+      cooldown.current = now + 700;   // was 500
     } else if (rightRatio > EDGE_RIGHT) {
       extendRight();
-      cooldown.current = now + 500;
+      cooldown.current = now + 700;
     }
   }, [extendLeft, extendRight]);
-
-  const handleScaleChange = useCallback((value: sensorLogScale) => {
-    console.log('Scale changed to:', value);
-    setScale(value);
-  }, []);
 
   const pickY = useCallback((row: any) => {
     switch (sensor.sensor_type) {
@@ -224,8 +281,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
   const sums = useMemo(() => {
     const m = new Map<number, { sum: number; c: number }>();
     (mergedGraph ?? []).forEach(row => {
-      const t = new Date(row.created_at);
-      const b = truncateToBucket(t, scale).getTime();
+      const b = truncateToBucketUTC(new Date(row.created_at), scale).getTime(); // <— use UTC
       const y = Number(pickY(row));
       if (!Number.isFinite(y)) return;
       const acc = m.get(b) ?? { sum: 0, c: 0 };
@@ -258,6 +314,22 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
     return { minValue: Math.floor(min), maxValue: Math.ceil(max * 2) };
   }, [points]);
 
+  const handleScaleChange = useCallback((value: sensorLogScale) => {
+    setScale((prev) => {
+      if (prev !== value) {
+        fetchVersionRef.current++;
+        clearMergedGraph(prev);
+      }
+      return value;
+    });
+  }, []);
+
+  if (__DEV__ && scale === 'all') {
+    const first5 = axisSlots.slice(0, 5).map(d => d.toISOString());
+    const hits = axisSlots.slice(0, 60).filter(d => sums.has(d.getTime())).length;
+    console.log('ALL probe slots=', first5, 'hits in first 60s=', hits);
+  }
+
   const scaleButtons = useMemo(() => {
     return sensorOption.map(option => ({
       id: option,
@@ -274,54 +346,90 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
   const currentDate = getCurrentDateFromScroll();
 
   const jumpToDate = useCallback(async (targetDate: Date) => {
-    if (isJumpingToDate) return;
+    if (jumpingRef.current || isJumpingToDate) return;
 
+    jumpingRef.current = true;
     setIsJumpingToDate(true);
 
     try {
-      const truncatedTarget = truncateToBucket(targetDate, scale);
-      const count = SLOT_COUNT[scale];
-      const newStart = addStep(truncatedTarget, scale, -Math.floor(count / 2));
-      const newSlots = Array.from({ length: count }, (_, i) => addStep(newStart, scale, i));
+      // 1) UTC truncate to align buckets (works for minute/hour/day/week/month/year)
+      const truncatedTarget = truncateToBucketUTC(targetDate, scale);
 
+      // 2) Build centered slots (UTC)
+      const count = SLOT_COUNT[scale];
+      const start = addStepUTC(truncatedTarget, scale, -Math.floor(count / 2));
+      const newSlots = Array.from({ length: count }, (_, i) => addStepUTC(start, scale, i));
       setAxisSlots(newSlots);
+
+      // 3) Fetch
       await getSensorGraphLog(truncatedTarget.toISOString(), scale, count);
 
-      requestAnimationFrame(() => {
+      // 4) Center the scroll after layout is ready (avoid NaN)
+      const centerAndScroll = () => {
+        const w = metricsRef.current.w || 0;
+        if (w <= 0) {
+          // try again on next frame when width is known
+          requestAnimationFrame(centerAndScroll);
+          return;
+        }
         const targetIndex = Math.floor(count / 2);
-        const targetX = targetIndex * spacing - (metricsRef.current.w / 2.1);
-        scrollRef.current?.scrollTo({ x: targetX, animated: true });
-      });
+        const x = targetIndex * spacing - w / 2;
+        if (Number.isFinite(x) && x >= 0) {
+          scrollRef.current?.scrollTo?.({ x, animated: true });
+        }
+      };
+      requestAnimationFrame(centerAndScroll);
 
     } catch (error) {
+      console.error('jumpToDate error:', error);
     } finally {
       setIsJumpingToDate(false);
+      jumpingRef.current = false;
     }
   }, [boardId, scale, spacing, getSensorGraphLog, isJumpingToDate]);
 
-  const handleDatePickerChange = useCallback((event: any, date?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-
-    if (event.type === 'set' && date) {
-      setSelectedDate(date);
-      if (Platform.OS === 'ios') {
-        setShowDatePicker(false);
-      }
-      jumpToDate(date);
-    } else if (event.type === 'dismissed') {
-      setShowDatePicker(false);
-    }
-  }, [jumpToDate]);
+  function openAndroidDateTime(initial: Date, cb: (finalDate: Date) => void) {
+    DateTimePickerAndroid.open({
+      value: initial,
+      mode: 'date',
+      onChange: (_e, d) => {
+        if (!d) return; // dismissed
+        const pickedDate = d;
+        DateTimePickerAndroid.open({
+          value: initial,
+          mode: 'time',
+          is24Hour: false,         // set true if you prefer
+          onChange: (_e2, t) => {
+            if (!t) return;       // dismissed
+            const final = new Date(
+              pickedDate.getFullYear(), pickedDate.getMonth(), pickedDate.getDate(),
+              t.getHours(), t.getMinutes(), 0, 0
+            );
+            cb(final);
+          },
+        });
+      },
+    });
+  }
 
   return (
     <View style={style.container}>
       <View style={style.container_header}>
-        <Text style={style.title}>Summary Graph of {sensor.sensor_type}</Text>
+        <Text style={style.title}>Summary Graph of{sensor.sensor_type}</Text>
         <TouchableOpacity
           style={style.datePickerButton}
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => {
+            if (isAndroid && needsDateTime(scale)) {
+              // Android + minute/hour/all → two-step
+              openAndroidDateTime(selectedDate, (finalDate) => {
+                setSelectedDate(finalDate);
+                jumpToDate(finalDate);
+              });
+            } else {
+              // iOS (supports 'datetime') OR Android date-only scales
+              setShowDatePicker(true);
+            }
+          }}
           disabled={isJumpingToDate}
         >
           <MaterialIcons name="date-range" size={15} color="black" />
@@ -351,6 +459,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
         <View style={{ overflow: 'hidden' }}>
           <LineChart
             data={points}
+
             height={220}
             initialSpacing={0}
             spacing={spacing}
@@ -363,12 +472,12 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
             maxValue={maxValue}
             scrollEventThrottle={16}
             onScroll={onScroll}
-            onScrollEndDrag={onScrollEnd}
+            // onScrollEndDrag={onScrollEnd}
             onMomentumScrollEnd={onScrollEnd}
             showVerticalLines
             scrollRef={scrollRef as any}
             showValuesAsDataPointsText={points.length <= 24}
-            curved
+            // curved
             dataPointsColor="#1A736A"
             dataPointsRadius={4}
             dataPointsWidth={2}
@@ -379,10 +488,15 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
             textFontSize={14}
             textShiftY={-15}
             textShiftX={-8}
+            // showValuesAsDataPointsText={false}
+            curved={false}
             lineGradient
-            animateOnDataChange
-            scrollAnimation
-            animationDuration={10}
+            animateOnDataChange={false}
+            scrollAnimation={false}
+          // lineGradient
+          // animateOnDataChange
+          // scrollAnimation
+          // animationDuration={10}
           />
         </View>
 
@@ -401,9 +515,19 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
       {showDatePicker && (
         <DateTimePicker
           value={selectedDate}
-          mode={scale === 'minute' || scale === 'hour' ? 'datetime' : 'date'}
+          mode={needsDateTime(scale) ? 'datetime' : 'date'} // iOS can do 'datetime'; Android non-datetime stays 'date'
           display="default"
-          onChange={handleDatePickerChange}
+          onChange={(event, date) => {
+            if (Platform.OS === 'android') setShowDatePicker(false);
+
+            if (event.type === 'set' && date) {
+              setSelectedDate(date);
+              if (Platform.OS === 'ios') setShowDatePicker(false);
+              jumpToDate(date);
+            } else if (event.type === 'dismissed') {
+              setShowDatePicker(false);
+            }
+          }}
         />
       )}
     </View>

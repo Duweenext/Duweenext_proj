@@ -1,5 +1,5 @@
 // useSensor.ts
-import {axiosMainInstance} from "@/src/api/apiManager";
+import { axiosMainInstance } from "@/src/api/apiManager";
 import axios from "axios";
 import { useCallback } from "react";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-query";
 import type {
     BackendSensorLogData,
+    BackendSensorLogPayload,
     SensorCurrentData,
     SensorDataBackend,
 } from "@/src/interfaces/sensor";
@@ -23,6 +24,8 @@ const sensorKeys = {
         ["sensor", "graph", boardId, scale, duration, end] as const,
     graphMerged: (boardId: string, scale: string) =>
         ["sensor", "graph-merged", boardId, scale] as const,
+    graphMeta: (boardId: string, scale: string) =>
+        ["sensor", "graph-meta", boardId, scale] as const,
 };
 
 type UseSensorReturn = {
@@ -34,6 +37,7 @@ type UseSensorReturn = {
     currentLoading: boolean;
 
     mergedGraph: BackendSensorLogData[] | undefined;
+    graphMetaData: BackendSensorLogPayload | undefined;
     isFetchingGraph: boolean;
 
     getSensorBasicInformation: () => Promise<SensorDataBackend[]>;
@@ -70,13 +74,25 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
 
     const getSensorGraphLog = useCallback(
         async (endISO: string, scale: string = graphScale, duration: number = 24) => {
+            console.log("Fetching sensor graph log", { boardId, scale, duration, endISO });
             const slice = await qc.fetchQuery({
                 queryKey: sensorKeys.graph(boardId, scale, duration, endISO),
                 staleTime: 0,
                 queryFn: async (): Promise<BackendSensorLogData[]> => {
                     const res = await axiosMainInstance.get(`/v1/sensors/${boardId}/sensor-logs/agg`, {
-                        params: { scale, lookback: duration, end: endISO, tz: "Asia/Bangkok" },
+                        params: { scale: scale, lookback: duration, end: endISO},
                     });
+
+                    const meta: BackendSensorLogPayload | undefined = { 
+                        count: res.data.count,
+                        startTime: res.data.startTime,
+                        endTime: res.data.endTime
+                     };
+
+                    if (meta) {
+                        qc.setQueryData<BackendSensorLogPayload>(sensorKeys.graphMeta(boardId, scale), meta);
+                    }
+                    console.log("Fetched sensor graph log", { data: res.data.data, meta });
                     return res.data.data as BackendSensorLogData[];
                 },
             });
@@ -112,6 +128,12 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
         queryKey: sensorKeys.graphMerged(boardId, graphScale),
         enabled: false,
         queryFn: async () => [] as BackendSensorLogData[],
+    });
+
+    const { data: graphMetaData } = useQuery({
+        queryKey: sensorKeys.graphMeta(boardId, graphScale),
+        enabled: false,                             
+        queryFn: async () => undefined as unknown as BackendSensorLogPayload,
     });
 
     const isFetchingGraph =
@@ -198,6 +220,7 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
         currentLoading,
 
         mergedGraph,
+        graphMetaData,
         isFetchingGraph,
 
         getSensorBasicInformation,

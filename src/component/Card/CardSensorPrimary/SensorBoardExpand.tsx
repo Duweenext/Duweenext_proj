@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { theme } from '@/theme';
 import TextFieldSensorValue from '@/src/component/TextFields/TextFieldSensorValue';
-import SensorChart from '../../Chart/SensorChart';
+import SensorChart from '../../Chart/SensorChart/SensorChart';
 import { Ionicons } from '@expo/vector-icons';
 import { useSensor } from '@/src/api/hooks/useSensor';
 import { BackendSensorLogData, SensorDataBackend } from '@/src/interfaces/sensor';
@@ -46,59 +46,9 @@ export const getSensorSuffix = (type : string) : string => {
   }
 };
 
-const generateTestSensorData = (sensorType: string): BackendSensorLogData[] => {
-  const testData: BackendSensorLogData[] = [];
-  const now = new Date();
-  const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); 
-
-  const sensorRanges = {
-    temperature: { min: 20, max: 35, baseline: 27.5 }, // °C
-    ph: { min: 6.0, max: 8.5, baseline: 7.2 },         // pH
-    ec: { min: 800, max: 1200, baseline: 1000 },       // µS/cm
-  };
-
-  const range = sensorRanges[sensorType.toLowerCase() as keyof typeof sensorRanges] || sensorRanges.temperature;
-
-  for (let day = 0; day < 30; day++) {
-    for (let reading = 0; reading < 4; reading++) {
-      const currentDate = new Date(oneMonthAgo.getTime() + day * 24 * 60 * 60 * 1000);
-
-      const hours = [6, 12, 16, 20][reading];
-      currentDate.setHours(hours, Math.floor(Math.random() * 60), Math.floor(Math.random() * 60));
-
-      const dailyVariation = Math.sin((day / 30) * Math.PI * 2) * (range.max - range.min) * 0.3;
-      const randomVariation = (Math.random() - 0.5) * (range.max - range.min) * 0.2;
-      const timeOfDayVariation = Math.sin((reading / 4) * Math.PI * 2) * (range.max - range.min) * 0.1;
-      
-      let value = range.baseline + dailyVariation + randomVariation + timeOfDayVariation;
-      value = Math.max(range.min, Math.min(range.max, value)); // Clamp to range
-
-      if (sensorType.toLowerCase() === 'temperature') {
-        value = Math.round(value * 10) / 10; // 1 decimal place
-      } else if (sensorType.toLowerCase() === 'ph') {
-        value = Math.round(value * 100) / 100; // 2 decimal places
-      } else if (sensorType.toLowerCase() === 'ec') {
-        value = Math.round(value); // No decimal places
-      }
-
-      const mockData: BackendSensorLogData = {
-        id: testData.length + 1,
-        board_id: "TEST_BOARD_123",
-        temperature: sensorType.toLowerCase() === 'temperature' ? value : 25.0,
-        ec: sensorType.toLowerCase() === 'ec' ? value : 1000,
-        ph: sensorType.toLowerCase() === 'ph' ? value : 7.0,
-        created_at: currentDate.toISOString(),
-      };
-      
-      testData.push(mockData);
-    }
-  }
-
-  return testData.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-};
-
 const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }) => {
-  const { setBoardThreshold, mergedGraph , sensorDataLoading} = useSensor(boardId);
+  const { setBoardThreshold, mergedGraph , sensorDataLoading, graphMetaData} = useSensor(boardId);
+  // console.log("Graph Meta Data: ", graphMetaData);
   const [selectedSensor, setSelectedSensor] = useState<SensorData>({
     id: sensor?.id ?? 0,
     name: sensor.sensor_type,
@@ -111,12 +61,6 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
     },
     historicalData: [
       { day: 'Day1', value: 5.6, x: 1, y: 5.6 },
-      { day: 'Day2', value: 4.8, x: 2, y: 4.8 },
-      { day: 'Day3', value: 5.4, x: 3, y: 5.4 },
-      { day: 'Day4', value: 6.5, x: 4, y: 6.5 },
-      { day: 'Day5', value: 7.5, x: 5, y: 7.5 },
-      { day: 'Day6', value: 8.1, x: 6, y: 8.1 },
-      { day: 'Day7', value: 7.9, x: 7, y: 7.9 },
     ],
   });
 
@@ -157,10 +101,8 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
 
     useEffect(() => {
     if (mergedGraph && mergedGraph.length > 0) {
-
-      const testData = generateTestSensorData(sensor.sensor_type);
       
-      const chartData = convertBackendDataToChart(testData);
+      const chartData = convertBackendDataToChart(mergedGraph);
       const latestValue = chartData.length > 0 ? chartData[chartData.length - 1].value : undefined;
       
       setSelectedSensor(prev => ({

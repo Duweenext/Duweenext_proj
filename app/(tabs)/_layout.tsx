@@ -9,7 +9,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-// ----- responsive helpers -----
 const getResponsiveSize = (size: number) => {
   const scale = screenWidth / 320;
   const newSize = size * scale;
@@ -22,9 +21,8 @@ const responsiveMarginTop = getResponsiveSize(14);
 const responsiveTabBarMargin = Math.max(screenWidth * 0.05, 20);
 const responsiveTabBarMarginBottom = Math.max(screenHeight * 0.018, 1);
 
-const TAB_BAR_HEIGHT = 80; // keep in sync with tabBarStyle.height
+const TAB_BAR_HEIGHT = 80; 
 
-// ----- Tab icon (lines-only when focused) -----
 function TabIcon({
   focused,
   icon,
@@ -69,10 +67,8 @@ function TabIcon({
       {focused && (
         <View
           style={{
-            height: 5,
             width: "50%",
             backgroundColor: themeStyle.colors.primary,
-            marginTop: 6,
             borderRadius: 15,
           }}
         />
@@ -113,7 +109,6 @@ export default function Layout() {
           elevation: 0,
           shadowOpacity: 0,
         },
-        // ✅ Global padding so every screen scrolls above the floating bar
         sceneStyle: {
           backgroundColor: "black",
           paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 12,

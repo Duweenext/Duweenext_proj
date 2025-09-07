@@ -25,6 +25,12 @@ export interface BackendSensorLogData {
   created_at: string;
 }
 
+export interface BackendSensorLogPayload {
+  count: number;
+  endTime: string;
+  startTime: string;
+}
+
 export interface SensorCurrentData extends BackendSensorLogData {
   ID: number;
   CreatedAt: string;

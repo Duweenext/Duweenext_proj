@@ -50,6 +50,7 @@ const TextFieldSensorValue = <T = string>({
           fontSize: fontSize,
           color: '#1A736A',  
           borderColor: '#E5E7EB',
+          
           // alignItems: 'center',
           // alignContent: 'center',
         }}

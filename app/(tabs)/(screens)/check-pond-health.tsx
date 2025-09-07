@@ -62,7 +62,7 @@ export default function CheckPondHealthScreen() {
 
   const [pendingFile, setPendingFile] = useState<any | null>(null);
 
-  const { diagnose, diagnoseResult, diagnosing, history_result } = usePondHealths();
+  const { diagnose, diagnoseResult, diagnosing, history_result, removeHistoryAt} = usePondHealths();
 
   const onRetake = () => { setConfirmVisible(false); setPendingFile(null); };
   const onContinue = async () => {
@@ -140,6 +140,7 @@ export default function CheckPondHealthScreen() {
               Tip: ${item.description_and_recommendation}`,
             })
           }
+          onDeleteItem={(id) => removeHistoryAt(id)}
         />
       </ScrollView>
 

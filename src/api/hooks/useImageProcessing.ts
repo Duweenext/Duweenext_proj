@@ -142,8 +142,8 @@ export function usePondHealths() {
         await persistHistory([]);
     };
 
-    const removeHistoryAt = async (index: number) => {
-        const next = history_result.filter((_, i) => i !== index);
+    const removeHistoryAt = async (id: string) => {
+        const next = history_result.filter(item => item._id !== id);
         await persistHistory(next);
     };
 

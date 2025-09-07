@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
-import TextFieldModal from '../TextFields/TextFieldModal';
+import TextFieldModal from '../TextFields/TextFieldModal/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
+import z from 'zod';
 
 interface ManualAddBoardModalProps {
   visible: boolean;
@@ -11,23 +12,37 @@ interface ManualAddBoardModalProps {
   onSubmit: (boardId: string) => void;
 }
 
+export const boardIdSchema = z.object({
+  boardId: z.string().trim()
+    .min(1, "Board ID is required")
+    .max(32, "Max 32 characters")
+    .regex(/^[A-Za-z0-9_-]+$/, "Use letters, numbers, hyphen, underscore"),
+})
+
+export type BoardIdForm = z.infer<typeof boardIdSchema>;
+
 const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
   visible,
   onClose,
   onSubmit,
 }) => {
   const [boardId, setBoardId] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = () => {
-    if (boardId.trim()) {
-      onSubmit(boardId.trim());
-      setBoardId(''); 
-      onClose();
+    const res = boardIdSchema.safeParse({ boardId });
+    if (!res.success) {
+      setError(res.error.issues[0]?.message ?? 'Invalid input');
+      return;
     }
+    onSubmit(boardId.trim());
+    setBoardId('');
+    onClose();
+    setError(null);
   };
 
   const handleClose = () => {
-    setBoardId(''); 
+    setBoardId('');
     onClose();
   };
 
@@ -53,15 +68,19 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
             <Text style={styles.description}>
               Locates the board ID on the right side of the board.
             </Text>
-            
+
             {/* Board ID Input */}
-            <TextFieldModal
-              value={boardId}
-              onChangeText={setBoardId}
-              placeholder="Enter board ID"
-              textColor={theme.colors.black}
-              borderColor={theme.colors.black}
-            />
+            <View>
+              <TextFieldModal
+                value={boardId}
+                onChangeText={setBoardId}
+                placeholder="Enter board ID"
+                textColor={theme.colors.black}
+                borderColor={theme.colors.black}
+              />
+
+              {error && <Text style={{ color: theme.colors.fail, marginTop: 4, fontSize: 12 }}>{error}</Text>}
+            </View>
             {/* Submit Button */}
             <View style={styles.buttonContainer}>
               <ButtonModalL

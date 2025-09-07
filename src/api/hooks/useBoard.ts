@@ -1,4 +1,4 @@
-import {axiosMainInstance} from "@/src/api/apiManager";
+import { axiosMainInstance } from "@/src/api/apiManager";
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios"; // Import axios to check for AxiosError
 import { BoardConnectionStatus, BoardRelationship } from "@/src/interfaces/board";
@@ -36,6 +36,9 @@ type UseBoardReturn = {
     createBoardRelationship: (payload: BoardRegistrationData) => Promise<any>;
     setBoardFrequency: (boardId: string, boardFrequency: number) => Promise<any>;
     setBoardConnection: (relationship_id: number, status: BoardConnectionStatus) => Promise<any>;
+    editBoardName: (boardId: string, boardName: string) => Promise<any>;
+    deleteBoard: (relationship_id: number) => Promise<any>;
+    verifyConnectionPassword: (boardId: string, connectionPassword: string) => Promise<any | null>;
 };
 
 export function useBoard(): UseBoardReturn {
@@ -72,12 +75,13 @@ export function useBoard(): UseBoardReturn {
             queryFn: async () => {
                 try {
                     const res = await axiosMainInstance.get(`/v1/board/${boardId}`);
-                    return res.data; // keep your previous shape
+                    return res.data;
                 } catch (err) {
                     if (axios.isAxiosError(err) && err.response?.status === 404) return null;
                     throw err;
                 }
             },
+            
         });
 
     // 3) Create relationship
@@ -95,10 +99,21 @@ export function useBoard(): UseBoardReturn {
             });
         },
         onError: (error: any) => {
+            let message = 'Something went wrong.';
+            if (axios.isAxiosError(error)) {
+                // custom message from backend
+                const apiMsg = error.response?.data?.data || error.response?.data?.message;
+                if (apiMsg) {
+                    message = apiMsg;
+                } else if (error.message) {
+                    message = error.message;
+                }
+            }
+
             Toast.show({
                 type: 'error',
                 text1: 'Add failed',
-                text2: error.message ?? 'Something went wrong.',
+                text2: 'Board already exists in you application',
             });
         },
     });
@@ -141,8 +156,76 @@ export function useBoard(): UseBoardReturn {
         },
     });
 
-    // Optional: if other parts of the app might change boards, you can invalidate here.
-    // Remove this whole effect if you don't need event-driven refreshes.
+    const editBoardName = useMutation({ 
+        mutationFn: async ({ boardName, boardId }: {boardName: string, boardId: string}) => {
+            const res = await axiosMainInstance.put(`/v1/board/name/${boardId}`, {
+                board_name: boardName,
+            });
+            return res.data.data;
+        },
+        onSuccess: () => {
+            if (userId) qc.invalidateQueries({ queryKey: boardKeys.user(userId) });
+            Toast.show({
+                type: 'success',
+                text1: 'Board Name Updated',
+                text2: 'The board name has been updated successfully.',
+            });
+        },
+    });
+
+    const deleteBoard = useMutation({
+        mutationFn: async (relationship_id: number) => {
+            const res = await axiosMainInstance.delete(`/v1/board-relationships/delete/${relationship_id}`);
+            return res.data.data;
+        },
+        onSuccess: () => {
+            if (userId) qc.invalidateQueries({ queryKey: boardKeys.user(userId) });
+            Toast.show({
+                type: 'success',
+                text1: 'Board Deleted',
+                text2: 'The board has been removed from your account.',
+            });
+        },
+        onError: (error: any) => {
+            Toast.show({
+                type: 'error',
+                text1: 'Delete failed',
+                text2: error.message ?? 'Something went wrong.',
+            });
+        },
+    });
+
+    const verifyConnectionPassword = useMutation({
+        mutationFn: async ({boardId, connectionPassword}: {boardId: string, connectionPassword: string}) => {
+            try {
+                const res = await axiosMainInstance.post(`/board-relationships/verify/${boardId}`, {
+                    con_password: connectionPassword,
+                });
+                return res.data;
+            } catch (err) {
+                if (axios.isAxiosError(err) && err.response?.status === 404) return null;
+                throw err;
+            }
+        },
+        onError: (error: any) => {
+            let message = 'Something went wrong.';
+            if (axios.isAxiosError(error)) {
+                const apiMsg = error.response?.data?.data || error.response?.data?.message;
+                if (apiMsg) {
+                    message = apiMsg;
+                } else if (error.message) {
+                    message = error.message;
+                }
+            }
+
+            Toast.show({
+                type: 'error',
+                text1: 'Verification failed',
+                text2: message,
+            });
+        },
+    });
+
     useEffect(() => {
         // no-op placeholder; keep or delete
     }, []);
@@ -165,7 +248,16 @@ export function useBoard(): UseBoardReturn {
         setBoardFrequency: (boardId: string, boardFrequency: number) =>
             setBoardFrequencyMut.mutateAsync({ boardId, boardFrequency }),
 
+        verifyConnectionPassword: (boardId: string, connectionPassword: string) =>
+            verifyConnectionPassword.mutateAsync({ boardId, connectionPassword }),
+
         setBoardConnection: (relationship_id: number, status: BoardConnectionStatus) =>
             setBoardConnectionMut.mutateAsync({ relationship_id, status }),
+
+        editBoardName: (boardId: string, boardName: string) => 
+            editBoardName.mutateAsync({ boardId, boardName }),
+
+        deleteBoard: (relationship_id: number) =>
+            deleteBoard.mutateAsync(relationship_id),
     };
 }

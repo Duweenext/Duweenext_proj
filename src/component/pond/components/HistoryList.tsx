@@ -9,9 +9,10 @@ import { ScrollView } from 'react-native-gesture-handler';
 type Props = {
   items: PondDiagnoseHistory[];
   onShareItem?: (item: PondDiagnoseHistory) => void;
+  onDeleteItem: (id: string) => void;
 };
 
-export default function HistoryList({ items, onShareItem }: Props) {
+export default function HistoryList({ items, onShareItem , onDeleteItem}: Props) {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [showFromPicker, setShowFromPicker] = useState(false);
@@ -131,7 +132,7 @@ export default function HistoryList({ items, onShareItem }: Props) {
 
         ListHeaderComponentStyle={{ marginBottom: 6 }}
         renderItem={({ item }) => (
-          <HistoryCard item={item} onShareItem={onShareItem} />
+          <HistoryCard item={item} onShareItem={onShareItem} onDelete={onDeleteItem} />
         )}
         contentContainerStyle={{ paddingBottom: 40 }}
       />
@@ -142,18 +143,19 @@ export default function HistoryList({ items, onShareItem }: Props) {
 function HistoryCard({
   item,
   onShareItem,
+  onDelete,
 }: {
   item: PondDiagnoseHistory
   onShareItem?: (i: PondDiagnoseHistory) => void;
+  onDelete: (id: string) => void;
 }) {
-  const { removeHistoryAt } = usePondHealths();
   const confirmDelete = () => {
     if (Platform.OS === 'web') {
-      removeHistoryAt(item._ts); // web: call directly
+      onDelete(item._id); // web: call directly
     } else {
       Alert.alert('Delete entry', 'Remove this history item?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => removeHistoryAt(item._ts) },
+        { text: 'Delete', style: 'destructive', onPress: () => onDelete(item._id) },
       ]);
     }
   };

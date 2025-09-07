@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import TextFieldVerificationCode from '../TextFields/TextFieldVerificationCode';
 import ButtonUnderline from '../Buttons/ButtonUnderline';
-import TextFieldModal from '../TextFields/TextFieldModal';
+import TextFieldModal from '../TextFields/TextFieldModal/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
 import { themeStyle } from '@/src/theme';
 
@@ -65,7 +65,7 @@ const ModalChangeInformation: React.FC<ModalChangeInformationProps> = ({
   visible,
   title,
   titleColor = themeStyle.colors.fail,
-  titleIcon,                       // 👈 make sure we destructure it
+  titleIcon,                       
   descriptionText,
   instructionText,
   errorMessage,
@@ -185,14 +185,12 @@ const ModalChangeInformation: React.FC<ModalChangeInformationProps> = ({
               return (
                 <View key={`field-${idx}`} style={{ marginBottom: 16, width: '100%' }}>
                   <TextFieldModal
-                    mode={field.mode ?? (field.type === 'text' ? 'text' : 'password-old')}
+                    type='password'
                     inputKind={field.inputKind ?? 'none'}
                     name={field.name}
                     placeholder={field.placeholder || ''}
                     value={field.value || ''}
                     onChangeText={field.onChangeText || (() => {})}
-                    confirmAgainst={field.confirmAgainst}
-                    oldPasswordError={field.oldPasswordError}
                   />
                 </View>
               );

@@ -10,14 +10,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
-import TextFieldModal from '@/src/component/TextFields/TextFieldModal';
+import TextFieldModal from '@/src/component/TextFields/TextFieldModal/TextFieldModal';
 import ButtonModalL from '@/src/component/Buttons/ButtonModalL';
+import { z } from "zod";
 
 interface ConnectionPasswordModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (password: string) => void;
-  submitting?: boolean;
+  loading?: boolean;
 }
 
 const COLORS = {
@@ -31,18 +32,30 @@ const COLORS = {
   error: '#ef4444',
 };
 
+export const connectionPasswordSchema = z.object({
+  connectionPassword: z.string().trim().min(1, "Connection password is required"),
+});
+
+export type ConnectionPasswordForm = z.infer<typeof connectionPasswordSchema>;
+
 const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
   visible,
   onClose,
   onSubmit,
-  submitting = false,
+  loading = false,
 }) => {
 
   const [password, setPassword] = React.useState<string>("");
+  const [error, setError] = React.useState<string | null>(null);
 
   const onSubmitForm = (data: { connectionPassword: string }) => {
+    const res = connectionPasswordSchema.safeParse(data);
+    if (!res.success) {
+      setError(res.error.issues[0]?.message ?? 'Invalid input');
+      return;
+    }
+    setError(null);
     onSubmit(data.connectionPassword);
-    onClose();
   };
 
   return (
@@ -61,36 +74,38 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Connection Password</Text>
-            <TouchableOpacity
+            {!loading && <TouchableOpacity
               onPress={onClose}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Close dialog"
             >
               <Ionicons name="close" size={22} color="#ffffff" />
-            </TouchableOpacity>
+            </TouchableOpacity>}
           </View>
 
           <View style={styles.content}>
             <View>
               <Text style={styles.label}>Connection password</Text>
-                  <TextFieldModal
-                    mode="password-old"
-                    onChangeText={setPassword}
-                    value={password}
-                    placeholder="Enter connection password"
-                    borderColor={theme.colors.black}
-                    secureToggle={true}
-                  />
+              <TextFieldModal
+                type="password"
+                onChangeText={setPassword}
+                value={password}
+                placeholder="Enter connection password"
+                borderColor={theme.colors.black}
+                secureToggle={true}
+              />
             </View>
+            {error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.buttonContainer}>
               <ButtonModalL
-                text={submitting ? 'Connecting...' : 'Connect'}
+                text={'Connect'}
                 textColor={theme.colors.white}
                 filledColor={theme.colors.black}
                 size='L'
                 onPress={() => onSubmitForm({ connectionPassword: password })}
                 marginBottom={0}
+                loading={loading}
               />
             </View>
           </View>

@@ -37,6 +37,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const [wifiInfo, setWifiInfo] = useState<WifiConfig>();
 
   const { provisionWifi } = useBle();
+  const [isProvisioning, setIsProvisioning] = useState<boolean>(false);
 
   const handleAddBoard = () => setModalVisible("option");
   const handleCloseModal = () => setModalVisible("");
@@ -47,8 +48,13 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const handleConnectedPasswordModal = () => setModalVisible("connect-password");
   
 
-  const handleManualSubmit = async (password: string) => {
+  const handleConnectionPasswordSubmit = async (password: string) => {
     setSubmitting(true);
+    if(isProvisioning)
+    {
+      await verifyConPasswordAndSubmit(password);
+      return;
+    }
     if (user?.id)
       await createBoardRelationship({
         board_id: selectedBoardId,
@@ -58,6 +64,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
       }).then(() => {
         setSubmitting(false);
       });
+
+    setModalVisible("");
   }
 
   const handleManualConnect = async (boardId: string) => {
@@ -85,6 +93,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     setSubmitting(true);
     setSelectedBoardId(boardId);
     setSelectedMacAddress(macAddress);
+    setIsProvisioning(true);
     try {
       const res = await verifyBoardInformation(boardId);
       if(res)
@@ -102,12 +111,14 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
       Alert.alert("Error", "An unexpected error occurred while verifying the board.");
     } finally {
       setSubmitting(false);
+      setIsProvisioning(false);
     }
   }
 
   const handleChangeBoardWifiCredentials = (values: WifiConfig) => {
     setWifiInfo(values);
     setModalVisible("connect-password");
+    setIsProvisioning(true);
   };
 
   const verifyConPasswordAndSubmit = async (password: string) => {
@@ -136,6 +147,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     console.log("Hello : " + selectedMacAddress)
     console.log("Selected Board ID: " + selectedBoardId)
     console.log("WiFi Credentials: ", { ssid: values.ssid, wifiPassword: values.wifiPassword })
+    setIsProvisioning(true);
 
     if (!selectedMacAddress) {
       console.error("No MAC address selected!");
@@ -171,6 +183,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     } catch (err) {
       console.error("Provisioning/Pairing failed:", err);
       Alert.alert("Provisioning Failed", `Could not complete the setup process: ${(err as Error)?.message || String(err)}`);
+    } finally {
+      setIsProvisioning(false);
     }
   }
 
@@ -220,7 +234,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
       <ConnectionPasswordModal
         visible={modalVisible === "connect-password"}
         onClose={handleCloseModal}
-        onSubmit={isBoardExist ? verifyConPasswordAndSubmit : handleManualSubmit}
+        onSubmit={isProvisioning ? verifyConPasswordAndSubmit : handleConnectionPasswordSubmit}
         loading={submitting}
       />
     </View>

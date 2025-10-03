@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSensor } from '@/src/api/hooks/useSensor';
 import DropDownTemplate from '../../Dropdown/DropDownTemplate';
 import LoadingSpinner from '../../Others/LoadingIndicator';
+import { useTranslation } from 'react-i18next';
 
 
 interface MeasurementDashboardProps {
@@ -26,6 +27,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({
   boardFrequency,
   board_id,
 }) => {
+  const {t} = useTranslation();
   const [frequency, setFrequency] = useState<number>(boardFrequency);
   const [isCustomEditFrequency, setIsCustomEditFrequency] = useState<boolean>(false);
   const { getSensorBasicInformation, measureCurrent, sensorData, currentSensorData, sensorDataLoading, currentLoading } = useSensor(board_id);
@@ -40,8 +42,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({
 
   useEffect(() => {
     const fetchCurrentSensorData = async () => {
-      await measureCurrent().then(() => {
-      });
+      await measureCurrent()
     }
     if(!currentLoading)
     {
@@ -63,17 +64,17 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Measurement</Text>
+        <Text style={styles.sectionTitle}>{t('Measurements')}</Text>
 
         <View style={styles.measurementCard}>
           <View style={[styles.measurementRow, { gap: gaugeGap }]}>
-            <HalfCircleGauge title="pH" value={currentSensorData?.ph ?? 0} unit="" min={0} max={14} threshold_max={7} threshold_min={5.5} extraHorizontalPadding={theme.spacing.md * 2} />
-            <HalfCircleGauge title="Temperature" value={currentSensorData?.temperature ?? 0} unit="°C" min={-10} max={50} threshold_max={35} threshold_min={30} extraHorizontalPadding={theme.spacing.md * 2} />
-            <HalfCircleGauge title="EC" value={currentSensorData?.ec ?? 0} unit="ms/cm" min={0} max={700} threshold_max={700} threshold_min={500} extraHorizontalPadding={theme.spacing.md * 2} />
+            <HalfCircleGauge title={t('pH')} value={currentSensorData?.ph ?? 0} unit="" min={0} max={14} threshold_max={7} threshold_min={5.5} extraHorizontalPadding={theme.spacing.md * 2} />
+            <HalfCircleGauge title={t('Temperature')} value={currentSensorData?.temperature ?? 0} unit="°C" min={-10} max={50} threshold_max={35} threshold_min={30} extraHorizontalPadding={theme.spacing.md * 2} />
+            <HalfCircleGauge title={t('EC')} value={currentSensorData?.ec ?? 0} unit="ms/cm" min={0} max={700} threshold_max={700} threshold_min={500} extraHorizontalPadding={theme.spacing.md * 2} />
           </View>
 
           <ButtonModalL
-            text={"Measure"}
+            text={t('Measure')}
             onPress={handleMeasureAgain}
             filledColor={theme.colors.primary}
             textColor={theme.colors.white}
@@ -83,15 +84,16 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({
 
         </View>
         <View style={styles.frequencySection}>
-          <Text style={styles.sectionSubtitle}>Board Frequency:</Text>
-          {!isCustomEditFrequency ? <DropDownTemplate
-            options={[`every ${frequency} second`, 'every 1 second', 'every 5 second', 'every 10 second', 'every 15 second', 'every 30 second', 'every 60 second', 'custom']}
-            label={`selected: ${frequency} s`}
+          <Text style={styles.sectionSubtitle}>{t('Board Frequency')}:</Text>
+          {!isCustomEditFrequency ? 
+          <DropDownTemplate
+            options={[`${t('every')} ${frequency} ${t('second')}`, `${t('every')} 1 ${t('second')}`, `${t('every')} 5 ${t('second')}`, `${t('every')} 10 ${t('second')}`, `${t('every')} 15 ${t('second')}`, `${t('every')} 30 ${t('second')}`, `${t('every')} 60 ${t('second')}`, t('custom')]}
+            label={`${t('selected')}: ${frequency} s`}
             onSelect={(value) => {
               if (value === 'custom') {
                 setIsCustomEditFrequency(true);
               } else {
-                const match = value.match(/every (\d+) second/);
+                const match = value.match(/('every') (\d+) second/);
                 if (match) {
                   const newFrequency = parseInt(match[1], 10);
                   setFrequency(newFrequency);
@@ -127,7 +129,7 @@ const CardBoardExpanded: React.FC<MeasurementDashboardProps> = ({
 
         <View style={styles.section}>
           <View style={styles.sensorHeaderContainer}>
-            <Text style={styles.sectionTitle}>Sensors</Text>
+            <Text style={styles.sectionTitle}>{t('Sensors')}</Text>
           </View>
           <View>
             {sensorData?.map((sensor) => (

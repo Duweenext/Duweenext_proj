@@ -20,6 +20,7 @@ import { theme } from "@/theme";
 import LoadingSpinner from "../Others/LoadingIndicator";
 import { useBle } from "@/src/ble/useBle.native";
 import { CardBoardModal } from "../Card/CardBoardModal";
+import { useTranslation } from "react-i18next";
 
 type BleConfigModalProp = {
   visible: boolean;
@@ -43,7 +44,7 @@ const BleConfigModal: React.FC<BleConfigModalProp> = ({
   handleConnectBoard,
   loading = false,
 }) => {
-  
+  const { t } = useTranslation();
   const { isScanning, devices, startScan, stopScan, connectAndReadBoardId } = useBle();
   const [connectingDeviceId, setConnectingDeviceId] = useState<string | null>(null);
 
@@ -101,7 +102,7 @@ const BleConfigModal: React.FC<BleConfigModalProp> = ({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
-            <Text style={styles.title}>Add Board</Text>
+            <Text style={styles.title}>{t("Add Board")}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
@@ -111,12 +112,12 @@ const BleConfigModal: React.FC<BleConfigModalProp> = ({
               <LoadingSpinner message="Verifying Board ID..." />
             ) : (
               <>
-                <Text style={styles.subtitle}>Select your device from the list below.</Text>
+                <Text style={styles.subtitle}>{t("Select your device from the list below.")}</Text>
                 <FlatList
                   data={data}
                   renderItem={renderItem}
                   keyExtractor={(item) => item.id}
-                  ListEmptyComponent={isScanning ? <LoadingSpinner message="Scanning..." /> : <Text style={styles.empty}>{"No devices found."}</Text>}
+                  ListEmptyComponent={isScanning ? <LoadingSpinner message={t("Scanning...")} /> : <Text style={styles.empty}>{t("No devices found.")}</Text>}
                 />
               </>
             )}

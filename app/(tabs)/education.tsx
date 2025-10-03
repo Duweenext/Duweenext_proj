@@ -5,6 +5,7 @@ import { EDUCATION_TOPICS } from '../../src/data/educationData';
 import CardEducation from '@/src/component/Card/CardEducation';
 import CardFAQ from '@/src/component/Card/CardFAQ';
 import BackgroundWrapper from '@/src/component/Layout/BackgroundWrapper';
+import { t } from 'i18next';
 
 const spacing = 12;
 const numColumns = 2;
@@ -23,7 +24,7 @@ export default function EducationIndex() {
         numColumns={numColumns}
         renderItem={({ item }) => (
           <CardEducation
-            title={item.title}
+            title={t(item.title)}
             icon={item.heroIcon}
             onPress={() => router.push({ pathname: '/education/[slug]', params: { slug: item.slug } })}
             style={{ width: cardWidth }}

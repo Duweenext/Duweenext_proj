@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/context/auth_context";
 import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export default function Page() {
   const { isAuthenticated, isLoading } = useAuth();

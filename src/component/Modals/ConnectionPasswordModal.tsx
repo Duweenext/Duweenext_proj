@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { use, useState } from 'react';
 import {
   Modal,
   View,
@@ -13,6 +13,7 @@ import { theme } from '@/theme';
 import TextFieldModal from '@/src/component/TextFields/TextFieldModal/TextFieldModal';
 import ButtonModalL from '@/src/component/Buttons/ButtonModalL';
 import { z } from "zod";
+import { useTranslation } from 'react-i18next';
 
 interface ConnectionPasswordModalProps {
   visible: boolean;
@@ -44,7 +45,7 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
   onSubmit,
   loading = false,
 }) => {
-
+  const {t} = useTranslation();
   const [password, setPassword] = React.useState<string>("");
   const [error, setError] = React.useState<string | null>(null);
 
@@ -73,7 +74,7 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
         <View style={styles.card}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Connection Password</Text>
+            <Text style={styles.title}>{t("Connection password")}</Text>
             {!loading && <TouchableOpacity
               onPress={onClose}
               style={styles.closeBtn}
@@ -86,12 +87,12 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
 
           <View style={styles.content}>
             <View>
-              <Text style={styles.label}>Connection password</Text>
+              <Text style={styles.label}>{t("Connection password")}</Text>
               <TextFieldModal
                 type="password"
                 onChangeText={setPassword}
                 value={password}
-                placeholder="Enter connection password"
+                placeholder={t("Enter Connection password")}
                 borderColor={theme.colors.black}
                 secureToggle={true}
               />
@@ -99,7 +100,7 @@ const ConnectionPasswordModal: React.FC<ConnectionPasswordModalProps> = ({
             {error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.buttonContainer}>
               <ButtonModalL
-                text={'Connect'}
+                text={t("Connect")}
                 textColor={theme.colors.white}
                 filledColor={theme.colors.black}
                 size='L'

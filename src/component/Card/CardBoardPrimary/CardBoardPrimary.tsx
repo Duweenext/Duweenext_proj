@@ -20,15 +20,17 @@ import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
 import IconButton from '../../Buttons/IconButton';
 import UnderlineTextField from '../../TextFields/TextFieldUnderline';
 import DeleteConfirmModal from '../../Modals/ConfirmDelete';
+import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 
 const displayStatusMap = {
-    active: 'Connected',
-    inactive: 'Disconnected',
+    active: t('Connected'),
+    inactive: t('Disconnected'),
 } as const;
 
 const displayStatusActionLabel = {
-    active: 'Disconnect',
-    inactive: 'Connect',
+    active: t('Disconnect'),
+    inactive: t('Connect'),
 }
 
 interface Esp32CardProps {
@@ -68,6 +70,7 @@ const variants: Record<
 const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     board,
 }) => {
+    const {t} = useTranslation();
     const mode = board?.board_status || 'inactive' as BoardConnectionStatus;
     const [boardName, setBoardName] = useState(board.board_name || 'Unnamed Board');
     const [expanded, setExpanded] = useState(false);
@@ -125,6 +128,8 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
         }
     }, [board.updated_at, board.board_status, tick]);
 
+    const displayStatus = t(displayStatusMap[mode])
+
     return (
         <View>
             <TouchableOpacity onPress={handleExpand} disabled={mode !== 'active' || isEditBoardName}>
@@ -154,17 +159,16 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                                             fontFamily: theme.fontFamily.medium,
                                             lineHeight: theme.fontSize.header1 * 1.2,
                                             paddingHorizontal: 0,
-                                            paddingVertical: 0, // avoid height drift
+                                            paddingVertical: 0, 
                                         }}
-                                        // reuse measured width (fallback to a min width)
                                         style={{ width: Math.max(titleWidth ?? 10, 120) }}
-                                        width={titleWidth} // optional: if your component reads `width` prop
+                                        width={titleWidth}
                                         placeholder=""
                                     />
                                 }
                                 {!isEditBoardName ?
                                     <ButtonCard
-                                        text={'edit'}
+                                        text={t('edit')}
                                         filledColor={theme.colors.warning}
                                         borderColor=''
                                         width={50}
@@ -208,16 +212,16 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                                 </Text>
                             )}
                             <Text style={[styles.description, { color: textColor }]}>
-                                Running: {board.board_status === 'active' ? runningTimeActive : lastActive}
+                                {t('Running')}: {board.board_status === 'active' ? runningTimeActive : lastActive}
                             </Text>
                             <Text style={[styles.description, { color: textColor }]}>
-                                Status: {displayStatusMap[mode]}
+                                {t('Status')}: {displayStatus}
                             </Text>
                         </View>
                         <View style={[styles.leftsection, { gap: mode === "inactive" ? 32 : 18 }]}>
 
                             <ButtonCard
-                                text={'delete'}
+                                text={t('delete')}
                                 filledColor={buttonBg}
                                 textColor={buttonText}
                                 onPress={() => setModal("delete")}

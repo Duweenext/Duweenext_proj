@@ -3,6 +3,7 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
 import ButtonModalXL from '../Buttons/ButtonModalXL';
+import { useTranslation } from 'react-i18next';
 
 interface AddBoardModalProps {
     visible: boolean;
@@ -17,6 +18,8 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({
     onSelectManual,
     onSelectBLE,
 }) => {
+    const {t} = useTranslation();
+
     return (
         <Modal
             visible={visible}
@@ -29,7 +32,7 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({
                     {/* Header */}
                     <View style={styles.header}>
                         {/* <View style={styles.header}/> */}
-                        <Text style={styles.title}>Add board</Text>
+                        <Text style={styles.title}>{t("Add Board")}</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                             <Ionicons name="close" size={24} color="white" />
                         </TouchableOpacity>
@@ -40,9 +43,9 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({
                         {/* <Text style={styles.subtitle}>Choose a mode to add a board.</Text> */}
                         <View style={styles.content}>
 
-                            <Text style={styles.description}>Manual mode requires a Board ID.</Text>
+                            <Text style={styles.description}>{t("Manual mode requires a Board ID.")}</Text>
                             <ButtonModalXL
-                                text="Manual"
+                                text={t("Manual")}
                                 filledColor="#2c5f54"
                                 textColor="white"
                                 onPress={onSelectManual}
@@ -54,9 +57,9 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({
 
                             {/* BLE Button */}
 
-                            <Text style={styles.description}>BLE mode scans nearby devices.</Text>
+                            <Text style={styles.description}>{t("BLE mode scans nearby devices.")}</Text>
                             <ButtonModalXL
-                                text="BLE"
+                                text={t("BLE")}
                                 filledColor="#2c5f54"
                                 textColor="white"
                                 onPress={onSelectBLE}
@@ -69,11 +72,11 @@ const AddBoardModal: React.FC<AddBoardModalProps> = ({
                     </View>
                     <View style={styles.instructionsOuterContainer}>
                         <View style={styles.instructionsContainer}>
-                            <Text style={styles.instructionsTitle}>Instructions:</Text>
-                            <Text style={styles.instructionItem}>1. To register the board you must use BLE options</Text>
-                            <Text style={styles.instructionItem}>2. To register the board you must use BLE options</Text>
-                            <Text style={styles.instructionItem}>3. To register the board you must use BLE options</Text>
-                            <Text style={styles.instructionItem}>4. To register the board you must use BLE options</Text>
+                            <Text style={styles.instructionsTitle}>{t("Instructions:")}</Text>
+                            <Text style={styles.instructionItem}>1. {t("To register the board you must use BLE options")}</Text>
+                            <Text style={styles.instructionItem}>2. {t("To Change wifi credentials of the board you must use BLE options")}</Text>
+                            <Text style={styles.instructionItem}>3. {t("You can add registered board by Manual option")}</Text>
+                            <Text style={styles.instructionItem}>4. {t("To use Manual option you must know MAC address or UUID of board")}</Text>
                         </View>
                     </View>
                     {/* Instructions Section */}

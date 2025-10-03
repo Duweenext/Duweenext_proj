@@ -3,9 +3,12 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from '@/theme';
 import SensorBoardExpand from "./SensorBoardExpand";
 import { SensorDataBackend } from "@/src/interfaces/sensor";
+import { useTranslation } from "react-i18next";
 
 const SensorTab: React.FC<{ sensor: SensorDataBackend , board_uuid: string}> = ({ sensor , board_uuid}) => {
     const [expanded, setExpanded] = useState(false);
+
+    const {t} = useTranslation();
 
     return (
         <View>
@@ -17,7 +20,7 @@ const SensorTab: React.FC<{ sensor: SensorDataBackend , board_uuid: string}> = (
                 }
                 ]}>
                     <View style={styles.sensorInfo}>
-                        <Text style={styles.sensorName}>{sensor.sensor_type}</Text>
+                        <Text style={styles.sensorName}>{t(sensor.sensor_type)}</Text>
                     </View>
                     <View style={styles.sensorActions}>
                         <Text style={styles.chevron}>›</Text>

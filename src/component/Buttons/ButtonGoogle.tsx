@@ -36,9 +36,7 @@ const ButtonGoogle: React.FC<ButtonGoogleProps> = ({
     >
       <View style={styles.content}>
         <Image
-          source={{
-            uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/2048px-Google_%22G%22_logo.svg.png',
-          }}
+          source={require('@/assets/icons/google.png')}
           style={styles.googleIcon}
         />
         <Text style={styles.text}>{text}</Text>

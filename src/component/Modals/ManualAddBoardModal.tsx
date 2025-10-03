@@ -5,6 +5,7 @@ import { theme } from '@/theme';
 import TextFieldModal from '../TextFields/TextFieldModal/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
 import z from 'zod';
+import { useTranslation } from 'react-i18next';
 
 interface ManualAddBoardModalProps {
   visible: boolean;
@@ -26,6 +27,7 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const {t} = useTranslation();
   const [boardId, setBoardId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +59,7 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
         <View style={styles.modalContainer}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Add board</Text>
+            <Text style={styles.title}>{t("Add Board")}</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
@@ -66,7 +68,7 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
           {/* Content */}
           <View style={styles.content}>
             <Text style={styles.description}>
-              Locates the board ID on the right side of the board.
+              {t("Locates the board ID on the right side of the board.")}
             </Text>
 
             {/* Board ID Input */}
@@ -74,7 +76,7 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
               <TextFieldModal
                 value={boardId}
                 onChangeText={setBoardId}
-                placeholder="Enter board ID"
+                placeholder={t("Enter board ID")}
                 textColor={theme.colors.black}
                 borderColor={theme.colors.black}
               />
@@ -84,7 +86,7 @@ const ManualAddBoardModal: React.FC<ManualAddBoardModalProps> = ({
             {/* Submit Button */}
             <View style={styles.buttonContainer}>
               <ButtonModalL
-                text="Submit"
+                text={t("Submit")}
                 filledColor="#000000"
                 textColor="white"
                 onPress={handleSubmit}

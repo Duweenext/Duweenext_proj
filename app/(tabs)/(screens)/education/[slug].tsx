@@ -7,6 +7,7 @@ import { getTopicBySlug } from '../../../../src/data/educationData';
 import type { EduSection } from '../../../../src/interfaces/typesEducation'; // or your updated path
 import { themeStyle } from '../../../../src/theme';
 import TopBar from '@/src/component/NavBar/TopBar';
+import { t } from 'i18next';
 
 export default function EducationDetail() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -16,7 +17,7 @@ export default function EducationDetail() {
   if (!topic) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Topic not found.</Text>
+        <Text>{t('Topic not found.')}</Text>
       </View>
     );
   }
@@ -59,7 +60,7 @@ export default function EducationDetail() {
               alignItems: 'center',
             }}
           >
-            {topic.title}
+            {t(topic.title)}
           </Text>
           </View>
           {/* Hero Icon in rounded bordered box */}
@@ -93,7 +94,7 @@ export default function EducationDetail() {
                 width: '80%',
               }}
             >
-              {`"${topic.tagline}"`}
+              {`"${t(topic.tagline)}"`}
             </Text>
           )}
 
@@ -162,7 +163,7 @@ const Section = ({
             fontSize: themeStyle.fontSize.description,
           }}
         >
-          {section.title}
+          {t(section.title)}
         </Text>
       </View>
     ) : null;
@@ -198,7 +199,7 @@ const Section = ({
                 lineHeight: 22,
               }}
             >
-              {section.text}
+              {t(section.text)}
             </Text>
           </Body>
         </View>

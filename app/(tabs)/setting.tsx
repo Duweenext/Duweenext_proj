@@ -8,46 +8,55 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme, themeStyle } from '@/theme';
 import { SettingCard } from '@/src/component/Card/SettingCard';
+import { useUser } from '@/src/api/hooks/useUser';
+import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
+import { useTranslation } from 'react-i18next';
 
 const Setting: React.FC = () => {
   const router = useRouter();
   const [lang, setLang] = useState<'en' | 'th'>('th');
   const [langOpen, setLangOpen] = useState(false);
-  const PICKER_SHIFT_RIGHT = 80;  
+  const { userLanguage, updateLocale } = useUser();
+
+  console.log('userLanguage', userLanguage);
+  const { i18n, t } = useTranslation();
 
   const cardSpacing = 14;
 
-  const onPickLang = (code: 'en' | 'th') => {
+  const onPickLang = async (code: "en" | "th") => {
     setLang(code);
+    i18n.changeLanguage(code);
+    await updateLocale(code);
     setLangOpen(false);
   };
 
   return (
-    <View style={{ 
-        flexDirection:'column', 
+    <PullToRefreshScreen >
+      <View style={{
+        flexDirection: 'column',
         marginTop: 20,
         alignItems: 'center'
-     }}>
+      }}>
         {/* CARD LIST */}
-        <View style={{ gap: cardSpacing, width: '90%'}}>
+        <View style={{ gap: cardSpacing, width: '90%' }}>
           <SettingCard
-            title="Manage Profile"
+            title={t("Manage Profile")}
             onPress={() => router.push('/(tabs)/(screens)/profile_setting')}
           />
           <SettingCard
-            title="Manage Notifications"
+            title={t("Manage Notifications")}
             onPress={() => router.push('/(tabs)/(screens)/manage-notifications')}
           />
           <SettingCard
-            title="Help & Supports"
+            title={t("Help & Supports")}
             onPress={() => router.push('/(tabs)/(screens)/help-supports')}
           />
           <SettingCard
-            title="Privacy Policy"
+            title={t("Privacy Policy")}
             onPress={() => router.push('/(tabs)/(screens)/privacy-policy')}
           />
           <SettingCard
-            title="Terms & Conditions"
+            title={t("Terms & Conditions")}
             onPress={() => router.push('/(tabs)/(screens)/terms-conditions')}
           />
         </View>
@@ -55,7 +64,7 @@ const Setting: React.FC = () => {
         {/* LANGUAGE ROW */}
         <View
           style={{
-            flexDirection: 'row', 
+            flexDirection: 'row',
             marginTop: 16,
             backgroundColor: '#fff',
             borderRadius: 5,
@@ -71,7 +80,7 @@ const Setting: React.FC = () => {
               alignSelf: 'center',
             }}
           >
-            Language
+            {t('Language')}
           </Text>
 
           <View
@@ -80,11 +89,14 @@ const Setting: React.FC = () => {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              right: 80,
+              right: i18n.language === 'en' ? 60 : 40,
             }}
           >
             <Pressable
-              onPress={() => setLangOpen((v) => !v)}
+              onPress={async () => {
+                setLangOpen((v) => !v);
+                await updateLocale(lang);
+              }}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -105,7 +117,7 @@ const Setting: React.FC = () => {
                   color: '#000',
                 }}
               >
-                {lang === 'en' ? 'English' : 'Thai (default)'}
+                {userLanguage?.language === 'en' ? t('English') : t('Thai (default)')}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#7A7A7A" />
             </Pressable>
@@ -148,7 +160,7 @@ const Setting: React.FC = () => {
                         : theme.fontFamily.regular,
                   }}
                 >
-                  English
+                  {t('English')}
                 </Text>
               </Pressable>
               <View
@@ -175,13 +187,14 @@ const Setting: React.FC = () => {
                         : theme.fontFamily.regular,
                   }}
                 >
-                  Thai (default)
+                  {t('Thai (default)')}
                 </Text>
               </Pressable>
             </View>
           )}
         </View>
-    </View>
+      </View>
+    </PullToRefreshScreen>
   );
 };
 

@@ -6,6 +6,7 @@ import TopBar from "@/src/component/NavBar/TopBar";
 import { icons } from "@/src/constants/icons";
 import { themeStyle } from "@/src/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -79,6 +80,7 @@ function TabIcon({
 
 export default function Layout() {
   const insets = useSafeAreaInsets();
+  const {t} = useTranslation();
 
   return (
     <Tabs
@@ -121,7 +123,7 @@ export default function Layout() {
           title: "",
           headerShown: true,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.home} title="Home" />
+            <TabIcon focused={focused} icon={icons.home} title={t("Home")} />
           ),
           header: () => <TopBar title="Home Page" showBackButton={false} />,
         }}
@@ -132,7 +134,7 @@ export default function Layout() {
           title: "",
           headerShown: true,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.educate} title="Education" />
+            <TabIcon focused={focused} icon={icons.educate} title={t("Education")} />
           ),
           header: () => <TopBar title="Education" />,
         }}
@@ -143,7 +145,7 @@ export default function Layout() {
           title: "",
           headerShown: true,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.setting} title="Setting" />
+            <TabIcon focused={focused} icon={icons.setting} title={t("Setting")} />
           ),
           header: () => <TopBar title="Setting" />,
         }}

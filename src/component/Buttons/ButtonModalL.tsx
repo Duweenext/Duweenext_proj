@@ -13,6 +13,7 @@ interface ButtonModalLProps {
   marginBottom?: number;
   size?: ButtonSize;
   loading?: boolean;
+  borderRadius?: number;
 }
 
 const ButtonModalL: React.FC<ButtonModalLProps> = ({
@@ -23,13 +24,14 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
   marginBottom,
   size = 'L',
   loading = false,
+  borderRadius = 12,
 }) => {
   const sizeStyles = getSizeStyles(size);
 
   return (
     <TouchableOpacity
       style={{
-        borderRadius: 12,
+        borderRadius: borderRadius,
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 6,
@@ -56,7 +58,6 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
   );
 };
 
-// keep size-specific styles separate
 const getSizeStyles = (size: ButtonSize) => {
   switch (size) {
     case 'L':

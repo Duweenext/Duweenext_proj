@@ -4,9 +4,13 @@ import {
   View, Text, SectionList, TouchableOpacity, Modal, Pressable, Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Notification } from '@/src/api/hooks/useNotification';
 import TopBar from '@/src/component/NavBar/TopBar';
 import { themeStyle } from '@/src/theme';
 import { CardNotification } from '@/src/component/Card/CardNotification';
+import { useNotification } from '@/src/api/hooks/useNotification';
+import { t } from 'i18next';
+import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
 
 // ===== Types =====
 type NotificationSeverity = 'info' | 'warning' | 'success' | 'error';
@@ -14,12 +18,12 @@ type NotificationItem = { id: string; title: string; headline: string; message: 
 
 // ===== Helpers =====
 const fmt = (d?: Date | null) =>
-  d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'dd/mm/yyyy';
+  d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : t('dd/mm/yyyy');
 const toLocalTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const toLocalDateLabel = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-const groupByDate = (items: NotificationItem[]) => {
-  const m: Record<string, NotificationItem[]> = {};
+const groupByDate = (items: Notification[]) => {
+  const m: Record<string, Notification[]> = {};
   items.forEach(n => (m[toLocalDateLabel(n.createdAt)] ||= []).push(n));
   return Object.entries(m)
     .sort((a, b) => +new Date(b[1][0].createdAt) - +new Date(a[1][0].createdAt))
@@ -149,34 +153,6 @@ function WebCalendarPortal({
   );
 }
 
-// ===== Mock backend (unchanged) =====
-const MOCK: NotificationItem[] = [
-  { id: 'n1', title: 'DuweeNext', headline: 'Your pond EC value is too low!', message: 'Please add fertilizer to the ponds now.', createdAt: '2025-01-13T02:02:00.000Z', severity: 'warning' },
-  { id: 'n2', title: 'DuweeNext', headline: 'Your pond pH value is too high!', message: 'Please add fertilizer to the ponds now.', createdAt: '2025-01-10T12:49:00.000Z', severity: 'warning' },
-  { id: 'n3', title: 'DuweeNext', headline: 'Your pond Temperature value is too high!', message: 'Please add fertilizer to the ponds now.', createdAt: '2025-01-10T15:07:00.000Z', severity: 'warning' },
-  { id: 'n4', title: 'DuweeNext', headline: 'Your Wolffia is ready to be harvested!', message: 'Great job keeping the pond healthy.', createdAt: '2025-01-07T09:08:00.000Z', severity: 'success' },
-  { id: 'n5', title: 'DuweeNext', headline: 'Aerator power usage is high', message: 'Consider checking your schedule settings.', createdAt: '2025-01-06T06:18:00.000Z', severity: 'info' },
-  { id: 'n6', title: 'DuweeNext', headline: 'Water level dropped quickly', message: 'Inspect for leakage or evaporation.', createdAt: '2025-01-05T18:34:00.000Z', severity: 'warning' },
-  { id: 'n7', title: 'DuweeNext', headline: 'IoT sensor offline', message: 'We lost connection to sensor #A2.', createdAt: '2025-01-04T10:10:00.000Z', severity: 'error' },
-  { id: 'n8', title: 'DuweeNext', headline: 'pH back to normal', message: 'Values are within range.', createdAt: '2025-01-03T07:25:00.000Z', severity: 'success' },
-];
-
-type FetchParams = { page: number; pageSize: number; startDate?: string; endDate?: string; };
-async function fetchNotifications({ page, pageSize, startDate, endDate }: FetchParams): Promise<NotificationItem[]> {
-  const start = startDate ? +new Date(startDate) : -Infinity;
-  const end   = endDate   ? +new Date(endDate)   : +Infinity;
-  const filtered = MOCK.filter(n => {
-    const t = +new Date(n.createdAt); return t >= start && t <= end;
-  }).sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  const startIdx = (page - 1) * pageSize;
-  await new Promise(r => setTimeout(r, 120));
-  return filtered.slice(startIdx, startIdx + pageSize);
-}
-async function deleteNotification(id: string) {
-  const idx = MOCK.findIndex(x => x.id === id); if (idx >= 0) MOCK.splice(idx, 1);
-  await new Promise(r => setTimeout(r, 80));
-}
-
 // ===== Screen =====
 export default function NotificationHistoryScreen() {
   // filters
@@ -185,119 +161,174 @@ export default function NotificationHistoryScreen() {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
   const [webPicker, setWebPicker] = useState<null | 'start' | 'end'>(null);
+  const [view, setView] = useState<"active" | "archived">("active");
 
-  // data
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const { notifications, resolveNotification, archiveNotification, deleteNotification, getNotifications } = useNotification();
   const [loading, setLoading] = useState(false);
 
-  const loadPage = useCallback(async (reset = false) => {
-    if (loading) return;
-    setLoading(true);
-    const startISO = fromDate ? new Date(new Date(fromDate).setHours(0,0,0,0)).toISOString() : undefined;
-    const endISO   = toDate   ? new Date(new Date(toDate).setHours(23,59,59,999)).toISOString() : undefined;
-    const p = reset ? 1 : page;
-    const res = await fetchNotifications({ page: p, pageSize: 6, startDate: startISO, endDate: endISO });
-    setItems(prev => (reset ? res : [...prev, ...res]));
-    setHasMore(res.length === 6);
-    setPage(prev => (reset ? 2 : prev + 1));
-    setLoading(false);
-  }, [page, fromDate, toDate, loading]);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        await getNotifications();
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [getNotifications]);
 
-  useEffect(() => { loadPage(true); }, [fromDate?.toISOString(), toDate?.toISOString()]);
+  const activeNotifications = useMemo(
+    () => (notifications || []).filter(n => !n.archived),
+    [notifications]
+  );
+  const archivedNotifications = useMemo(
+    () => (notifications || []).filter(n => n.archived),
+    [notifications]
+  );
 
-  const handleDelete = useCallback(async (id: string) => {
-    const snap = items;
-    setItems(prev => prev.filter(n => n.id !== id));
-    try { await deleteNotification(id); } catch { setItems(snap); }
-  }, [items]);
+  const sections = useMemo(() => {
+    let items = view === "active" ? activeNotifications : archivedNotifications;
 
-  const sections = useMemo(() => groupByDate(items), [items]);
-  const iconFor = (s?: NotificationSeverity) =>
-    s === 'warning' ? <Text style={{ fontSize: 18 }}>⚠️</Text> :
-    s === 'success' ? <Text style={{ fontSize: 18 }}>🌾</Text> :
-    s === 'error'   ? <Text style={{ fontSize: 18 }}>⛔️</Text> :
-                      <Text style={{ fontSize: 18 }}>ℹ️</Text>;
+    if (fromDate) {
+      items = items.filter(n => new Date(n.createdAt) >= fromDate);
+    }
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      items = items.filter(n => new Date(n.createdAt) <= to);
+    }
+
+    return groupByDate(items);
+  }, [view, activeNotifications, archivedNotifications, fromDate, toDate]);
+
+  console.log("notifications", notifications);
+
 
   const openFromPicker = () => Platform.OS === 'web' ? setWebPicker('start') : setShowFromPicker(true);
-  const openToPicker   = () => Platform.OS === 'web' ? setWebPicker('end')   : setShowToPicker(true);
+  const openToPicker = () => Platform.OS === 'web' ? setWebPicker('end') : setShowToPicker(true);
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* <TopBar title="Notification" /> */}
+    <PullToRefreshScreen>
+      <View style={{ flex: 1 }}>
 
-      {/* Filter row */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-        <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingHorizontal: 10 }}>
-          <Text style={{ color: '#fff' }}>Filter by date:</Text>
-          <CalendarChip label="From:" value={fromDate} onCalendarPress={openFromPicker} />
-          <CalendarChip label="To:" value={toDate} onCalendarPress={openToPicker} />
-          {(fromDate || toDate) && (
-            <TouchableOpacity
-              onPress={() => { setFromDate(null); setToDate(null); }}
-              style={{ paddingHorizontal: 12, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Text style={{ color: '#111827' }}>Clear</Text>
-            </TouchableOpacity>
-          )}
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          backgroundColor: themeStyle.colors.primary,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: "#374151",
+        }}>
+          <TouchableOpacity
+            onPress={() => setView("active")}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              paddingVertical: 8,
+              borderBottomWidth: view === "active" ? 3 : 0,
+              borderBottomColor: view === "active" ? "#fff" : "transparent",
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "600" }}>{t('History')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setView("archived")}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              paddingVertical: 8,
+              borderBottomWidth: view === "archived" ? 3 : 0,
+              borderBottomColor: view === "archived" ? "#fff" : "transparent",
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "600" }}>{t('Archived')}</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Native pickers */}
-        {Platform.OS !== 'web' && (
-          <>
-            <NativeCalendarModal visible={showFromPicker} value={fromDate ?? new Date()} onClose={() => setShowFromPicker(false)} onConfirm={setFromDate} maximumDate={toDate ?? undefined} />
-            <NativeCalendarModal visible={showToPicker}   value={toDate ?? (fromDate ?? new Date())} onClose={() => setShowToPicker(false)}   onConfirm={setToDate}   minimumDate={fromDate ?? undefined} />
-          </>
-        )}
+        {/* Filter row */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
+          <View style={{ alignSelf: 'flex-start', alignItems: 'flex-start', gap: 8, paddingVertical: 4, paddingHorizontal: 10 }}>
+            <Text style={{ color: '#fff' }}>{t('Filter by date')}:</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <CalendarChip label={t('From')} value={fromDate} onCalendarPress={openFromPicker} />
+              <CalendarChip label={t('To')} value={toDate} onCalendarPress={openToPicker} />
+            </View>
+            {(fromDate || toDate) && (
+              <TouchableOpacity
+                onPress={() => { setFromDate(null); setToDate(null); }}
+                style={{ paddingHorizontal: 12, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text style={{ color: '#111827' }}>Clear</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-        {/* Web top-center anchor (no weird box) */}
-        <WebCalendarPortal
-          visible={Platform.OS === 'web' && webPicker === 'start'}
-          mode="start"
-          defaultValue={fromDate}
-          max={toDate}
-          onClose={() => setWebPicker(null)}
-          onConfirm={(d) => setFromDate(d)}
-        />
-        <WebCalendarPortal
-          visible={Platform.OS === 'web' && webPicker === 'end'}
-          mode="end"
-          defaultValue={toDate ?? fromDate}
-          min={fromDate}
-          onClose={() => setWebPicker(null)}
-          onConfirm={(d) => setToDate(d)}
+          {Platform.OS !== 'web' && (
+            <>
+              <NativeCalendarModal visible={showFromPicker} value={fromDate ?? new Date()} onClose={() => setShowFromPicker(false)} onConfirm={setFromDate} maximumDate={toDate ?? undefined} />
+              <NativeCalendarModal visible={showToPicker} value={toDate ?? (fromDate ?? new Date())} onClose={() => setShowToPicker(false)} onConfirm={setToDate} minimumDate={fromDate ?? undefined} />
+            </>
+          )}
+
+          <WebCalendarPortal
+            visible={Platform.OS === 'web' && webPicker === 'start'}
+            mode="start"
+            defaultValue={fromDate}
+            max={toDate}
+            onClose={() => setWebPicker(null)}
+            onConfirm={(d) => setFromDate(d)}
+          />
+          <WebCalendarPortal
+            visible={Platform.OS === 'web' && webPicker === 'end'}
+            mode="end"
+            defaultValue={toDate ?? fromDate}
+            min={fromDate}
+            onClose={() => setWebPicker(null)}
+            onConfirm={(d) => setToDate(d)}
+          />
+        </View>
+
+        <SectionList
+          sections={sections}
+          keyExtractor={(item, index) => item.id ? String(item.id) : `notification-${index}`}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          SectionSeparatorComponent={() => <View style={{ height: 8 }} />}
+          renderSectionHeader={({ section: { title } }) => (
+            <Text style={{ color: '#d1d5db', marginVertical: 10, marginLeft: 4, fontFamily: themeStyle.fontFamily.medium }}>
+              {title}
+            </Text>
+          )}
+          renderItem={({ item }) => (
+            <View style={{ marginBottom: 12 }}>
+              <CardNotification
+                icon={<Text>⚠️</Text>}
+                title={item.title}
+                headline={item.title}
+                message={item.message}
+                time={toLocalTime(item.createdAt)}
+                onDelete={async () => {
+                  await deleteNotification(item.id);
+                }}
+                onArchive={async () => {
+                  await archiveNotification(item.id);
+                }}
+                onResolve={async (note) => {
+                  if (!item.id || !note) return;
+                  await resolveNotification(item.id, note, item.groupId);
+                }}
+                note={item.note}
+                resolvedBy={item.resolvedBy || ''}
+              />
+            </View>
+          )}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={!loading ? <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#fff' }}>No notifications.</Text></View> : null}
         />
       </View>
-
-      {/* List */}
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-        SectionSeparatorComponent={() => <View style={{ height: 8 }} />}
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={{ color: '#d1d5db', marginVertical: 10, marginLeft: 4, fontFamily: themeStyle.fontFamily.medium }}>
-            {title}
-          </Text>
-        )}
-        renderItem={({ item }) => (
-          <View style={{ marginBottom: 12 }}>
-            <CardNotification
-              icon={iconFor(item.severity)}
-              title={item.title}
-              headline={item.headline}
-              message={item.message}
-              time={toLocalTime(item.createdAt)}
-              onDelete={() => handleDelete(item.id)}
-            />
-          </View>
-        )}
-        onEndReached={() => hasMore && loadPage()}
-        onEndReachedThreshold={0.3}
-        ListEmptyComponent={!loading ? <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#fff' }}>No notifications.</Text></View> : null}
-      />
-    </View>
+    </PullToRefreshScreen>
   );
 }
 

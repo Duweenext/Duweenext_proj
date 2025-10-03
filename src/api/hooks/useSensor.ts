@@ -15,6 +15,7 @@ import type {
     SensorDataBackend,
 } from "@/src/interfaces/sensor";
 import Toast from "react-native-toast-message";
+import { qc } from "../query";
 
 const sensorKeys = {
     all: ["sensor"] as const,
@@ -49,7 +50,6 @@ type UseSensorReturn = {
 };
 
 export function useSensor(boardId: string, graphScale: string = "day"): UseSensorReturn {
-    const qc = useQueryClient();
 
     const getSensorBasicInformation = useCallback(async () => {
         return qc.fetchQuery({
@@ -66,10 +66,15 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
         data: sensorData,
         isFetching: sensorDataLoading,
         error: sensorDataError,
+        refetch: refetchSensorData,
     } = useQuery({
         queryKey: sensorKeys.basic(boardId),
-        enabled: false,
-        queryFn: async () => [] as SensorDataBackend[],
+        queryFn: async (): Promise<SensorDataBackend[]> => {
+            const res = await axiosMainInstance.get(`/v1/sensors/board/${boardId}`);
+            return res.data.data as SensorDataBackend[];
+        },
+        enabled: !!boardId,
+        staleTime: 60_000,
     });
 
     const getSensorGraphLog = useCallback(
@@ -80,14 +85,14 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
                 staleTime: 0,
                 queryFn: async (): Promise<BackendSensorLogData[]> => {
                     const res = await axiosMainInstance.get(`/v1/sensors/${boardId}/sensor-logs/agg`, {
-                        params: { scale: scale, lookback: duration, end: endISO},
+                        params: { scale: scale, lookback: duration, end: endISO },
                     });
 
-                    const meta: BackendSensorLogPayload | undefined = { 
+                    const meta: BackendSensorLogPayload | undefined = {
                         count: res.data.count,
                         startTime: res.data.startTime,
                         endTime: res.data.endTime
-                     };
+                    };
 
                     if (meta) {
                         qc.setQueryData<BackendSensorLogPayload>(sensorKeys.graphMeta(boardId, scale), meta);
@@ -132,7 +137,7 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
 
     const { data: graphMetaData } = useQuery({
         queryKey: sensorKeys.graphMeta(boardId, graphScale),
-        enabled: false,                             
+        enabled: false,
         queryFn: async () => undefined as unknown as BackendSensorLogPayload,
     });
 
@@ -148,21 +153,38 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
             },
         }) > 0;
 
-    const measureCurrent = useCallback(async () => {
-        return qc.fetchQuery({
-            queryKey: sensorKeys.current(boardId),
-            staleTime: 0,
-            queryFn: async (): Promise<SensorCurrentData> => {
-                const res = await axiosMainInstance.post(`/v1/board/measure/${boardId}`);
-                return res.data.data as SensorCurrentData;
-            },
-        });
-    }, [qc, boardId]);
+    const measureMutation = useMutation({
+        mutationFn: async (): Promise<SensorCurrentData> => {
+            const res = await axiosMainInstance.post(`/v1/board/measure/${boardId}`);
+            return res.data.data as SensorCurrentData;
+        },
+        onSuccess: (data) => {
+            qc.setQueryData(sensorKeys.current(boardId), data);
 
-    const { data: currentSensorData, isFetching: currentLoading } = useQuery({
+            Toast.show({
+                type: "success",
+                text1: "Measurement complete",
+            });
+        },
+        onError: (err: any) => {
+            Toast.show({
+                type: "error",
+                text1: "Measurement failed",
+                text2: err?.response?.data?.message || err?.message || "Something went wrong",
+            });
+        },
+    });
+
+    const measureCurrent = useCallback(() => {
+        return measureMutation.mutateAsync();
+    }, [measureMutation]);
+
+    const { data: currentSensorData } = useQuery({
         queryKey: sensorKeys.current(boardId),
         enabled: false,
         queryFn: async () => undefined as unknown as SensorCurrentData,
+        placeholderData: () =>
+            qc.getQueryData<SensorCurrentData>(sensorKeys.current(boardId)),
     });
 
     const setBoardThresholdMut = useMutation({
@@ -217,7 +239,7 @@ export function useSensor(boardId: string, graphScale: string = "day"): UseSenso
         sensorDataError,
 
         currentSensorData,
-        currentLoading,
+        currentLoading: measureMutation.isPending,
 
         mergedGraph,
         graphMetaData,

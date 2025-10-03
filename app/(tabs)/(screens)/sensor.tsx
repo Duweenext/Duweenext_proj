@@ -15,10 +15,7 @@ const SensorScreen = () => {
   const { t } = useTranslation();
   const {boards, loading , refetchBoards} = useBoard();
 
-  console.log("Boards:", boards);
-
   const { user } = useAuth();
-
   const handleRefresh = async () => {
     if (user?.id) {
       await refetchBoards();
@@ -26,7 +23,7 @@ const SensorScreen = () => {
   };
 
   return (
-    <PullToRefreshScreen onRefresh={handleRefresh}>
+    <PullToRefreshScreen >
       <View style={{ flex: 1 }}>
 
         <StatusBar barStyle="dark-content" backgroundColor="white" />
@@ -34,7 +31,7 @@ const SensorScreen = () => {
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <AddBoardSection
           />
-          <BoardSectionHeader title="Board" />
+          <BoardSectionHeader title={t("Board")} />
           <View style={{ paddingHorizontal: 16, paddingBottom: 20, gap: 12 }}>
             {boards ? boards.map((board) => (
               <CardBoardPrimary
@@ -44,7 +41,7 @@ const SensorScreen = () => {
             )) : loading ? (
               <LoadingSpinner size="large" />
             ) : (
-              <Text>No boards available</Text>
+              <Text>{t("No boards available")}</Text>
             )}
           </View>
         </ScrollView>

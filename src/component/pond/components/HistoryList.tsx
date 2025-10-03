@@ -6,6 +6,8 @@ import { themeStyle } from '@/src/theme';
 import { PondDiagnoseHistory, PondDiagnoseResponse, usePondHealths } from '@/src/api/hooks/useImageProcessing';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 type Props = {
   items: PondDiagnoseHistory[];
   onShareItem?: (item: PondDiagnoseHistory) => void;
@@ -17,6 +19,8 @@ export default function HistoryList({ items, onShareItem , onDeleteItem}: Props)
   const [toDate, setToDate] = useState<Date | null>(null);
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
+
+  const {t} = useTranslation();
 
   const webFromRef = useRef<HTMLInputElement | null>(null);
   const webToRef = useRef<HTMLInputElement | null>(null);
@@ -86,11 +90,11 @@ export default function HistoryList({ items, onShareItem , onDeleteItem}: Props)
 
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-        <Text style={{ fontSize: 22, fontWeight: '800', color: '#fff', marginBottom: 6, paddingHorizontal: 14 }}>History</Text>
+        <Text style={{ fontSize: 22, fontWeight: '800', color: '#fff', marginBottom: 6, paddingHorizontal: 14 }}>{(t('History'))}</Text>
         <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4,paddingHorizontal: 14 }}>
 
-          <CalendarChip label="From:" value={fromDate} onCalendarPress={openFromPicker} />
-          <CalendarChip label="To:" value={toDate} onCalendarPress={openToPicker} />
+          <CalendarChip label={t('From')} value={fromDate} onCalendarPress={openFromPicker} />
+          <CalendarChip label={t('To')} value={toDate} onCalendarPress={openToPicker} />
 
         </View>
         <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4,paddingHorizontal: 14 }}>
@@ -175,7 +179,7 @@ function HistoryCard({
       <Image source={{ uri: item.image_uri }} style={{ width: 110, height: 80, borderRadius: 8 }} />
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ fontWeight: '700' }}>Health Status: {String(item.health_status)}</Text>
+          <Text style={{ fontWeight: '700' }}>{t('Health Status')}: {String(t(item.health_status))}</Text>
         </View>
           <Text style={{ color: '#666' }}>{timeAgo(item._ts)}</Text>
         <Text style={{ marginTop: 6 }} numberOfLines={3}>
@@ -184,11 +188,11 @@ function HistoryCard({
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, gap: 16 }}>
           {onShareItem && (
             <TouchableOpacity onPress={() => onShareItem(item)}>
-              <Text style={{ color: '#0a6' }}>Share</Text>
+              <Text style={{ color: '#0a6' }}>{t('Share')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={confirmDelete}>
-            <Text style={{ color: '#d00' }}>Delete</Text>
+            <Text style={{ color: '#d00' }}>{t('Delete')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -280,13 +284,13 @@ function CalendarModal({
                   onPress={onClose}
                   style={{ paddingHorizontal: 14, height: 40, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <Text>Cancel</Text>
+                  <Text>{t('Cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => { onConfirm(temp); onClose(); }}
                   style={{ paddingHorizontal: 14, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: themeStyle.colors.primary }}
                 >
-                  <Text style={{ color: '#fff' }}>Select</Text>
+                  <Text style={{ color: '#fff' }}>{t('Select')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -302,15 +306,15 @@ function timeAgo(ts: number | string | Date) {
   const diff = Date.now() - date.getTime();
 
   const min = Math.max(1, Math.round(diff / 60000));
-  if (min < 60) return `Last ${min} minute${min > 1 ? "s" : ""}`;
+  if (min < 60) return `${t('Last')} ${min} ${t('minute', { count: min })}`;
   const hr = Math.round(min / 60);
-  if (hr < 24) return `Last ${hr} hour${hr > 1 ? "s" : ""}`;
+  if (hr < 24) return `${t('Last')} ${hr} ${t('hour', { count: hr })}`;
   const days = Math.round(hr / 24);
-  return `Last ${days} day${days > 1 ? "s" : ""}`;
+  return `${t('Last')} ${days} ${t('day', { count: days })}`;
 }
 
 const fmt = (d?: Date | null) =>
-  d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'dd/mm/yyyy';
+  d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : t('dd/mm/yyyy');
 
 function toISO(d: Date) {
   const y = d.getFullYear();

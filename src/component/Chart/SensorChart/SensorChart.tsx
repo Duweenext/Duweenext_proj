@@ -16,6 +16,7 @@ import {
   sensorOption, SLOT_COUNT, SPACING_PER_SCALE, TRIM_AMOUNT,
   truncateToBucketUTC, addStepUTC
 } from '@/src/utils/chartUtils';
+import { useTranslation } from 'react-i18next';
 
 
 
@@ -28,8 +29,8 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
   const isAndroid = Platform.OS === 'android';
   const needsDateTime = (scale: sensorLogScale) =>
     scale === 'minute' || scale === 'hour' || scale === 'all';
-  const [androidPickerStage, setAndroidPickerStage] = useState<'idle' | 'date' | 'time'>('idle');
-  const tempPickedDateRef = useRef<Date | null>(null);
+
+  const {t} = useTranslation();
 
   const spacing = useMemo(() => SPACING_PER_SCALE[scale], [scale]);
 
@@ -334,7 +335,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
     return sensorOption.map(option => ({
       id: option,
       label: option.toUpperCase(),
-      value: option,
+      value: t(option),
       color: '#f5f5f5',
       focusColor: '#1A736A',
       textColor: '#666',
@@ -415,7 +416,7 @@ export default function SensorChart({ boardId, sensor }: SensorChartProp) {
   return (
     <View style={style.container}>
       <View style={style.container_header}>
-        <Text style={style.title}>Summary Graph of{sensor.sensor_type}</Text>
+        <Text style={style.title}>{t('Summary Graph of')} {t(sensor.sensor_type)}</Text>
         <TouchableOpacity
           style={style.datePickerButton}
           onPress={() => {

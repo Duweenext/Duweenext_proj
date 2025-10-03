@@ -1,3 +1,5 @@
+import i18next, { t } from "i18next";
+
 export type Strength = 'Weak' | 'Medium' | 'Strong';
 
 export const getPasswordStrength = (text: string): Strength => {
@@ -78,14 +80,14 @@ export const formatRunningTimeFromTimestamp = (updatedAt: string): string => {
   const seconds = totalSeconds % 60;
   
   if (days >= 1) {
-    return `${days} day${days > 1 ? 's' : ''}`;
+    return `${days} ${t('day')}${days > 1 && i18next.language !== 'th' ? 's' : ''}`;
   }
   else if (hours > 0) {
-    return `${hours}h ${minutes}m`;
+    return `${hours} ${t('hour')}${hours > 1 && i18next.language !== 'th' ? 's' : ''} ${minutes} ${t('minute')}${minutes > 1 && i18next.language !== 'th' ? 's' : ''}`;
   } else if (minutes > 0) {
-    return `${minutes}m ${seconds}s`;
+    return `${minutes} ${t('minute')}${minutes > 1 && i18next.language !== 'th' ? 's' : ''} ${seconds} ${t('second')}${seconds > 1 && i18next.language !== 'th' ? 's' : ''}`;
   } else {
-    return `${seconds}s`;
+    return `${seconds} ${t('second')}${seconds > 1 && i18next.language !== 'th' ? 's' : ''}`;
   }
 };
 

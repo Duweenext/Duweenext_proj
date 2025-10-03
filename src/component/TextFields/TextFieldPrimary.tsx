@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Text, TextInput, View, Pressable, Animated, Easing } from 'react-native';
+import { Text, TextInput, View, Pressable } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { themeStyle } from '@/src/theme';
 import { getPasswordStrength } from '@/src/utlis/passwordStrength';
 import { strengthColorMap, strengthPercentMap, validateEmail, validateText } from '@/src/utlis/input';
+import AnchoredPopover from './PasswordStrength/Popup';
+import RulesCard, { RulesCardProps } from './PasswordStrength/RuleCard';
 
 type PasswordVariant = 'default' | 'old' | 'confirm';
 type ErrorPlacement = 'above' | 'below' | 'topRight';
@@ -13,7 +16,6 @@ type Props = {
   hint?: string;
   placeholder?: string;
   icon?: boolean;
-  strengthIndicator?: boolean;
   showStrengthRules?: boolean;
   type?: 'text' | 'email' | 'password';
   passwordVariant?: PasswordVariant;
@@ -25,15 +27,15 @@ type Props = {
   onChangeText: (text: string) => void;
   onMatchChange?: (matched: boolean) => void;
   errorPlacement?: ErrorPlacement;
-  externalError?: string;
+  externalError?: string;                 // may be a translated string OR an i18n key
+  ruleData?: RulesCardProps;
+  translateErrors?: boolean;              // NEW: if true, try to translate error strings/keys
 };
 
 const TextFieldPrimary: React.FC<Props> = ({
   name,
-  hint,
   placeholder = '',
   icon = true,
-  strengthIndicator = true,
   showStrengthRules = true,
   type = 'text',
   passwordVariant = 'default',
@@ -46,7 +48,11 @@ const TextFieldPrimary: React.FC<Props> = ({
   onMatchChange,
   errorPlacement = 'below',
   externalError,
+  ruleData,
+  translateErrors = true,
 }) => {
+  const { t } = useTranslation();
+
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -56,23 +62,8 @@ const TextFieldPrimary: React.FC<Props> = ({
   const isPassword = type === 'password';
   const isEmail = type === 'email';
   const isText = type === 'text';
-  const strength = getPasswordStrength(value);
+  const nameRef = useRef<View>(null);
 
-  const animatedWidth = useRef(new Animated.Value(0)).current;
-
-  // Animate password strength bar
-  useEffect(() => {
-    if (!(isPassword && passwordVariant === 'default' && strengthIndicator)) return;
-    const toValue = strengthPercentMap[strength] * width;
-    Animated.timing(animatedWidth, {
-      toValue,
-      duration: 500,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: false,
-    }).start();
-  }, [strength, value, isPassword, strengthIndicator, passwordVariant, width]);
-
-  // Confirm password match logic
   const isConfirm = isPassword && passwordVariant === 'confirm';
   const matched =
     isConfirm && localValue.length > 0 ? localValue === confirmWith : false;
@@ -86,7 +77,7 @@ const TextFieldPrimary: React.FC<Props> = ({
     let err = '';
 
     if (isText) {
-      err = validateText(text);
+      err = validateText(text);                 // may return a literal message
     } else if (isEmail) {
       const { error: emailError, cleaned } = validateEmail(text);
       err = emailError;
@@ -96,9 +87,18 @@ const TextFieldPrimary: React.FC<Props> = ({
     if (!err || text === '') onChangeText(text);
   };
 
-  const computedError = externalError || errorMessage;
+  // If you pass i18n keys (e.g., "errors.passwordRequired"), this will translate them.
+  // If you pass already-translated strings, this will return them unchanged.
+  const trErr = (msg?: string) =>
+    !msg
+      ? ''
+      : translateErrors
+        ? t(msg, { defaultValue: msg })
+        : msg;
 
-  // Border color logic
+  const computedErrorRaw = externalError || errorMessage;
+  const computedError = trErr(computedErrorRaw);
+
   const baseBorder = '#d1d5db';
   const focusBorder = themeStyle.colors.primary;
   const errorBorder = themeStyle.colors.fail;
@@ -117,8 +117,6 @@ const TextFieldPrimary: React.FC<Props> = ({
   }
 
   const showEye = icon && isPassword;
-  const showStrengthUI = isPassword && passwordVariant === 'default' && strengthIndicator;
-  const showRulesUI = isPassword && passwordVariant === 'default' && showStrengthRules;
 
   const ErrorText = () =>
     computedError ? (
@@ -136,60 +134,49 @@ const TextFieldPrimary: React.FC<Props> = ({
   return (
     <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 10 }}>
       {/* Label + optional topRight error */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <Text
-          style={{
-            color: themeStyle.colors.white,
-            fontSize: themeStyle.fontSize.description,
-            fontFamily: themeStyle.fontFamily.semibold,
-          }}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View
+          ref={nameRef}
+          style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', marginBottom: 8, gap: 6 }}
         >
-          {name}
-        </Text>
-        <View style = {{marginRight: 27,}}>
-        {errorPlacement === 'topRight' && <ErrorText />}
+          <Text
+            style={{
+              color: themeStyle.colors.white,
+              fontSize: themeStyle.fontSize.description,
+              fontFamily: themeStyle.fontFamily.semibold,
+            }}
+          >
+            {name}
+          </Text>
+
+          {/* Info / rules popover toggle */}
+          <Pressable onPress={() => setShowRules((s) => !s)} style={{ alignSelf: 'flex-end', marginRight: 16 }}>
+            <Text style={{ color: 'white', fontWeight: '700' }}>ⓘ</Text>
+          </Pressable>
+
+          {errorPlacement === 'above' && <ErrorText />}
+
+          <AnchoredPopover
+            isOpen={showRules}
+            onClose={() => setShowRules(false)}
+            anchorRef={nameRef}
+            placement="top"
+            align="center"
+            offset={0}
+          >
+            {ruleData && (
+              <RulesCard
+                title={ruleData.title}
+                description={ruleData.description}
+                rules={ruleData.rules}
+              />
+            )}
+          </AnchoredPopover>
         </View>
+
+        {errorPlacement === 'topRight' && <ErrorText />}
       </View>
 
-      {/* Hint + rules */}
-      {hint && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-          <Text style={{ color: themeStyle.colors.white, fontSize: themeStyle.fontSize.data_text, marginRight: 8 }}>
-            {hint}
-          </Text>
-          {showRulesUI && (
-            <Pressable onPress={() => setShowRules(!showRules)}>
-              <Text style={{ color: themeStyle.colors.white, fontWeight: 'bold' }}>ⓘ</Text>
-            </Pressable>
-          )}
-        </View>
-      )}
-
-      {/* Rules panel */}
-      {showRulesUI && showRules && (
-        <View
-          style={{
-            backgroundColor: themeStyle.colors.white,
-            padding: 12,
-            borderRadius: 12,
-            marginBottom: 12,
-            width: '90%',
-            alignSelf: 'center',
-          }}
-        >
-          <Text style={{ fontWeight: '600' }}>Recommended password format</Text>
-          <Text>• At least one number</Text>
-          <Text>• At least one uppercase</Text>
-          <Text>• At least one lowercase</Text>
-          <Text>• At least 8 characters</Text>
-          <Text>• At least one special character</Text>
-        </View>
-      )}
-
-      {/* Error above input */}
-      {errorPlacement === 'above' && <ErrorText />}
-
-      {/* Input container */}
       <View
         style={{
           width,
@@ -223,28 +210,6 @@ const TextFieldPrimary: React.FC<Props> = ({
         )}
       </View>
 
-      {/* Error below input */}
-      {errorPlacement === 'below' && <ErrorText />}
-
-      {/* Password strength */}
-      {showStrengthUI && (
-        <View style={{ marginTop: 8}}>
-          <View style={{ height: 8, backgroundColor: '#d1d5db', borderRadius: 10, overflow: 'hidden', width }}>
-            <Animated.View
-              style={{
-                height: '100%',
-                borderRadius: 10,
-                backgroundColor: strengthColorMap[strength],
-                width: animatedWidth,
-              }}
-            />
-          </View>
-          <Text style={{ marginTop: 4, fontWeight: '600', color: strengthColorMap[strength] }}>
-            {strength}
-          </Text>
-        </View>
-      )}
-
       {/* Confirm password match */}
       {isConfirm && localValue.length > 0 && (
         <Text
@@ -254,7 +219,7 @@ const TextFieldPrimary: React.FC<Props> = ({
             color: matched ? themeStyle.colors.success : themeStyle.colors.fail,
           }}
         >
-          {matched ? 'Matched' : 'Passwords do not match'}
+          {matched ? t('textfield.matched') : t('textfield.notMatch')}
         </Text>
       )}
     </View>

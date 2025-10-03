@@ -5,7 +5,6 @@
 expo-env.d.ts
 # @end expo-cli
 node_modules
-google-services.json
 GoogleService-Info.plist
 .env*
 *.key
@@ -15,3 +14,4 @@ duweenext-firebase-adminsdk-fbsvc-cd3056aad2.json
 *firebase-adminsdk*.json
 duweenext-firebase-adminsdk-fbsvc-cd3056aad2.json
 *firebase-adminsdk*.json
+

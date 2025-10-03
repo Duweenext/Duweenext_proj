@@ -1,19 +1,13 @@
-import React, { useState } from 'react';
-import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native';
+// component/PullToRefreshScreen.tsx
+import { useGlobalRefresh } from "@/src/api/local/_local";
+import React from "react";
+import { ScrollView, RefreshControl, StyleSheet } from "react-native";
 
-type PullToRefreshScreenProps = {
-  onRefresh: () => Promise<void>;
-  children: React.ReactNode;
-};
 
-export default function PullToRefreshScreen({ onRefresh, children }: PullToRefreshScreenProps) {
-  const [refreshing, setRefreshing] = useState(false);
+type Props = { children: React.ReactNode };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await onRefresh();
-    setRefreshing(false);
-  };
+export default function PullToRefreshScreen({ children }: Props) {
+  const { refreshing, refresh } = useGlobalRefresh();
 
   return (
     <ScrollView
@@ -21,8 +15,8 @@ export default function PullToRefreshScreen({ onRefresh, children }: PullToRefre
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={handleRefresh}
-          progressViewOffset={70} // Moves indicator down from top
+          onRefresh={refresh}
+          progressViewOffset={70}
         />
       }
     >
@@ -32,7 +26,5 @@ export default function PullToRefreshScreen({ onRefresh, children }: PullToRefre
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-  },
+  container: { flexGrow: 1 },
 });

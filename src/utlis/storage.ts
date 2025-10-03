@@ -59,9 +59,13 @@ export function useStorageState(key: string): UseStateHook<string> {
 
   // Set
   const setValue = useCallback(
-    (value: string | null) => {
-      setState(value);
-      setStorageItemAsync(key, value);
+    async (value: string | null) => {
+      try {
+        setState(value);                    
+        await setStorageItemAsync(key, value);
+      } catch (e) {
+        console.error("Persist failed:", e);             
+      }
     },
     [key]
   );

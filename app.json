@@ -17,7 +17,7 @@
       }
     },
     "android": {
-      "googleServicesFile" : "./google-services.json",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
@@ -26,7 +26,6 @@
         "android.permission.BLUETOOTH_SCAN",
         "android.permission.ACCESS_WIFI_STATE",
         "android.permission.CHANGE_WIFI_STATE",
-        "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
       ],
       "adaptiveIcon": {
@@ -64,7 +63,8 @@
       "react-native-ble-plx",
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
-      "react-native-wifi-reborn"
+      "react-native-wifi-reborn",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true
@@ -72,8 +72,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "360f4700-89c6-4316-b392-0b50ab575b7a"
+        "projectId": "2605e7ce-9068-432e-bd20-a08493470dc6"
       }
-    }
+    },
+    "owner": "duweenext"
   }
 }

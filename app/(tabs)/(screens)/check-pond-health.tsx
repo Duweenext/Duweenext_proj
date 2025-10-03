@@ -1,8 +1,7 @@
 // app/(screens)/check-pond-health.tsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Share, Text, TouchableOpacity, Modal, Pressable, Image, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from "expo-image-picker";
 
 import { themeStyle } from '@/src/theme';
@@ -13,6 +12,8 @@ import HistoryList from '@/src/component/pond/components/HistoryList';
 import { usePondAnalysis } from '@/src/component/pond/usePondAnalysis';
 import { mockService } from '@/src/component/pond/services';
 import { usePondHealths } from '@/src/api/hooks/useImageProcessing';
+import { useTranslation } from 'react-i18next';
+import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
 
 const IconBtn = ({ icon, onPress, disabled }: any) => (
   <TouchableOpacity
@@ -61,6 +62,7 @@ export default function CheckPondHealthScreen() {
   }, [photoUri]);
 
   const [pendingFile, setPendingFile] = useState<any | null>(null);
+  const {t} = useTranslation();
 
   const { diagnose, diagnoseResult, diagnosing, history_result, removeHistoryAt} = usePondHealths();
 
@@ -108,9 +110,10 @@ export default function CheckPondHealthScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      <PullToRefreshScreen>
       <ScrollView contentContainerStyle={{ paddingBottom: 30, marginTop: 20 }}>
         <Text style={{ color: themeStyle.colors.white, fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.header2, left: 20, marginBottom: 10 }}>
-          Determine your pond health
+          {t('Determine your pond health')}
         </Text>
 
         <UploadBox imageUri={!confirmVisible ? pendingFile?.uri : undefined} status={status} placeholder={placeholder} onReset={() => setPendingFile(null)} />
@@ -131,20 +134,18 @@ export default function CheckPondHealthScreen() {
         </View>
 
         <HistoryList
-          // header={historyHeader}
           items={history_result}
           onShareItem={(item) =>
             Share.share({
-              message: `Pond check • ${new Date(item._ts)}
-              Result: ${item.health_status} 
-              Tip: ${item.description_and_recommendation}`,
+              message: `${t('Pond check')} • ${new Date(item._ts)}
+              ${t('Result')}: ${t(item.health_status) ?? t(item.health_status)}
+              ${t('Tip')}: ${item.description_and_recommendation}`,
             })
           }
           onDeleteItem={(id) => removeHistoryAt(id)}
         />
       </ScrollView>
 
-      {/* Confirm Modal */}
       <Modal animationType="fade" transparent visible={confirmVisible} onRequestClose={() => setConfirmVisible(false)}>
         <Pressable
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 }}
@@ -156,20 +157,21 @@ export default function CheckPondHealthScreen() {
           >
             {pendingFile ? <Image source={{ uri: pendingFile.uri }} style={{ width: '100%', height: 180 }} resizeMode="cover" /> : null}
             <View style={{ padding: 16 }}>
-              <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: 18, marginBottom: 6, color: themeStyle.colors.black }}>Use this photo?</Text>
-              <Text style={{ color: '#6b7280', marginBottom: 16 }}>Make sure the surface is clear and close-up for best analysis.</Text>
+              <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: 18, marginBottom: 6, color: themeStyle.colors.black }}>{t('Use this photo?')}</Text>
+              <Text style={{ color: '#6b7280', marginBottom: 16 }}>{t('Make sure the surface is clear and close-up for best analysis.')}</Text>
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <TouchableOpacity onPress={onRetake} style={{ flex: 1, height: 44, borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
-                  <Text style={{ color: '#111827', fontFamily: themeStyle.fontFamily.semibold }}>Upload Again</Text>
+                  <Text style={{ color: '#111827', fontFamily: themeStyle.fontFamily.semibold }}>{t('Upload Again')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={onContinue} style={{ flex: 1, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: themeStyle.colors.primary }}>
-                  <Text style={{ color: '#fff', fontFamily: themeStyle.fontFamily.semibold }}>Continue</Text>
+                  <Text style={{ color: '#fff', fontFamily: themeStyle.fontFamily.semibold }}>{t('Continue')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Pressable>
         </Pressable>
       </Modal>
+      </PullToRefreshScreen>
     </View>
   );
 }

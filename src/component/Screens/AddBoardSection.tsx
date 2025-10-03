@@ -11,6 +11,7 @@ import ManualAddBoardModal from '../Modals/ManualAddBoardModal';
 import ConnectionPasswordModal from '@/src/component/Modals/ConnectionPasswordModal';
 import { useAuth } from '@/src/auth/context/auth_context';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from 'react-i18next';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
@@ -19,6 +20,7 @@ interface AddBoardSectionProps {
 
 const AddBoardSection: React.FC<AddBoardSectionProps> = ({
 }) => {
+  const {t} = useTranslation();
   const [isBoardExist, setIsBoardExist] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "connect-password" | "">("");
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -49,12 +51,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   
 
   const handleConnectionPasswordSubmit = async (password: string) => {
-    setSubmitting(true);
-    if(isProvisioning)
-    {
-      await verifyConPasswordAndSubmit(password);
-      return;
-    }
+    console.log("Submitting connection password and creating board relationship...", user?.id);
+    setSubmitting(false);
     if (user?.id)
       await createBoardRelationship({
         board_id: selectedBoardId,
@@ -122,16 +120,27 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   };
 
   const verifyConPasswordAndSubmit = async (password: string) => {
+    console.log("Verifying connection password and submitting WiFi credentials...");
     setSubmitting(true);
     if (!wifiInfo) {
       Alert.alert("Error", "WiFi information is missing. Please try again.");
       return;
     }
 
-    if (isBoardExist) {
+    if (isBoardExist && user?.id) {
       try {
+        console.log("Verifying connection password...");
+        console.log("Selected Board ID: " + selectedBoardId);
+        console.log("Connection Password: " + password);
         await verifyConnectionPassword(selectedBoardId, password);
         await handleWifiSubmit({ ...wifiInfo, connectionPassword: password });
+        await createBoardRelationship({
+          board_id: selectedBoardId,
+          con_method: "bluetooth",
+          con_password: password,
+          user_id: user?.id!,
+        });
+        console.log("Connection password verified and WiFi submitted successfully.");
       } catch (error) {
         console.error("Connection password verification failed:", error);
         Alert.alert("Error", "Connection password is incorrect. Please try again.");
@@ -191,7 +200,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.title}>Add Board</Text>
+        <Text style={styles.title}>{t("Add Board")}</Text>
         <TouchableOpacity>
           <Ionicons name="help-circle-outline" size={20} color="white" />
         </TouchableOpacity>
@@ -235,7 +244,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         visible={modalVisible === "connect-password"}
         onClose={handleCloseModal}
         onSubmit={isProvisioning ? verifyConPasswordAndSubmit : handleConnectionPasswordSubmit}
-        loading={submitting}
+        // loading={submitting}
       />
     </View>
   );

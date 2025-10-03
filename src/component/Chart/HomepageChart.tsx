@@ -15,6 +15,7 @@ import {
   EDGE_LEFT, EDGE_RIGHT, MAX_TOTAL_SLOTS, ScrollMetrics, 
   sensorOption, SLOT_COUNT, SPACING_PER_SCALE, TRIM_AMOUNT
 } from '@/src/utils/chartUtils';
+import { useTranslation } from 'react-i18next';
 
 type SummaryChartProp = { boardId: string};
 
@@ -22,6 +23,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
   const [scale, setScale] = useState<sensorLogScale>('day');
   const [axisSlots, setAxisSlots] = useState<Date[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { t} = useTranslation();
 
   const spacing = useMemo(() => SPACING_PER_SCALE[scale], [scale]);
 
@@ -376,7 +378,7 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
         >
           <MaterialIcons name="date-range" size={15} color="black" />
           <Text style={style.datePickerText}>
-            {isJumpingToDate ? 'Loading...' : selectedDate.toLocaleDateString('en-US', {
+            {isJumpingToDate ? t('Loading...') : selectedDate.toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               ...(scale === 'hour' || scale === 'minute' ? {
@@ -403,15 +405,15 @@ export default function SummaryChart({ boardId }: SummaryChartProp) {
         <View style={style.legendContainer}>
           <View style={style.legendItem}>
             <View style={[style.legendColor, { backgroundColor: '#CDB4DB' }]} />
-            <Text style={style.legendText}>Temperature (°C)</Text>
+            <Text style={style.legendText}>{t('Temperature')} (°C)</Text>
           </View>
           <View style={style.legendItem}>
             <View style={[style.legendColor, { backgroundColor: '#F2BC79' }]} />
-            <Text style={style.legendText}>EC</Text>
+            <Text style={style.legendText}>{t('EC')}</Text>
           </View>
           <View style={style.legendItem}>
             <View style={[style.legendColor, { backgroundColor: '#F77979' }]} />
-            <Text style={style.legendText}>pH</Text>
+            <Text style={style.legendText}>{t('pH')}</Text>
           </View>
         </View>
         <View style={{ overflow: 'hidden' }}>

@@ -1,5 +1,405 @@
 {
+    "common": {
+        "ok": "OK",
+        "or": "or"
+    },
     "home": "Homepage",
-    "greet" : "Hello, world",
-    "name": "Name"
-}
+    "Sensor": "Sensor",
+    "Check Pond Health": "Check Pond Health",
+    "Notification History": "Notification History",
+    "Activity Overview": "Activity Overview",
+    "'Loading...'": "Loading...",
+    "Temperature": "Temperature",
+    "EC": "EC",
+    "pH": "pH",
+    "Home": "Home Page",
+    "Education": "Education",
+    "Setting": "Setting",
+    "Add Board": "Add Board",
+    "Manual mode requires a Board ID.": "Manual mode requires a Board ID.",
+    "BLE mode scans nearby devices.": "BLE mode scans nearby devices.",
+    "Instructions": "Instructions",
+    "To register the board you must use BLE options": "To register the board you must use BLE options",
+    "To Change wifi credentials of the board you must use BLE options": "To Change wifi credentials of the board you must use BLE options",
+    "You can add registered board by Manual option": "You can add registered board by Manual option",
+    "To use Manual option you must know MAC address or UUID of board": "To use Manual option you must know MAC address or UUID of board",
+    "Manual": "Manual",
+    "BLE": "BLE",
+    "Locates the board ID on the right side of the board.": "Locates the board ID on the right side of the board.",
+    "Enter board ID": "Enter board ID",
+    "Submit": "Submit",
+    "Select your device from the list below.": "Select your device from the list below",
+    "Scanning...": "Scanning...",
+    "No devices found.": "No devices found",
+    "Wifi configuration": "Wifi configuration",
+    "Board ID": "Board ID",
+    "Wifi name": "Wifi name",
+    "Wifi password": "Wifi password",
+    "Connection password": "Connection password",
+    "Board name": "Board name",
+    "Enter wifi name": "Enter wifi name",
+    "Enter Wifi password": "Enter Wifi password",
+    "Enter Connection password": "Enter Connection password",
+    "Enter Board Model Name": "Enter Board Model Name",
+    "Connect": "Connect",
+    "No boards available": "No boards available",
+    "Board": "Board",
+    "delete": "delete",
+    "edit": "edit",
+    "Running": "Running",
+    "Status": "Status",
+    "day": "day",
+    "hour": "hour",
+    "minute": "minute",
+    "second": "second",
+    "Connected": "Connected",
+    "Disconnected": "Disconnected",
+    "Disconnect": "Disconnect",
+    "Measurements": "Measurements",
+    "Measure": "Measure",
+    "Board Frequency": "Board Frequency",
+    "every": "every",
+    "Sensors": "Sensors",
+    "selected": "selected",
+    "custom": "custom",
+    "Threshold": "Threshold",
+    "Set Threshold": "Set Threshold",
+    "Max": "Max",
+    "Min": "Min",
+    "Loading sensor data...": "Loading sensor data...",
+    "No data available": "No data available",
+    "Please wait while we fetch your sensor readings": "Please wait while we fetch your sensor readings",
+    "Check your sensor connection and try again": "Check your sensor connection and try again",
+    "Summary Graph of": "Summary Graph of",
+    "Determine your pond health": "Determine your pond health",
+    "Pond Health": "Pond Health",
+    "Analyzing…": "Analyzing…",
+    "Health Status": "Health Status",
+    "Healthy": "Healthy",
+    "Excess Fertilizer": "Excess Fertilizer",
+    "Contamination Suspected": "Contamination Suspected",
+    "Low Oxygen": "Low Oxygen",
+    "Uncertain": "Uncertain",
+    "At Risk": "At Risk",
+    "Unhealthy": "Unhealthy",
+    "Pond check": "Pond check",
+    "Use this photo?": "Use this photo?",
+    "Make sure the surface is clear and close-up for best analysis.": "Make sure the surface is clear and close-up for best analysis.",
+    "Upload Again": "Upload Again",
+    "Continue": "Continue",
+    "Result": "Result",
+    "Tip": "Tip",
+    "Please insert image to\nbegin analysis": "Please insert image to\nbegin analysis",
+    "Unsupported file type.\nPlease upload a JPG or PNG image.": "Unsupported file type.\nPlease upload a JPG or PNG image.",
+    "Unable to upload image\nPlease check your network\nconnection": "Unable to upload image\nPlease check your network\nconnection",
+    "History": "History",
+    "From": "From",
+    "To": "To",
+    "Last": "Last",
+    "Cancel": "Cancel",
+    "Select": "Select",
+    "Share": "Share",
+    "No history available": "No history available",
+    "Delete": "Delete",
+    "dd/mm/yyyy": "dd/mm/yyyy",
+    "Archived": "Archived",
+    "Filter by date": "Filter by date",
+    "greet": "Hello, world",
+    "name": "Name",
+    "Manage Profile": "Manage Profile",
+    "Terms & Conditions": "Terms & Conditions",
+    "Manage Notifications": "Manage Notifications",
+    "Language": "Language",
+    "English": "English",
+    "Thai (default)": "Thai (default)",
+    "Username": "Username",
+    "Your account will be delete within": "Your account will be delete within",
+    "days": "วัน",
+    "You are unable to perform delete account for 24 hours":"You are unable to perform delete account for 24 hours",
+    "Account": "Account",
+    "Profile Information": "Profile Information",
+    "Google Account": "Google Account",
+    "Logout": "Logout",
+    "Delete Account": "Delete Account",
+    "Manage Account": "Manage Account",
+    "Google": "Google",
+    "Help & Supports": "Help & Supports",
+    "Privacy Policy": "Privacy Policy",
+    "welcome": {
+        "appName": "DuWeeNext",
+        "tagline": "Monitor, Prevent & Thrive!",
+        "register": "Register",
+        "login": "Login",
+        "registerHint": "Please register if you do not have an account."
+    },
+    "auth": {
+        "username": "Username",
+        "email": "Email",
+        "password": "Password",
+        "placeholder": {
+            "username": "Username",
+            "email": "example@gmail.com",
+            "password": "••••••••••••"
+        },
+        "forgotPassword": "Forgot password",
+        "forgotNeedsEmail": "To continue with password reset, you need to input email first.",
+        "registerInline": {
+            "prefix": "Please",
+            "link": "register",
+            "suffix": "if you have not registered."
+        },
+        "register": "Register",
+        "sending": "Sending…",
+        "haveAccount": "Already have an account?",
+        "login": "Log In",
+        "here": "here.",
+        "or": "— or —",
+        "googleSignup": "Sign up with Google",
+        "googleContinue": "Continue with Google",
+        "verify": {
+            "title": "Verification code",
+            "description": "We have sent a verification code to {{email}}",
+            "sendAgain": "Send again",
+            "sendAgainIn": "Send again ({{seconds}}s)",
+            "confirm": "Confirm",
+            "successTitle": "Verification Complete!",
+            "successSubtitle": "You will be redirected to Homepage next"
+        }
+    },
+    "rules": {
+        "username": {
+            "title": "Username requirements",
+            "description": "Your username should be unique and easy to identify.",
+            "items": [
+                "Must be at least 3 characters long",
+                "Can only contain letters, numbers, underscores",
+                "Cannot contain spaces or special characters",
+                "Must not already be taken"
+            ]
+        },
+        "email": {
+            "title": "Email requirements",
+            "description": "We’ll use this email for account verification and recovery.",
+            "items": [
+                "Must be a valid email format (e.g. name@example.com)",
+                "Cannot contain spaces",
+                "Must belong to a real and accessible domain"
+            ]
+        },
+        "password": {
+            "title": "Recommended password format",
+            "description": "Choose a password that is strong but easy for you to remember.",
+            "items": [
+                "At least one number",
+                "At least one uppercase letter",
+                "At least one lowercase letter",
+                "At least 8 characters minimum (12+ recommended)",
+                "At least one special character"
+            ]
+        }
+    },
+    "errors": {
+        "required": "Required",
+        "invalidEmail": "Invalid email",
+        "weakPassword": "Password too weak",
+        "pleaseEnterCode": "Please enter the code",
+        "noVerificationId": "No verification ID found. Please register again.",
+        "resendFailed": "Failed to resend code.",
+        "invalidCode": "Invalid code",
+        "emailRequired": "Email is required",
+        "passwordRequired": "Password is required",
+        "noToken": "No authentication token received from server",
+        "loginFailed": "Email or password is incorrect. Please check your credentials and try again.",
+        "inputError": "Please check your input and try again.",
+        "serverError": "Something went wrong on our end. Please try again later.",
+        "loginError": "An error occurred during login. Please try again.",
+        "networkError": "Please check your internet connection and try again.",
+        "unexpectedError": "An unexpected error occurred. Please try again."
+    },
+    "textfield": {
+        "matched": "Matched",
+        "notMatch": "Passwords do not match"
+    },
+    "education": {
+        "topics": {
+            "step-by-step-guide": {
+                "title": "Step-by-step Guide on how to grow Wolffia globosa",
+                "tagline": "",
+                    "sections": [
+                        {
+                            "kind": "paragraph",
+                            "title": "Understanding Wolffia globosa",
+                            "text": "Wolffia globosa, also known as Asian watermeal or duckweed, is the world's smallest flowering plant. It floats on the water surface and grows rapidly under the right conditions. This plant is valued for its high protein content and its ability to help purify water. Successful cultivation requires careful control of environment, nutrients, and water quality."
+                        },
+                        {
+                            "kind": "paragraph",
+                            "title": "Choosing the Right Growing Environment",
+                            "text": "Wolffia globosa thrives in warm, nutrient-rich, stagnant or slow-moving freshwater. For home or farm cultivation, use a controlled body of water (aquarium, pond, trough) that’s clean and free of contaminants."
+                        }
+                    ]
+                },
+                "pesticide-contamination": {
+                    "title": "Pesticide Contamination",
+                    "tagline": "If your pond is near a rice field or plantation, always check water sources — clean water = safe duckweed = safe consumers.",
+                    "sections": [
+                        {
+                            "kind": "paragraph",
+                            "text": "Pesticide contamination happens when chemicals used on nearby farms wash into your pond via rain runoff or contaminated sources."
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Common Sources",
+                            "items": [
+                                "Runoff from nearby plantations or rice fields",
+                                "Water pumped from canals collecting farm runoff",
+                                "Leftover water from pesticide-sprayed crops"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "How to Prevent",
+                            "items": [
+                                "Avoid water from areas near sprayed fields",
+                                "Prefer safe sources: 1) properly stored rainwater 2) clean well/groundwater 3) tested/filtered canal or pond water",
+                                "Be extra cautious after heavy rain",
+                                "Do not reuse water from other farms unless chemical-free"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Risks to Your Duckweed & Consumers",
+                            "items": [
+                                "Poor growth or sudden die-off",
+                                "Residues can make duckweed unsafe to eat",
+                                "Long-term pond contamination may require full replacement",
+                                "Damaged reputation and consumer trust"
+                            ]
+                        }
+                    ]
+                },
+                "heavy-metal-contamination": {
+                    "title": "Heavy Metal Contamination",
+                    "tagline": "Just because water looks clean doesn’t mean it’s safe. Choose water sources wisely to protect your duckweed and your customers.",
+                    "sections": [
+                        {
+                            "kind": "paragraph",
+                            "title": "What is Heavy Metal Contamination?",
+                            "text": "Heavy metals like lead, cadmium, mercury, and arsenic can enter your pond if water comes from industrial areas, old mining zones, or polluted canals/rivers. They’re invisible and odorless—testing is required."
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Common Sources",
+                            "items": [
+                                "Canals/rivers near factories or industrial estates",
+                                "Runoff from old mining or waste sites",
+                                "Contaminated groundwater in polluted regions",
+                                "Irrigation water flowing through many farm zones"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "How to Prevent",
+                            "items": [
+                                "Avoid unknown/untested sources, especially near industrial zones",
+                                "Prefer: 1) clean well/groundwater 2) properly stored rainwater 3) sources verified by advisors/authorities",
+                                "Get water tested if unsure or in historically polluted areas",
+                                "Avoid mixing uncertain sources"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Risks to Your Duckweed & Consumers",
+                            "items": [
+                                "Slow or stunted growth",
+                                "Duckweed becomes unsafe to eat (metal buildup)",
+                                "Contamination can persist even after water changes",
+                                "Potential harm to animals or people consuming it",
+                                "Possible regulatory/food safety issues"
+                            ]
+                        }
+                    ]
+                },
+                "overuse-of-NPK": {
+                    "title": "Overuse of Chemical Fertilizers (NPK)",
+                    "tagline": "Fertilizer is food, not a cure. Too much can do more harm than good. Watch your duckweed, check your data, and apply only what’s needed.",
+                    "sections": [
+                        {
+                            "kind": "paragraph",
+                            "title": "What is Overuse of Chemical Fertilizers (NPK)?",
+                            "text": "NPK helps when used correctly. Overuse can destabilize your pond—leading to unhealthy duckweed and poor water quality."
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Common Signs of NPK Overuse",
+                            "items": [
+                                "Sudden pH or TDS spikes/drops",
+                                "Unhealthy bubbles or cloudy water",
+                                "Yellowing, slow growth, or die-off",
+                                "Thick scum/algae on the surface"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "How to Apply NPK Safely",
+                            "items": [
+                                "Follow recommended dosage for pond size/density",
+                                "Start small and observe",
+                                "Avoid applying near rain events",
+                                "Monitor pH/TDS regularly with DuweeNext"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Risks to Your Duckweed & Pond",
+                            "items": [
+                                "Excess nutrients suffocate duckweed and boost harmful algae",
+                                "Unstable pH/TDS makes management harder",
+                                "Unsafe or low-quality duckweed",
+                                "Possible need for full pond cleaning"
+                            ]
+                        }
+                    ]
+                },
+                "user-of-organic-fertilizers": {
+                    "title": "Use of Organic Fertilizers (Animal Waste)",
+                    "tagline": "Just because it’s organic doesn’t mean it’s safe. Avoid animal waste in ponds to protect your duckweed and your health.",
+                    "sections": [
+                        {
+                            "kind": "paragraph",
+                            "title": "What is Organic Fertilizers (Animal Waste)?",
+                            "text": "Using animal manure (pig, cow, chicken) can introduce dangerous bacteria and pathogens, making duckweed unsafe."
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Common Issues from Animal Waste Use",
+                            "items": [
+                                "Bacterial contamination (e.g., E. coli, Salmonella)",
+                                "Murky or foul-smelling water",
+                                "Rapid duckweed death/discoloration",
+                                "Unsafe for sale or consumption"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Safer Organic Alternatives",
+                            "items": [
+                                "Choose plant-based compost or treated bio-fertilizers",
+                                "Never apply raw animal waste directly",
+                                "Maintain pond hygiene and clean water flow"
+                            ]
+                        },
+                        {
+                            "kind": "bullets",
+                            "title": "Risks to Your Duckweed & Consumers",
+                            "items": [
+                                "Can cause illness in people/animals",
+                                "May require full draining and cleaning",
+                                "Hurts credibility with buyers/processors",
+                                "Long-term biohazard in your system"
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    }

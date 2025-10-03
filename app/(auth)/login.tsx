@@ -1,48 +1,95 @@
-// app/auth/login.tsx
-import React from 'react';
-import { View, Text, SafeAreaView, StatusBar, ImageBackground, ScrollView, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, SafeAreaView, StatusBar, ImageBackground, ScrollView, Modal, TouchableOpacity, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import axios from 'axios'; // Import axios to check for AxiosError
+import { jwtDecode } from "jwt-decode";
 
 import { themeStyle } from '@/src/theme';
 import { images } from '@/src/constants/images';
 
-import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
 import { useAuthentication } from '@/src/api/hooks/useAuth';
 import { useAuth } from '@/src/auth/context/auth_context';
 import TextFieldPrimary from '@/src/component/TextFields/TextFieldPrimary';
 import ButtonUnderline from '@/src/component/Buttons/ButtonUnderline';
 import ButtonPrimary from '@/src/component/Buttons/ButtonPrimary';
 import ButtonGoogle from '@/src/component/Buttons/ButtonGoogle';
+import { useTranslation } from 'react-i18next';
+import i18n from "i18next";
+import { z } from "zod";
+import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
+import { GoogleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { useDeviceStore } from './_local';
 
-// simple email validation function
-const isValidEmail = (email: string) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+const loginSchema = z.object({
+  email: z.string().trim().min(1, "errors.emailRequired").email("errors.invalidEmail"),
+  password: z.string().trim().min(1, "errors.passwordRequired"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 const Login: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
+  const deviceToken = useDeviceStore(state => state.deviceToken);
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
 
-  const {session, user, isAuthenticated, login: authLogin} = useAuth();
+  const { login: authLogin } = useAuth();
 
-  const {login: apiLogin} = useAuthentication();
+
+  const { login: apiLogin, googleLogin } = useAuthentication();
 
   const [emailError, setEmailError] = React.useState<string | undefined>();
   const [pwdError, setPwdError] = React.useState<string | undefined>();
 
   const [forgotOpen, setForgotOpen] = React.useState(false);
-  
-  // Custom popup states
+
   const [showErrorPopup, setShowErrorPopup] = React.useState(false);
   const [errorTitle, setErrorTitle] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
 
-  // Helper function to show custom popup
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '17967520741-mkjuqt3486ft1lhhlv65qp6lujhvot5g.apps.googleusercontent.com',
+      iosClientId: '17967520741-5bcdj687vhnv0knbhhtaa0q5a3pph35t.apps.googleusercontent.com',
+    });
+  }, []);
+
+  async function onGoogleButtonPress() {
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+    await GoogleSignin.signOut();
+
+    const signInResult = await GoogleSignin.signIn().then((user) => {
+      return user;
+    }).catch((error) => {
+      console.error('Google Sign-In error:', error);
+      showError(t('auth.googleSignInError'), error.message);
+      throw error;
+    });
+
+    const idToken = signInResult.data?.idToken;
+    if (!idToken) {
+      throw new Error('No ID token found');
+    }
+
+    const googleCredential = GoogleAuthProvider.credential(idToken);
+
+    const res = await googleLogin({
+      id_token: idToken,
+      device_token: deviceToken,
+      platform: Platform.OS === 'ios' ? 'ios' : 'android',
+    });
+
+    await authLogin(res.token);
+
+    return signInWithCredential(getAuth(), googleCredential);
+  }
+
   const showError = (title: string, message: string) => {
-    console.log('Showing error popup:', title, message); // Debug log
+    console.log('Showing error popup:', title, message);
     setErrorTitle(title);
     setErrorMessage(message);
     setShowErrorPopup(true);
@@ -52,95 +99,35 @@ const Login: React.FC = () => {
     setEmailError(undefined);
     setPwdError(undefined);
 
-    // Validate email format
-    console.log(session, user?.email, isAuthenticated)
-    if (!email.trim()) {
-      setEmailError('Email is required');
-    } else if (!isValidEmail(email)) {
-      setEmailError('Please enter a valid email address');
-    }
-    
-    if (!password.trim()) setPwdError('Password is required');
-    
-    // Stop if there are validation errors
-    if (!email.trim() || !isValidEmail(email) || !password.trim()) return;
-    
-    try {
-      const res = await apiLogin({
-        Email: email, // Send email as username for backend compatibility
-        Password: password
-      });
+    const result = loginSchema.safeParse({ email, password } as LoginForm);
 
-      console.log('Login successful:', res);
-      
-      // Store the session in auth context
-      // Adjust these property names based on your actual API response structure
-      if (res?.token || res?.access_token || res?.jwt) {
-        const token = res.token || res.access_token || res.jwt;
-        const userData = {
-          id: res.user?.id || res.user_id || '1',
-          email: email,
-          name: res.user?.name || res.username || email.split('@')[0]
-        };
-        
-        await authLogin(token, userData);
-        console.log('Session stored successfully');
-        console.log('Token:', token);
-        console.log('User data:', userData);
-      } else {
-        console.error('No token found in response:', res);
-        showError('Login Error', 'No authentication token received from server');
-      }
-      
-      console.log('Navigation called successfully');
-    } catch (error: any) {
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      if (fieldErrors.email?.[0]) setEmailError(t(fieldErrors.email[0]));
+      if (fieldErrors.password?.[0]) setPwdError(t(fieldErrors.password[0]));
+      return;
+    }
+
+    console.log("Device token from store:", deviceToken);
+
+    const res = await apiLogin({
+      Email: email,
+      Password: password,
+      DeviceToken: deviceToken,
+      Platform: Platform.OS === 'ios' ? 'ios' : 'android'
+    }).catch((error) => {
       console.error('Login error:', error);
-      
-      // Check if it's an axios error with 401 status
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
-        
-        if (status === 401) {
-          // Show specific popup for wrong email/password
-          console.log("Unauthorized 401 ");
-          showError(
-            'Login Failed',
-            'Email or password is incorrect. Please check your credentials and try again.'
-          );
-        } else if (status === 400) {
-          // Handle other client errors
-          showError(
-            'Login Error',
-            error.response?.data?.message || 'Please check your input and try again.'
-          );
-        } else if (status && status >= 500) {
-          // Handle server errors
-          showError(
-            'Server Error',
-            'Something went wrong on our end. Please try again later.'
-          );
-        } else {
-          // Handle other HTTP errors
-          showError(
-            'Login Error',
-            error.response?.data?.message || 'An error occurred during login. Please try again.'
-          );
-        }
-      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network')) {
-        // Handle network errors
-        showError(
-          'Network Error',
-          'Please check your internet connection and try again.'
-        );
-      } else {
-        // Handle other errors
-        showError(
-          'Login Error',
-          error.message || 'An unexpected error occurred. Please try again.'
-        );
-      }
+      showError(t('auth.login'), error.message);
+    });
+
+    if (res?.token) {
+      await authLogin(res.token);
+    } else {
+      showError(t('auth.login'), t('errors.noToken'));
     }
   };
+
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeStyle.colors.black }}>
@@ -151,18 +138,17 @@ const Login: React.FC = () => {
       />
       <StatusBar barStyle="light-content" />
 
-      <ScrollView 
+      <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ 
-          flexGrow: 1, 
-          paddingHorizontal: 18, 
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 18,
           paddingTop: 100,
-          paddingBottom: 50 
+          paddingBottom: 50
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Logo */}
         <View style={{ alignItems: 'center', marginBottom: 12 }}>
           <Animated.Image
             entering={FadeIn.duration(500)}
@@ -171,58 +157,55 @@ const Login: React.FC = () => {
           />
         </View>
 
-        {/* Form */}
         <View style={{ gap: 12, alignItems: 'center' }}>
-          {/* Email Field */}
           <Animated.View entering={FadeInDown.delay(80).duration(500)}>
             <TextFieldPrimary
-              name="Email"
+              name={t('auth.email')}
               type="email"
-              placeholder="example@gmail.com"
+              placeholder={t('auth.placeholder.email')}
               value={email}
-              onChangeText={(t) => {
-                setEmail(t);
+              onChangeText={(val) => {
+                setEmail(val);
                 if (emailError) setEmailError(undefined);
               }}
               errorPlacement="topRight"
               externalError={emailError}
+              ruleData={{
+                title: t('rules.email.title'),
+                description: t('rules.email.description'),
+                rules: t('rules.email.items', { returnObjects: true }) as string[]
+              }}
             />
           </Animated.View>
 
-          {/* Password (old variant) */}
           <Animated.View entering={FadeInDown.delay(140).duration(500)}>
             <TextFieldPrimary
-              name="Password"
+              name={t('auth.password')}
               type="password"
               passwordVariant="old"
-              placeholder="••••••••••••"
+              placeholder={t('auth.placeholder.password')}
               value={password}
-              onChangeText={(t) => {
-                setPassword(t);
+              onChangeText={(val) => {
+                setPassword(val);
                 if (pwdError) setPwdError(undefined);
               }}
               errorPlacement="topRight"
               externalError={pwdError}
+              ruleData={{
+                title: t('rules.password.title'),
+                description: t('rules.password.description'),
+                rules: t('rules.password.items', { returnObjects: true }) as string[]
+              }}
             />
           </Animated.View>
 
-          {/* Forgot password -> skip email step, go straight to verification */}
           <View style={{ paddingHorizontal: 16, marginTop: -6, alignItems: 'center', right: 100 }}>
-            <ButtonUnderline text="Forgot password" onPress={() => setForgotOpen(true)} />
+            <ButtonUnderline text={t('auth.forgotPassword')} onPress={() => setForgotOpen(true)} />
           </View>
-          <View style={{ maxWidth: 325 }}>
-            <Text style={{ color: 'white' }}>To continue with password reset,
-              you need to input email first.</Text>
-          </View>
-
-
-          {/* Login button */}
-          <Animated.View
-            entering={FadeInDown.delay(200).duration(500)}
-            style={{ alignItems: 'center'}}
-          >
+          <Text style={{ color: 'white' }}>{t('auth.forgotNeedsEmail')}</Text>
+          <Animated.View entering={FadeInDown.delay(200).duration(500)} style={{ alignItems: 'center' }}>
             <ButtonPrimary
-              text="Login"
+              text={t('auth.login')}
               filledColor={themeStyle.colors.primary}
               borderColor={themeStyle.colors.white}
               textColor={themeStyle.colors.white}
@@ -231,7 +214,6 @@ const Login: React.FC = () => {
             />
           </Animated.View>
 
-          {/* Register hint */}
           <Animated.Text
             entering={FadeInDown.delay(260).duration(500)}
             style={{
@@ -239,63 +221,51 @@ const Login: React.FC = () => {
               color: themeStyle.colors.white,
               fontFamily: themeStyle.fontFamily.regular,
               fontSize: themeStyle.fontSize.data_text,
-              textAlign: 'center',
+              textAlign: 'center'
             }}
           >
-            Please{' '}
+            {t('auth.registerInline.prefix')}{' '}
             <Text
               onPress={() => router.push('/(auth)/signup')}
               style={{
-                color: themeStyle.colors.primary,
+                color: '#40a9ff',
                 textDecorationLine: 'underline',
-                fontFamily: themeStyle.fontFamily.medium,
+                fontFamily: themeStyle.fontFamily.medium
               }}
             >
-              register
+              {t('auth.registerInline.link')}
             </Text>{' '}
-            if you have not registered.
+            {t('auth.registerInline.suffix')}
           </Animated.Text>
 
-          {/* Divider */}
           <Animated.Text
             entering={FadeInDown.delay(300).duration(500)}
-            style={{
-              textAlign: 'center',
-              color: themeStyle.colors.white,
-              opacity: 0.8,
-              marginTop: 20,
-            }}
+            style={{ textAlign: 'center', color: themeStyle.colors.white, opacity: 0.8, marginTop: 20 }}
           >
-            ————————— or —————————
+            ————————— {t('common.or')} —————————
           </Animated.Text>
 
-          {/* Google button */}
-          <Animated.View
-            entering={FadeInDown.delay(340).duration(500)}
-            style={{ alignItems: 'center', marginTop: 30 }}
-          >
+          <Animated.View entering={FadeInDown.delay(340).duration(500)} style={{ alignItems: 'center', marginTop: 30 }}>
             <ButtonGoogle
-              text="Sign up with Google"
+              text={t('auth.googleContinue')}
               borderColor={themeStyle.colors.black}
-              onPress={() => showError('Google', 'Google auth (mock)')}
+              onPress={() => onGoogleButtonPress()}
               width={270}
             />
           </Animated.View>
         </View>
       </ScrollView>
 
-      {/* Forgot Password flow: force verification step first */}
       <ForgotPasswordFlow
         visible={forgotOpen}
         onClose={() => setForgotOpen(false)}
-        initialEmail={email}   // from Email TextField
-        startStep="verify"          // force verification UI
+        initialEmail={email}
+        startStep="email"
       />
 
-      {/* Custom Error Popup Modal */}
       <Modal
         visible={showErrorPopup}
-        transparent={true}
+        transparent
         animationType="fade"
         onRequestClose={() => setShowErrorPopup(false)}
       >
@@ -303,21 +273,16 @@ const Login: React.FC = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{errorTitle}</Text>
             <Text style={styles.modalMessage}>{errorMessage}</Text>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => setShowErrorPopup(false)}
-            >
-              <Text style={styles.modalButtonText}>OK</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => setShowErrorPopup(false)}>
+              <Text style={styles.modalButtonText}>{t('common.ok')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 };
 
-// Modal styles for custom popup
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,

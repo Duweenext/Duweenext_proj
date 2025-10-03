@@ -6,6 +6,7 @@ import SensorChart from '../../Chart/SensorChart/SensorChart';
 import { Ionicons } from '@expo/vector-icons';
 import { useSensor } from '@/src/api/hooks/useSensor';
 import { BackendSensorLogData, SensorDataBackend } from '@/src/interfaces/sensor';
+import { useTranslation } from 'react-i18next';
 
 interface SensorThreshold {
   max: number;
@@ -48,7 +49,7 @@ export const getSensorSuffix = (type : string) : string => {
 
 const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }) => {
   const { setBoardThreshold, mergedGraph , sensorDataLoading, graphMetaData} = useSensor(boardId);
-  // console.log("Graph Meta Data: ", graphMetaData);
+  const {t} = useTranslation();
   const [selectedSensor, setSelectedSensor] = useState<SensorData>({
     id: sensor?.id ?? 0,
     name: sensor.sensor_type,
@@ -142,7 +143,7 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
         <>
           <View style={styles.thresholdContainer}>
             <View style={styles.thresholdHeader}>
-              <Text style={styles.thresholdTitle}>Threshold:</Text>
+              <Text style={styles.thresholdTitle}>{t('Threshold')}:</Text>
               <View style={styles.infoIcon}>
                 <Text style={styles.infoText}>?</Text>
               </View>
@@ -150,7 +151,7 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
             
             <View style={styles.thresholdRow}>
               <View style={styles.thresholdItem}>
-                <Text style={styles.thresholdLabel}>Max:</Text>
+                <Text style={styles.thresholdLabel}>{t('Max')}:</Text>
                 <TextFieldSensorValue 
                   defaultValue={selectedSensor.threshold.max.toString()}
                   onChange={handleMaxThresholdChange}
@@ -178,7 +179,7 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
 
             <View style={styles.thresholdRow}>
               <View style={styles.thresholdItem}>
-                <Text style={styles.thresholdLabel}>Min:</Text>
+                <Text style={styles.thresholdLabel}>{t('Min')}:</Text>
                 <TextFieldSensorValue 
                   defaultValue={selectedSensor.threshold.min.toString()}
                   onChange={handleMinThresholdChange}
@@ -216,10 +217,10 @@ const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }
           ) : (
             <View style={styles.chartPlaceholder}>
               <Text style={styles.chartPlaceholderText}>
-                {sensorDataLoading ? '📊 Loading sensor data...' : '📊 No data available'}
+                {sensorDataLoading ? (t('Loading sensor data...')) : t('No data available')}
               </Text>
               <Text style={styles.chartSubtext}>
-                {sensorDataLoading ? 'Please wait while we fetch your sensor readings' : 'Check your sensor connection and try again'}
+                {sensorDataLoading ? t('Please wait while we fetch your sensor readings') : t('Check your sensor connection and try again')}
               </Text>
             </View>
           )}

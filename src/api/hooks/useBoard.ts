@@ -6,6 +6,7 @@ import { eventBus } from "@/src/event/eventBus";
 import { useAuth } from "@/src/auth/context/auth_context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
+import { qc } from "../query";
 
 export type BoardRegistrationData = {
     board_id: string;
@@ -44,7 +45,6 @@ type UseBoardReturn = {
 export function useBoard(): UseBoardReturn {
     const { user } = useAuth();
     const userId = user?.id;
-    const qc = useQueryClient();
 
     // 1) List boards for current user
     const {
@@ -81,7 +81,7 @@ export function useBoard(): UseBoardReturn {
                     throw err;
                 }
             },
-            
+
         });
 
     // 3) Create relationship
@@ -91,7 +91,12 @@ export function useBoard(): UseBoardReturn {
             return res.data.data;
         },
         onSuccess: () => {
-            if (userId) qc.invalidateQueries({ queryKey: boardKeys.user(userId) });
+            if (userId) {
+                qc.invalidateQueries({
+                    queryKey: boardKeys.user(userId),
+                    refetchType: 'active', // default; use 'all' if you want background ones too
+                });
+            }
             Toast.show({
                 type: 'success',
                 text1: 'Board added !!',
@@ -101,7 +106,6 @@ export function useBoard(): UseBoardReturn {
         onError: (error: any) => {
             let message = 'Something went wrong.';
             if (axios.isAxiosError(error)) {
-                // custom message from backend
                 const apiMsg = error.response?.data?.data || error.response?.data?.message;
                 if (apiMsg) {
                     message = apiMsg;
@@ -156,8 +160,8 @@ export function useBoard(): UseBoardReturn {
         },
     });
 
-    const editBoardName = useMutation({ 
-        mutationFn: async ({ boardName, boardId }: {boardName: string, boardId: string}) => {
+    const editBoardName = useMutation({
+        mutationFn: async ({ boardName, boardId }: { boardName: string, boardId: string }) => {
             const res = await axiosMainInstance.put(`/v1/board/name/${boardId}`, {
                 board_name: boardName,
             });
@@ -196,9 +200,9 @@ export function useBoard(): UseBoardReturn {
     });
 
     const verifyConnectionPassword = useMutation({
-        mutationFn: async ({boardId, connectionPassword}: {boardId: string, connectionPassword: string}) => {
+        mutationFn: async ({ boardId, connectionPassword }: { boardId: string, connectionPassword: string }) => {
             try {
-                const res = await axiosMainInstance.post(`/board-relationships/verify/${boardId}`, {
+                const res = await axiosMainInstance.post(`v1/board-relationships/verify/${boardId}`, {
                     con_password: connectionPassword,
                 });
                 return res.data;
@@ -254,7 +258,7 @@ export function useBoard(): UseBoardReturn {
         setBoardConnection: (relationship_id: number, status: BoardConnectionStatus) =>
             setBoardConnectionMut.mutateAsync({ relationship_id, status }),
 
-        editBoardName: (boardId: string, boardName: string) => 
+        editBoardName: (boardId: string, boardName: string) =>
             editBoardName.mutateAsync({ boardId, boardName }),
 
         deleteBoard: (relationship_id: number) =>

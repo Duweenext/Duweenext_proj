@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Image, Text, TouchableOpacity } from 'react-native';
 import { themeStyle } from '@/src/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   imageUri: string | null;
@@ -17,6 +18,7 @@ const MSG = {
 };
 
 export default function UploadBox({ imageUri, status, placeholder, onReset }: Props) {
+  const {t} = useTranslation();
   return (
     <View style={{
       backgroundColor: themeStyle.colors.white, borderRadius: 10, 
@@ -37,7 +39,7 @@ export default function UploadBox({ imageUri, status, placeholder, onReset }: Pr
           textAlign: 'center', color: '#c9c9c9',
           fontFamily: themeStyle.fontFamily.medium,
           fontSize: themeStyle.fontSize.header2,
-        }}>{MSG[placeholder]}</Text>
+        }}>{t(MSG[placeholder])}</Text>
       )}
     </View>
   );

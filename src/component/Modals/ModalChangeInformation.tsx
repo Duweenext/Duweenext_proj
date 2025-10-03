@@ -12,6 +12,7 @@ import ButtonUnderline from '../Buttons/ButtonUnderline';
 import TextFieldModal from '../TextFields/TextFieldModal/TextFieldModal';
 import ButtonModalL from '../Buttons/ButtonModalL';
 import { themeStyle } from '@/src/theme';
+import PasswordStrengthMeter, { usePasswordStrength } from '../TextFields/PasswordStrength/PasswordStrength';
 
 type FieldMode = 'text' | 'password-old' | 'password-new' | 'password-confirm';
 type InputKind = 'none' | 'letters' | 'email';
@@ -36,6 +37,7 @@ interface ModalChangeInformationProps {
     onChangeText?: (text: string) => void;
     confirmAgainst?: string;
     oldPasswordError?: string;
+    passwordStrengthVisible?: boolean;
   }[];
   underlineButton?: {
     text: string;
@@ -47,6 +49,7 @@ interface ModalChangeInformationProps {
     filledColor?: string;
     textColor?: string;
   };
+  buttonLoading?: boolean; 
 }
 
 const hexToRgba = (hex: string, alpha: number) => {
@@ -65,7 +68,7 @@ const ModalChangeInformation: React.FC<ModalChangeInformationProps> = ({
   visible,
   title,
   titleColor = themeStyle.colors.fail,
-  titleIcon,                       
+  titleIcon,
   descriptionText,
   instructionText,
   errorMessage,
@@ -74,7 +77,9 @@ const ModalChangeInformation: React.FC<ModalChangeInformationProps> = ({
   fields = [],
   button,
   underlineButton,
+  buttonLoading = false,
 }) => {
+  const { strength, color, percent } = usePasswordStrength(fields ? fields.find(f => f.type === 'password')?.value || '' : '');
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View
@@ -181,16 +186,36 @@ const ModalChangeInformation: React.FC<ModalChangeInformationProps> = ({
           )}
 
           {fields.map((field, idx) => {
-            if (field.type === 'password' || field.type === 'text') {
+            if (field.type === 'password') {
               return (
-                <View key={`field-${idx}`} style={{ marginBottom: 16, width: '100%' }}>
+                <View key={`field-${idx}`} style={{ marginBottom: 16, width: '100%' , gap: 8}}>
                   <TextFieldModal
                     type='password'
                     inputKind={field.inputKind ?? 'none'}
                     name={field.name}
                     placeholder={field.placeholder || ''}
                     value={field.value || ''}
-                    onChangeText={field.onChangeText || (() => {})}
+                    onChangeText={field.onChangeText || (() => { })}
+                  />
+                  {field.passwordStrengthVisible && <PasswordStrengthMeter
+                    strength={strength}
+                    color={color}
+                    percent={percent}
+                    width={280}
+                  />}
+                </View>
+              );
+            }
+            if (field.type === 'text') {
+              return (
+                <View key={`field-${idx}`} style={{ marginBottom: 16, width: '100%' }}>
+                  <TextFieldModal
+                    type='text'
+                    inputKind={field.inputKind ?? 'none'}
+                    name={field.name}
+                    placeholder={field.placeholder || ''}
+                    value={field.value || ''}
+                    onChangeText={field.onChangeText || (() => { })}
                   />
                 </View>
               );
@@ -201,6 +226,8 @@ const ModalChangeInformation: React.FC<ModalChangeInformationProps> = ({
                   <TextFieldVerificationCode
                     length={6}
                     onCodeFilled={(code) => field.onChangeText?.(code)}
+                    value={field.value ?? ''}                 // ⬅ add this
+                    onChangeText={field.onChangeText || (() => { })}
                     isError={!!errorMessage}
                   />
                 </View>
@@ -222,6 +249,7 @@ const ModalChangeInformation: React.FC<ModalChangeInformationProps> = ({
                 filledColor={button.filledColor}
                 textColor={button.textColor}
                 onPress={button.onPress}
+                loading={buttonLoading}
               />
             </View>
           )}

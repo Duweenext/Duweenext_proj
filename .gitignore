@@ -14,4 +14,12 @@ duweenext-firebase-adminsdk-fbsvc-cd3056aad2.json
 *firebase-adminsdk*.json
 duweenext-firebase-adminsdk-fbsvc-cd3056aad2.json
 *firebase-adminsdk*.json
+# Android build stuff
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/debug.keystore
+google-service.json
+/android/app/google-service.json
 

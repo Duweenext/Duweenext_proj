@@ -46,16 +46,16 @@ const UsernameRow: React.FC<UsernameRowProps> = ({
   const handleSave = async () => {
     const v = draft.trim();
     if (!v) {
-      Toast.show({ type: "error", text1: "Username is required" });
+      Toast.show({ type: "errorToast", text1: "Username is required" });
       return;
     }
     try {
       await onSaveUsername?.(v);
       setEditing(false);
-      Toast.show({ type: "success", text1: "Username updated" });
+      Toast.show({ type: "successToast", text1: "Username updated" });
     } catch (e: any) {
       Toast.show({
-        type: "error",
+        type: "errorToast",
         text1: "Update failed",
         text2: e?.message ?? "Please try again",
       });

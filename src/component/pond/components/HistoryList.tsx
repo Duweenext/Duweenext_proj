@@ -1,26 +1,27 @@
 // src/pond/components/HistoryList.tsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Image, Text, TouchableOpacity, View, Platform, Modal, Pressable } from 'react-native'; // 👈 add Platform
-import { AnalysisResult } from '../types';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, FlatList, Image, Text, TouchableOpacity, View, Platform, Modal, Pressable, StyleSheet } from 'react-native'; // 👈 add Platform
 import { themeStyle } from '@/src/theme';
-import { PondDiagnoseHistory, PondDiagnoseResponse, usePondHealths } from '@/src/api/hooks/useImageProcessing';
+import { PondDiagnoseHistory } from '@/src/api/hooks/useImageProcessing';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { ScrollView } from 'react-native-gesture-handler';
 import { useTranslation } from 'react-i18next';
 import { t } from 'i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { MaterialIcons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 type Props = {
   items: PondDiagnoseHistory[];
   onShareItem?: (item: PondDiagnoseHistory) => void;
-  onDeleteItem: (id: string) => void;
+  onDeleteItem: (id: number) => void;
 };
 
-export default function HistoryList({ items, onShareItem , onDeleteItem}: Props) {
+export default function HistoryList({ items, onShareItem, onDeleteItem }: Props) {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const webFromRef = useRef<HTMLInputElement | null>(null);
   const webToRef = useRef<HTMLInputElement | null>(null);
@@ -88,51 +89,84 @@ export default function HistoryList({ items, onShareItem , onDeleteItem}: Props)
     </>
   ) : null;
 
+  const queryClient = useQueryClient();
+
+  const onRefreshHistory = useCallback(async () => {
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['pondHealthHistory'] });
+
+      Toast.show({
+        type: 'successToast',
+        text1: t('Refreshed'),
+        text2: t('Your pond history is up to date.'),
+        position: 'top',
+        visibilityTime: 2000,
+      });
+
+    } catch (error) {
+      Toast.show({
+        type: 'errorToast',
+        text1: t('Error'),
+        text2: t('Could not refresh history.'),
+        position: 'top',
+      });
+    }
+  }, [queryClient, t]);
+  
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
         <Text style={{ fontSize: 22, fontWeight: '800', color: '#fff', marginBottom: 6, paddingHorizontal: 14 }}>{(t('History'))}</Text>
-        <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4,paddingHorizontal: 14 }}>
+        <TouchableOpacity onPress={onRefreshHistory} style={styles.refreshButton}>
+          <MaterialIcons
+            name="refresh"
+            size={26}
+            color={themeStyle.colors.white}
+          />
+        </TouchableOpacity>
+      </View>
+      <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingHorizontal: 14 }}>
 
-          <CalendarChip label={t('From')} value={fromDate} onCalendarPress={openFromPicker} />
-          <CalendarChip label={t('To')} value={toDate} onCalendarPress={openToPicker} />
+        <CalendarChip label={t('From')} value={fromDate} onCalendarPress={openFromPicker} />
+        <CalendarChip label={t('To')} value={toDate} onCalendarPress={openToPicker} />
 
-        </View>
-        <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4,paddingHorizontal: 14 }}>
-          {(fromDate || toDate) && (
-            <TouchableOpacity
-              onPress={() => { setFromDate(null); setToDate(null); }}
-              style={{ paddingHorizontal: 12, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Text style={{ color: '#111827' }}>Clear</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-
-        {/* Mobile (iOS/Android) calendar popups */}
-        {Platform.OS !== 'web' && (
-          <>
-            <CalendarModal
-              visible={showFromPicker}
-              value={fromDate ?? new Date()}
-              onClose={() => setShowFromPicker(false)}
-              onConfirm={(d) => setFromDate(d)}
-              maximumDate={toDate ?? undefined}
-            />
-            <CalendarModal
-              visible={showToPicker}
-              value={toDate ?? (fromDate ?? new Date())}
-              onClose={() => setShowToPicker(false)}
-              onConfirm={(d) => setToDate(d)}
-              minimumDate={fromDate ?? undefined}
-            />
-          </>
+      </View>
+      <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingHorizontal: 14 }}>
+        {(fromDate || toDate) && (
+          <TouchableOpacity
+            onPress={() => { setFromDate(null); setToDate(null); }}
+            style={{ paddingHorizontal: 12, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Text style={{ color: '#111827' }}>Clear</Text>
+          </TouchableOpacity>
         )}
+      </View>
+
+
+      {/* Mobile (iOS/Android) calendar popups */}
+      {Platform.OS !== 'web' && (
+        <>
+          <CalendarModal
+            visible={showFromPicker}
+            value={fromDate ?? new Date()}
+            onClose={() => setShowFromPicker(false)}
+            onConfirm={(d) => setFromDate(d)}
+            maximumDate={toDate ?? undefined}
+          />
+          <CalendarModal
+            visible={showToPicker}
+            value={toDate ?? (fromDate ?? new Date())}
+            onClose={() => setShowToPicker(false)}
+            onConfirm={(d) => setToDate(d)}
+            minimumDate={fromDate ?? undefined}
+          />
+        </>
+      )}
 
       {WebDateInputs}
       <FlatList
         data={filteredItems}
-        keyExtractor={(i) => i._id}
+        keyExtractor={(i) => i._id.toString()}
 
         ListHeaderComponentStyle={{ marginBottom: 6 }}
         renderItem={({ item }) => (
@@ -151,7 +185,7 @@ function HistoryCard({
 }: {
   item: PondDiagnoseHistory
   onShareItem?: (i: PondDiagnoseHistory) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
 }) {
   const confirmDelete = () => {
     if (Platform.OS === 'web') {
@@ -181,7 +215,7 @@ function HistoryCard({
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={{ fontWeight: '700' }}>{t('Health Status')}: {String(t(item.health_status))}</Text>
         </View>
-          <Text style={{ color: '#666' }}>{timeAgo(item._ts)}</Text>
+        <Text style={{ color: '#666' }}>{timeAgo(item._ts)}</Text>
         <Text style={{ marginTop: 6 }} numberOfLines={3}>
           {item.description_and_recommendation}
         </Text>
@@ -302,7 +336,15 @@ function CalendarModal({
 }
 
 function timeAgo(ts: number | string | Date) {
-  const date = typeof ts === "number" ? new Date(ts) : new Date(ts);
+  const date = new Date(ts);
+
+  console.log("Calculating timeAgo for timestamp:", ts, "-> date:", date);
+  if (isNaN(date.getTime())) {
+    return t('Invalid date'); // Or return 'Just now', or an empty string
+  }
+  // --- END OF CHECK ---
+
+  // 3. The rest of your function is now safe
   const diff = Date.now() - date.getTime();
 
   const min = Math.max(1, Math.round(diff / 60000));
@@ -343,7 +385,13 @@ function filterByDateRange<T extends { _ts: number }>(
   if (!fromDate && !toDate) return items;
 
   const fromMs = fromDate ? startOfDay(fromDate).getTime() : -Infinity;
-  const toMs   = toDate   ? endOfDay(toDate).getTime()     :  Infinity;
+  const toMs = toDate ? endOfDay(toDate).getTime() : Infinity;
 
   return items.filter(it => it._ts >= fromMs && it._ts <= toMs);
 }
+
+const styles = StyleSheet.create({
+  refreshButton: {
+    padding: 8,
+  },
+});

@@ -1,4 +1,3 @@
-// components/Esp32Card.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     View,
@@ -11,27 +10,26 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/theme';
 import { BoardConnectionStatus, BoardRelationship } from '@/src/interfaces/board';
-import CardBoardExpanded from './CardboardExpand';
+import CardBoardExpandedWrapped from '@/src/component/Card/CardBoardPrimary/CardBoardExpand/CardboardExpandWrapped';
 import ButtonCard from '../../Buttons/ButtonCard';
 import { useBoard } from '@/src/api/hooks/useBoard';
 import { formatRunningTimeFromTimestamp } from '@/src/utlis/input';
-import TextFieldPrimary from '../../TextFields/TextFieldPrimary';
-import TextFieldSensorValue from '../../TextFields/TextFieldSensorValue';
 import IconButton from '../../Buttons/IconButton';
 import UnderlineTextField from '../../TextFields/TextFieldUnderline';
 import DeleteConfirmModal from '../../Modals/ConfirmDelete';
 import { useTranslation } from 'react-i18next';
-import { t } from 'i18next';
+import i18next, { t} from 'i18next';
+import WifiConfigModal from '../../Modals/wificonfigModal';
+import ConnectionPasswordModal from '../../Modals/ConnectionPasswordModal';
+import { WifiConfig } from '@/src/interfaces/wifi';
+import { useBle } from '@/src/ble/useBle.native';
+import Toast from 'react-native-toast-message';
+import i18n from '@/src/i18n/i18n.config';
 
 const displayStatusMap = {
-    active: t('Connected'),
-    inactive: t('Disconnected'),
-} as const;
-
-const displayStatusActionLabel = {
-    active: t('Disconnect'),
-    inactive: t('Connect'),
-}
+    active: 'status.connected',
+    inactive: 'status.disconnected',
+};
 
 interface Esp32CardProps {
     runningTime?: string;
@@ -40,7 +38,6 @@ interface Esp32CardProps {
     frequency?: number;
 }
 
-// everything in one place:
 const variants: Record<
     BoardConnectionStatus,
     {
@@ -70,7 +67,7 @@ const variants: Record<
 const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     board,
 }) => {
-    const {t} = useTranslation();
+    const { t } = useTranslation();
     const mode = board?.board_status || 'inactive' as BoardConnectionStatus;
     const [boardName, setBoardName] = useState(board.board_name || 'Unnamed Board');
     const [expanded, setExpanded] = useState(false);
@@ -78,14 +75,56 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     const { cardBg, textColor, buttonBg, buttonText, iconColor } =
         variants[mode] || variants.inactive;
     const [lastActive, setLastActive] = useState<string | null>(null);
-    const [modal, setModal] = useState<"delete" | "">();
+    const [modal, setModal] = useState<"delete" | "wifi-config" | "connect-password" | "">();
     const [isTitleMultiline, setIsTitleMultiline] = React.useState(false);
+    const [wifiInfo, setWifiInfo] = useState<WifiConfig>();
 
     const [titleWidth, setTitleWidth] = useState<number | undefined>(undefined);
 
+    const handleReconnectProvision = async (values: WifiConfig) => {
+        if (!values.ssid || !values.wifiPassword) {
+            Toast.show({
+                type: 'error',
+                text1: 'Invalid Input',
+                text2: 'SSID and Password are required to re-provision Wi-Fi.'
+            });
+            return;
+        }
+
+        const deviceId = board.mac_address; 
+
+        setModal(""); 
+
+        try {
+          console.log(`Starting Wi-Fi provisioning for ${deviceId}...`);
+
+          await provisionWifi(deviceId, {
+            ssid: values.ssid,
+            wifiPassword: values.wifiPassword,
+          });
+          
+          console.log("WiFi provisioning completed successfully!");
+          Toast.show({
+            type: 'success',
+            text1: 'Wi-Fi Re-provisioned',
+            text2: 'The board has been successfully re-provisioned with new Wi-Fi credentials.'
+          });
+          
+          await refetchBoards(); 
+    
+        } catch (err) {
+          console.error("Re-provisioning failed:", err);
+          Toast.show({
+            type: 'error',
+            text1: 'Provisioning Failed',
+            text2: 'Failed to re-provision Wi-Fi. Please try again.'
+          });
+        }
+    };
+
     useEffect(() => {
-        setLastActive(formatRunningTimeFromTimestamp(board.updated_at));
-    }, [])
+        setLastActive(formatRunningTimeFromTimestamp(board.updated_at, t));
+    }, [board.updated_at])
 
     const onTitleTextLayout = (e: any) => {
         const line = e.nativeEvent.lines?.[0];
@@ -95,6 +134,7 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
     };
 
     const { loading, editBoardName, deleteBoard, refetchBoards } = useBoard();
+    const {provisionWifi} = useBle();
 
     const handleExpand = async () => {
         setExpanded(!expanded);
@@ -124,15 +164,36 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
 
     const runningTimeActive = useMemo(() => {
         if (board.board_status === 'active') {
-            return formatRunningTimeFromTimestamp(board.updated_at);
+            return formatRunningTimeFromTimestamp(board.updated_at, t);
         }
     }, [board.updated_at, board.board_status, tick]);
 
-    const displayStatus = t(displayStatusMap[mode])
+    const displayStatus = t(displayStatusMap[mode]);
+
+    const handleWifiSubmit = async () => {
+        if (!wifiInfo) return;
+        console.log("Submitting new Wi-Fi credentials for board:", board.board_id);
+        try {
+          console.log("Starting WiFi provisioning...");
+          await provisionWifi(board.board_id, {
+            ssid: wifiInfo?.ssid,
+            wifiPassword: wifiInfo?.wifiPassword,
+          });
+          console.log("WiFi provisioning completed successfully!");
+          console.log("WiFi provisioning completed successfully!");
+    
+          await refetchBoards();
+    
+    
+          setModal("");
+        } catch (err) {
+          console.error("Provisioning/Pairing failed:", err);
+        }
+      }
 
     return (
         <View>
-            <TouchableOpacity onPress={handleExpand} disabled={mode !== 'active' || isEditBoardName}>
+            <TouchableOpacity onPress={handleExpand} disabled={isEditBoardName}>
                 <View style={[styles.card, {
                     backgroundColor: cardBg,
                     borderBottomEndRadius: expanded ? 0 : theme.borderRadius.lg,
@@ -152,14 +213,13 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                                     <UnderlineTextField
                                         value={boardName}
                                         onChangeText={setBoardName}
-                                        // match text visuals
                                         inputStyle={{
                                             color: textColor,
                                             fontSize: theme.fontSize.header1,
                                             fontFamily: theme.fontFamily.medium,
                                             lineHeight: theme.fontSize.header1 * 1.2,
                                             paddingHorizontal: 0,
-                                            paddingVertical: 0, 
+                                            paddingVertical: 0,
                                         }}
                                         style={{ width: Math.max(titleWidth ?? 10, 120) }}
                                         width={titleWidth}
@@ -208,33 +268,45 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                         <View>
                             {mode === 'inactive' && (
                                 <Text style={[styles.description, { color: textColor }]}>
-                                    Last connected: {fromISOTimeToLocaleString(board?.updated_at) || 'N/A'}
+                                    {t('Last Connected')}: {fromISOTimeToLocaleString(board?.updated_at, i18next.language) || 'N/A'}
                                 </Text>
                             )}
                             <Text style={[styles.description, { color: textColor }]}>
                                 {t('Running')}: {board.board_status === 'active' ? runningTimeActive : lastActive}
                             </Text>
                             <Text style={[styles.description, { color: textColor }]}>
-                                {t('Status')}: {displayStatus}
+                                {t('Status')}: {board.board_status ? displayStatus : t('status.notAvailable')}
                             </Text>
                         </View>
                         <View style={[styles.leftsection, { gap: mode === "inactive" ? 32 : 18 }]}>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                {mode === 'inactive' && (
+                                    <ButtonCard
+                                        text={t('Reconnect')}
+                                        filledColor={buttonBg}
+                                        textColor={buttonText}
+                                        onPress={() => setModal("wifi-config")}
+                                    />
+                                )}
+                                <ButtonCard
+                                    text={t('delete')}
+                                    filledColor={buttonBg}
+                                    textColor={buttonText}
+                                    onPress={() => setModal("delete")}
+                                />
 
-                            <ButtonCard
-                                text={t('delete')}
-                                filledColor={buttonBg}
-                                textColor={buttonText}
-                                onPress={() => setModal("delete")}
-                            />
+                            </View>
                         </View>
                     </View>
                 </View>
 
             </TouchableOpacity>
-            {expanded && mode === "active" && (
-                <CardBoardExpanded
+            {expanded && (
+                <CardBoardExpandedWrapped
                     boardFrequency={board.sensor_frequency}
                     board_id={board.board_id}
+                    board_status={board.board_status}
+                    board_role={board.role}
                 />
             )}
 
@@ -245,6 +317,21 @@ const CardBoardPrimary: React.FC<Esp32CardProps> = ({
                 loading={loading}
                 onCancel={() => setModal("")}
                 onConfirm={handleDeleteCardBoard}
+            />
+
+            <WifiConfigModal
+                visible={modal === "wifi-config"}
+                onClose={() => setModal("")}
+                onSubmit={handleReconnectProvision} 
+                boardId={board.board_id}
+                isBoardIdExists={!!board.board_id}
+            />
+
+            <ConnectionPasswordModal
+                visible={modal === "connect-password"}
+                onClose={() => setModal("")}
+                onSubmit={handleWifiSubmit}
+            // loading={submitting}
             />
         </View>
     );
@@ -280,7 +367,6 @@ const styles = StyleSheet.create({
     },
     content: {
         marginHorizontal: 8,
-        // gap: 3,
     },
     timestamp: {
         justifyContent: 'flex-start',
@@ -292,21 +378,29 @@ const styles = StyleSheet.create({
         fontFamily: theme.fontFamily.medium,
     },
     description: {
-        // marginTop: 4,
         fontSize: theme.fontSize.description,
         fontFamily: theme.fontFamily.regular,
     },
     leftsection: {
         flexDirection: 'column',
         bottom: 0,
-        alignSelf: 'flex-end',
-        // height: '100%',
-        position: 'absolute',
+        alignSelf: 'flex-start',
+        gap: 1,
+        marginTop: 12,
     }
 });
 
 
-const fromISOTimeToLocaleString = (isoTime: string) => {
+const fromISOTimeToLocaleString = (isoTime: string, lang: string) => {
+    if (!isoTime) return 'N/A'; // Added a check for safety
     const date = new Date(isoTime);
-    return date.toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: true });
+    // Use the `lang` parameter instead of "en-US"
+    return date.toLocaleString(lang, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+    });
 };

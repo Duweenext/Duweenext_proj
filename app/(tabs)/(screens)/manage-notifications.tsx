@@ -3,6 +3,7 @@ import { View, Text, Switch, Pressable, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme, themeStyle } from '@/theme';
 import { useNotification } from '@/src/api/hooks/useNotification';
+import { t } from 'i18next';
 
 const SOUND_OPTIONS = ['Default', 'Chime', 'Ripple', 'Wave'] as const;
 type SoundName = typeof SOUND_OPTIONS[number];
@@ -65,7 +66,7 @@ const ManageNotifications: React.FC = () => {
             android: { elevation: 1 },
             }),
          }}>
-          <Text style={label}>Enable Notifications</Text>
+          <Text style={label}>{t("noti_setting.enable_notifications")}</Text>
           <Switch
             value={notifEnabled}
             onValueChange={setAlertEnableSetting}
@@ -100,7 +101,7 @@ const ManageNotifications: React.FC = () => {
             }),
          } }
         >
-          <Text style={label}>Enable Alert Sound</Text>
+          <Text style={label}>{t("noti_setting.enable_alert_sound")}</Text>
           <Switch
             value={alertSoundEnabled}
             onValueChange={setAlertSoundEnableSetting}
@@ -132,7 +133,7 @@ const ManageNotifications: React.FC = () => {
             }),
      }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={label}>Alert Sound</Text>
+            <Text style={label}>{t("noti_setting.alert_sound")}</Text>
 
             <Pressable
               onPress={() => setSoundOpen((v) => !v)}
@@ -151,7 +152,7 @@ const ManageNotifications: React.FC = () => {
                 opacity: !notifEnabled || !alertSoundEnabled ? 0.5 : 1,
               }}
             >
-              <Text style={{ fontSize: 16, fontFamily: theme.fontFamily.regular, color: '#000' }}>{sound}</Text>
+              <Text style={{ fontSize: 16, fontFamily: theme.fontFamily.regular, color: '#000' }}>{t(`noti_setting.sounds.${sound.toLowerCase()}`)}</Text>
               <Ionicons name="chevron-down" size={20} color="#7A7A7A" />
             </Pressable>
           </View>
@@ -195,7 +196,7 @@ const ManageNotifications: React.FC = () => {
                       fontFamily: opt === sound ? theme.fontFamily.medium : theme.fontFamily.regular,
                     }}
                   >
-                    {opt}
+                    {t(`noti_setting.sounds.${opt.toLowerCase()}`)}
                   </Text>
                 </Pressable>
               ))}

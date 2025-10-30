@@ -30,20 +30,21 @@ import { qc } from '@/src/api/query';
 import { useDeleteAccountStore } from '@/src/flows/_deletelocal';
 import { Icon } from 'react-native-paper';
 import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
+import { t } from 'i18next';
 
 type DeletionBanner = 'idle' | 'locked' | 'pending';
 
 const emailSchema = z.string().trim().min(1, "Required").email("Invalid email");
 
 const resetPasswordSchema = z.object({
-  oldPassword: z.string().min(6, " must be at least 6 characters").nonempty("Required"),
-  newPassword: z.string().min(8, " must be at least 8 characters").nonempty("Required"),
-  confirmPassword: z.string().nonempty("Required"),
+  oldPassword: z.string().min(6, t("errors.passwordMin6")).nonempty(t("errors.required")),
+  newPassword: z.string().min(8, t("errors.passwordMin8")).nonempty(t("errors.required")),
+  confirmPassword: z.string().nonempty(t("errors.required")), // Also translate this one
 }).refine(
   (data) => data.newPassword === data.confirmPassword,
   {
     path: ["confirmPassword"],
-    message: "Passwords do not match",
+    message: t("errors.passwordsDoNotMatch"), // And this one
   }
 );
 
@@ -298,7 +299,7 @@ const ProfileSettingEmail: React.FC = () => {
       return (
         <>
           <ButtonPrimary
-            text="Recovery"
+            text={t("Recovery")}
             filledColor={themeStyle.colors.white}
             textColor={themeStyle.colors.fail}
             onPress={() => {
@@ -313,7 +314,7 @@ const ProfileSettingEmail: React.FC = () => {
               fontSize: themeStyle.fontSize.description,
             }}
           >
-            Your account will be delete within             {countdown.remainingDays} days {countdown.remainingHours} hours
+            {t("Your account will be delete within")} {countdown.remainingDays} {t("days")} {countdown.remainingHours} {t("hours")}
           </Text>
         </>
       );
@@ -322,7 +323,7 @@ const ProfileSettingEmail: React.FC = () => {
     return (
       <>
         <ButtonPrimary
-          text="Delete Account"
+          text={t("Delete Account")}
           filledColor={themeStyle.colors.white}
           textColor={themeStyle.colors.fail}
           onPress={() => {
@@ -338,7 +339,7 @@ const ProfileSettingEmail: React.FC = () => {
               fontSize: themeStyle.fontSize.description,
             }}
           >
-            You are unable to perform delete account for 24 hours
+            {t("You are unable to perform delete account for 24 hours")}
           </Text>
         )}
       </>
@@ -372,10 +373,9 @@ const ProfileSettingEmail: React.FC = () => {
 
   return (
     <>
-      <PullToRefreshScreen>
       <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }} key={refreshKey}>
         <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 20, left: 20, }}>
-          Profile Information
+          <Text>{t('profile.title')}</Text>
         </Text>
 
         <UsernameRow
@@ -385,23 +385,22 @@ const ProfileSettingEmail: React.FC = () => {
         />
 
         <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10, left: 20 }}>
-          Email Address
+          <Text>{t('profile.email')}</Text>
         </Text>
         <View style={{ flexDirection: 'column', alignSelf: 'center', width: '85%', backgroundColor: themeStyle.colors.white, borderRadius: 10, padding: 15, marginBottom: 25 }}>
 
           <View style={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 10, marginBottom: 15 }}>
-            <Text style={{ fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.description }}>Email:</Text>
+            <Text style={{ fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.description }}>{t("profile.emailLabel")}</Text>
             <Text style={{ fontFamily: themeStyle.fontFamily.regular, fontSize: themeStyle.fontSize.description }}>{userData?.email}</Text>
           </View>
 
           <View style={{ width: '100%', alignItems: 'flex-start' }}>
             <ButtonModalL
-              text="Edit Information"
+              text={t("profile.edit_email")}
               filledColor={themeStyle.colors.primary}
               textColor={themeStyle.colors.white}
               onPress={onEditInfo}
               size="L"
-              borderRadius={8}
             />
 
             {showResume && (
@@ -419,9 +418,9 @@ const ProfileSettingEmail: React.FC = () => {
                 }}
               >
                 <Text style={{ color: themeStyle.colors.fail, fontFamily: themeStyle.fontFamily.semibold }}>
-                  Resume: {step === "verify-code-old-email" ? "Verify code (old email)"
-                    : step === "change-email" ? "Enter new email"
-                      : "Verify code (new email)"} ({formatMMSS(remainingMs)})
+                  Resume: {step === "verify-code-old-email" ? t("Verify code (old email)")
+                    : step === "change-email" ? t("profile.enter_new_email")
+                      : t("profile.verify_code_new_email")} ({formatMMSS(remainingMs)})
                 </Text>
               </Pressable>
             )}
@@ -431,30 +430,30 @@ const ProfileSettingEmail: React.FC = () => {
 
         <ModalChangeInformation
           visible={modal === 'change-email-verify-password'}
-          title="Change email"
+          title={t("t.change_email")}
           titleColor={themeStyle.colors.fail}
-          descriptionText="To perform email change please verify yourself. Your current email is"
-          instructionText="Enter password below"
+          descriptionText={t("To perform email change please verify yourself. Your current email is")}
+          instructionText={t("Enter password below")}
           email={email}
           errorMessage={verifyError}
           fields={[
             {
               type: 'password',
               mode: 'password-old',
-              placeholder: 'Enter your password',
+              placeholder: t('Enter your password'),
               value: verifyPasswordInput,
               onChangeText: setVerifyPasswordInput,
             },
           ]}
           underlineButton={{
-            text: 'Forgot password',
+            text: t('Forgot password'),
             onPress: () => {
               setModal(null);
               setModal('forgot-password');
             },
           }}
           button={{
-            text: 'Next',
+            text: t('Next'),
             onPress: handleVerifyPassword,
             filledColor: themeStyle.colors.primary,
             textColor: themeStyle.colors.white,
@@ -465,15 +464,15 @@ const ProfileSettingEmail: React.FC = () => {
 
         <ModalChangeInformation
           visible={modal === 'verify-code-old-email'}
-          title="Change email"
+          title={t("t.change_email")}
           titleColor={themeStyle.colors.fail}
-          descriptionText="The verification code has been sent to"
+          descriptionText={t("The verification code has been sent to")}
           email={email}
           errorMessage={codeError}
           fields={[{ type: 'code', placeholder: '', value: code, onChangeText: setCode }]}
-          underlineButton={{ text: 'Send again', onPress: () => console.log('Resend verification code…') }}
+          underlineButton={{ text: t('Send again'), onPress: () => console.log('Resend verification code…') }}
           button={{
-            text: 'Confirm',
+            text: t('Confirm'),
             onPress: handleConfirmCodeOldEmail,
             filledColor: themeStyle.colors.primary,
             textColor: themeStyle.colors.white,
@@ -483,9 +482,9 @@ const ProfileSettingEmail: React.FC = () => {
 
         <ModalChangeInformation
           visible={modal === 'change-email'}
-          title="Change email"
+          title={t("profile.change_email")}
           titleColor={themeStyle.colors.fail}
-          descriptionText="Please put your new email information below"
+          descriptionText={t("Please put your new email information below")}
           errorMessage={editError}
           fields={[
             {
@@ -493,13 +492,13 @@ const ProfileSettingEmail: React.FC = () => {
               mode: 'text',
               inputKind: 'email',
               name: 'New Email',
-              placeholder: 'your@email.com',
+              placeholder: t('your@email.com'),
               value: editEmail,
               onChangeText: setEditEmail,
             },
           ]}
           button={{
-            text: 'Submit',
+            text: t('profile.submit'),
             onPress: handleSubmitEmailChange,
             filledColor: themeStyle.colors.primary,
             textColor: themeStyle.colors.white,
@@ -509,15 +508,15 @@ const ProfileSettingEmail: React.FC = () => {
 
         <ModalChangeInformation
           visible={modal === 'verify-code-new-email'}
-          title="Change email"
+          title={t("profile.change_email")}
           titleColor={themeStyle.colors.fail}
-          descriptionText="The verification code has been sent to"
+          descriptionText={t("The verification code has been sent to")}
           email={editEmail}
           errorMessage={codeError}
           fields={[{ type: 'code', placeholder: '', value: code, onChangeText: setCode }]}
-          underlineButton={{ text: 'Send again', onPress: () => console.log('Resend verification code…') }}
+          underlineButton={{ text: t('Send again'), onPress: () => console.log('Resend verification code…') }}
           button={{
-            text: 'Confirm',
+            text: t('Confirm'),
             onPress: handleConfirmCodeNewEmail,
             filledColor: themeStyle.colors.primary,
             textColor: themeStyle.colors.white,
@@ -527,14 +526,14 @@ const ProfileSettingEmail: React.FC = () => {
 
         {/* ---- Change Password (user knows old) ---- */}
         <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10, left: 20 }}>
-          Password
+          {t("profile.password")}
         </Text>
         <View style={{ flexDirection: 'column', alignItems: 'center' }}>
 
 
           <View>
             <TextFieldPrimary
-              name="Enter old password"
+              name={t("profile.oldPasswordLabel")}
               type="password"
               passwordVariant="old"
               placeholder="••••••••••••"
@@ -543,8 +542,8 @@ const ProfileSettingEmail: React.FC = () => {
               errorPlacement="topRight"
               externalError={oldPwError}
               ruleData={{
-                title: "Old Password",
-                description: "Enter your current password.",
+                title: t("profile.old_password"),
+                description: t("profile.enter_current_password"),
                 rules: [
                   "Must match your current password",
                 ],
@@ -554,7 +553,7 @@ const ProfileSettingEmail: React.FC = () => {
 
           <View>
             <TextFieldPrimary
-              name="Enter new password"
+              name={t("profile.newPasswordLabel")}
               type="password"
               passwordVariant="default"
               placeholder="••••••••••••"
@@ -574,7 +573,7 @@ const ProfileSettingEmail: React.FC = () => {
 
           <View>
             <TextFieldPrimary
-              name="Confirm new password"
+              name={t("profile.confirmNewPasswordLabel")}
               type="password"
               passwordVariant="confirm"
               confirmWith={newPw}
@@ -584,17 +583,17 @@ const ProfileSettingEmail: React.FC = () => {
               errorPlacement="topRight"
               externalError={confirmPwError}
               ruleData={{
-                title: "Confirm Password",
-                description: "Re-enter your new password to confirm.",
+                title: t("profile.confirm_password"),
+                description: t("profile.reenter_new_password"),
                 rules: [
-                  "Must match the new password entered above",
+                  t("profile.must_match_new_password"),
                 ],
               }}
             />
           </View>
 
           <View style={{ marginTop: -5, left: -100 }}>
-            <ButtonUnderline text="Forgot password"
+            <ButtonUnderline text={t("profile.forgotPassword")}
               onPress={() => {
                 setModal('forgot-password');
               }} />
@@ -602,7 +601,7 @@ const ProfileSettingEmail: React.FC = () => {
 
           <View style={{ marginTop: 12, alignItems: 'flex-end', right: -70 }}>
             <ButtonPrimary
-              text="Change password"
+              text={t("profile.change_password")}
               filledColor={themeStyle.colors.primary}
               borderColor={themeStyle.colors.white}
               textColor={themeStyle.colors.white}
@@ -614,12 +613,12 @@ const ProfileSettingEmail: React.FC = () => {
         {/* ---- Linked Accounts ---- */}
         <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 15, left: 20 }}>
           <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 10 }}>
-            Linked Accounts
+            {t("profile.linked_accounts")}
           </Text>
         </View>
         <View style={{ marginTop: 5, marginBottom: 12, flexDirection: 'column', justifyContent: 'flex-start', width: 240, paddingBottom: 20, left: 30 }}>
-          <ButtonGoogle text="Google" borderColor={themeStyle.colors.primary} onPress={() => onGoogleButtonPress()} width={220} />
-          <ButtonPrimary text="Logout" filledColor={themeStyle.colors.white} textColor={themeStyle.colors.black} onPress={() => logout()} />
+          <ButtonGoogle text={t("profile.google")} borderColor={themeStyle.colors.primary} onPress={() => onGoogleButtonPress()} width={220} />
+          <ButtonPrimary text={t("profile.logout")} filledColor={themeStyle.colors.white} textColor={themeStyle.colors.black} onPress={() => logout()} />
 
           {/* Danger zone / Recovery UI */}
           {renderDeleteAction()}
@@ -634,22 +633,22 @@ const ProfileSettingEmail: React.FC = () => {
 
         <ModalChangeInformation
           visible={modal === 'delete-account-verify-password'}
-          title="Delete account"
+          title={t("profile.delete_account")}
           titleIcon={<Icon size={40} source={require('@/assets/icons/delete.png') } />}
           titleColor={themeStyle.colors.fail}
-          instructionText="Enter password below"
+          instructionText={t("profile.enter_password_below")}
           email={email}
           fields={[
             {
               type: 'password',
               mode: 'password-old',
-              placeholder: 'Enter your password',
+              placeholder: t("profile.enter_your_password"),
               value: verifyPw,
               onChangeText: setVerifyPw,
             },
           ]}
           button={{
-            text: 'Next',
+            text: t('profile.next'),
             onPress: () => onVerifyPassword(verifyPw),
             filledColor: themeStyle.colors.primary,
             textColor: themeStyle.colors.white,
@@ -659,14 +658,14 @@ const ProfileSettingEmail: React.FC = () => {
 
         <ModalChangeInformation
           visible={modal === 'delete-account-verify-code'}
-          title="Delete account"
+          title={t("profile.delete_account")}
           titleColor={themeStyle.colors.fail}
-          descriptionText="The verification code has been sent to"
+          descriptionText={t("profile.verification_code_sent")}
           email={email}
           fields={[{ type: 'code', placeholder: '', value: code, onChangeText: setCode }]}
-          underlineButton={{ text: 'Send again', onPress: () => console.log('Resend verification code…') }}
+          underlineButton={{ text: t("profile.send_again"), onPress: () => console.log('Resend verification code…') }}
           button={{
-            text: 'Confirm',
+            text: t("profile.confirm"),
             onPress: () => verifyCodeDeleteAccount(code),
             filledColor: themeStyle.colors.primary,
             textColor: themeStyle.colors.white,
@@ -674,7 +673,6 @@ const ProfileSettingEmail: React.FC = () => {
           onClose={() => { setModal(null); }}
         />
       </ScrollView>
-        </PullToRefreshScreen>
     </>
   );
 };

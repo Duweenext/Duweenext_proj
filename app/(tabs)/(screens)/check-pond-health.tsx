@@ -1,6 +1,6 @@
 // app/(screens)/check-pond-health.tsx
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Share, Text, TouchableOpacity, Modal, Pressable, Image, Platform } from 'react-native';
+import { View, ScrollView, Share, Text, TouchableOpacity, Modal, Pressable, Image} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from "expo-image-picker";
 
@@ -14,6 +14,7 @@ import { mockService } from '@/src/component/pond/services';
 import { usePondHealths } from '@/src/api/hooks/useImageProcessing';
 import { useTranslation } from 'react-i18next';
 import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
+import { useQueryClient } from '@tanstack/react-query';
 
 const IconBtn = ({ icon, onPress, disabled }: any) => (
   <TouchableOpacity
@@ -42,13 +43,7 @@ export default function CheckPondHealthScreen() {
     status,
     placeholder,
     imageUri,
-    latest,
-    history,
-    pickFromLibrary,
-    startAnalysis,
-    resetImage,
     setExternalImageUri,
-    removeHistoryItem,
   } = usePondAnalysis(mockService);
 
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -90,6 +85,8 @@ export default function CheckPondHealthScreen() {
     setConfirmVisible(true);
   };
 
+  console.log("History result:", history_result);
+
   const pickFromLocalLibrary = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -110,7 +107,6 @@ export default function CheckPondHealthScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <PullToRefreshScreen>
       <ScrollView contentContainerStyle={{ paddingBottom: 30, marginTop: 20 }}>
         <Text style={{ color: themeStyle.colors.white, fontFamily: themeStyle.fontFamily.semibold, fontSize: themeStyle.fontSize.header2, left: 20, marginBottom: 10 }}>
           {t('Determine your pond health')}
@@ -134,7 +130,7 @@ export default function CheckPondHealthScreen() {
         </View>
 
         <HistoryList
-          items={history_result}
+          items={history_result ?? []}
           onShareItem={(item) =>
             Share.share({
               message: `${t('Pond check')} • ${new Date(item._ts)}
@@ -171,7 +167,6 @@ export default function CheckPondHealthScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-      </PullToRefreshScreen>
     </View>
   );
 }

@@ -3,12 +3,13 @@ import { axiosMainInstance } from "@/src/api/apiManager";
 import Toast from "react-native-toast-message";
 import axios from "axios";
 import { qc } from "../query";
+import { t } from "i18next";
 
 export interface LoginCredential {
-  Email: string;
-  Password: string;
-  DeviceToken: string | null;
-  Platform?: string;
+  email: string;
+  password: string;
+  device_token: string | null;
+  platform?: string;
 }
 
 export interface RegisterCredential {
@@ -71,18 +72,19 @@ export function useAuthentication() {
     onError: (error: any) => {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
-        const apiMsg = (error.response?.data as any)?.message;
+        
+        const apiData = error.response?.data as any;
+        const apiMsg = apiData?.error || apiData?.message;
 
         const msg = apiMsg || error.message || "Something went wrong.";
 
         Toast.show({
-          type: "error",
-          text1: "Verification failed",
+          type: "errorToast",
+          text1: t("toast.loginFailedTitle"), 
           text2: msg,
         });
-        throw new Error(msg);
+        throw new Error(msg); 
       }
-      throw new Error("Something went wrong.");
     },
   });
 
@@ -102,8 +104,8 @@ export function useAuthentication() {
         const msg = apiMsg || error.message || "Something went wrong.";
 
         Toast.show({
-          type: "error",
-          text1: "Verification failed",
+          type: "errorToast",
+          text1: t("toast.verificationFailedTitle"), 
           text2: msg,
         });
         throw new Error(msg);
@@ -137,8 +139,8 @@ export function useAuthentication() {
               : apiMsg || error.message || "Something went wrong.";
 
         Toast.show({
-          type: "error",
-          text1: "Verification failed",
+          type: "errorToast",
+          text1: t("toast.verificationFailedTitle"), 
           text2: msg,
         });
         throw new Error(msg);
@@ -158,8 +160,8 @@ export function useAuthentication() {
     onError: (error: any) => {
       Toast.show({
         type: 'error',
-        text1: 'Resend failed',
-        text2: error.message ?? 'Something went wrong.',
+        text1: t('toast.resendFailedTitle'), // --- TRANSLATED ---
+        text2: error.message ?? t('errors.unknownError'), // --- TRANSLATED ---
       });
       throw error;
     },
@@ -178,16 +180,16 @@ export function useAuthentication() {
       qc.invalidateQueries({ queryKey: ["userProfile"] });
 
       Toast.show({
-        type: "success",
-        text1: "Login successful",
+        type: "successToast",
+        text1: t("toast.loginSuccessTitle"), // --- TRANSLATED ---
       });
     },
     onError: (error: any) => {
       if (axios.isAxiosError(error)) {
         const apiMsg = (error.response?.data as any)?.error || error.message;
         Toast.show({
-          type: "error",
-          text1: "Google login failed",
+          type: "errorToast",
+          text1: t("toast.googleLoginFailedTitle"), // --- TRANSLATED ---
           text2: apiMsg,
         });
         throw new Error(apiMsg);

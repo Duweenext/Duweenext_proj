@@ -1,615 +1,272 @@
-import React, { useEffect, useMemo, useCallback, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { LineChart } from 'react-native-gifted-charts';
-import { SensorDataBackend, sensorLogScale } from '@/src/interfaces/sensor';
-import { useSensor } from '@/src/api/hooks/useSensor';
-import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { themeStyle } from '@/src/theme';
-import RowButtonGroup from '../Buttons/ButtonFilter';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useEffect, useState, useMemo, useCallback } from 'react'; // Added useCallback
+// Added ScrollView
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getSensorSuffix } from '../Card/CardSensorPrimary/SensorBoardExpand';
-import {
-  addStep, formatCurrentDate, formatLabel, truncateToBucket,
-  AGGRESSIVE_TRIM_THRESHOLD,
-  EDGE_LEFT, EDGE_RIGHT, MAX_TOTAL_SLOTS, ScrollMetrics, 
-  sensorOption, SLOT_COUNT, SPACING_PER_SCALE, TRIM_AMOUNT
-} from '@/src/utils/chartUtils';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
+import RowButtonGroup from '../Buttons/ButtonFilter';
+import { sensorLogScale } from '@/src/interfaces/sensor';
+import { useSensorGraph } from '@/src/api/hooks/useSensorGraph';
+import {
+  addStep,
+  buildWindowDomain,
+  makeSlots,
+  binToSlots,
+  formatLabel,
+  SLOT_COUNT,
+  sensorOption,
+  makeSlotsFromRange,
+} from '@/src/utils/chartUtils';
+import { chart_themes } from '@/src/component/Card/CardSensorPrimary/chartTheme';
+// Make sure this path is correct for your project
+import D3MultiLineChart, { D3ChartSeries } from '../Card/CardSensorPrimary/D3MultiLineChart'; 
 
-type SummaryChartProp = { boardId: string};
+type SummaryChartProp = {
+  boardId: string;
+};
 
-export default function SummaryChart({ boardId }: SummaryChartProp) {
+const SummaryChart: React.FC<SummaryChartProp> = ({ boardId }) => {
+  const { t } = useTranslation();
   const [scale, setScale] = useState<sensorLogScale>('day');
-  const [axisSlots, setAxisSlots] = useState<Date[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const { t} = useTranslation();
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const date = new Date();
+    date.setHours(23, 59, 59, 999);
+    return date;
+  });
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const spacing = useMemo(() => SPACING_PER_SCALE[scale], [scale]);
+  const activeTheme = useMemo(() => chart_themes.default.styles, []);
 
-  const { getSensorGraphLog, mergedGraph } = useSensor(boardId);
+  const apiEndDate = useMemo(() => {
+    const { end } = buildWindowDomain(selectedDate, scale);
+    return end;
+  }, [selectedDate, scale]);
 
-  const scrollRef = useRef<any>(null);
-  const metricsRef = useRef<ScrollMetrics>({ x: 0, w: 1, cw: 1 });
-  const cooldown = useRef(0);
-  const isExtending = useRef(false);
+  const { getSensorGraphLog, graphData , timeRange} = useSensorGraph(boardId, scale, apiEndDate.toISOString());
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [isJumpingToDate, setIsJumpingToDate] = useState(false);
+  // This is the correct logic for handling all scales
+  const chartDomain = useMemo(() => {
+    if (scale === 'all' && timeRange.start && timeRange.end) {
+      return {
+        start: new Date(timeRange.start),
+        end: new Date(timeRange.end),
+      };
+    }
+    return buildWindowDomain(selectedDate, scale);
+  }, [selectedDate, scale, timeRange.start, timeRange.end]);
 
-  const fetchGraphLog = async (end: Date, count: number) => {
-    await getSensorGraphLog(end.toISOString(), scale, count)
-      .then(() => {
-        setIsInitialized(true);
-        console.log('✅ Initial load complete');
-      })
-      .catch(err => console.error('❌ Initial load failed:', err));
-  }
+  const axisSlots = useMemo(() => {
+    const { start, end } = chartDomain;
+    if (scale === 'all') {
+      if (!timeRange.start || !timeRange.end) {
+        return []; // Data not ready
+      }
+      return makeSlotsFromRange(
+        new Date(timeRange.start),
+        new Date(timeRange.end),
+        SLOT_COUNT[scale]
+      );
+    }
+    return makeSlots(start, scale, SLOT_COUNT[scale]);
+  }, [chartDomain, scale, timeRange.start, timeRange.end]);
 
   useEffect(() => {
-    console.log('🔄 Initial load for boardId:', boardId);
-    const end = truncateToBucket(new Date(), scale);
-    const count = SLOT_COUNT[scale];
-    const start = addStep(end, scale, -(count - 1));
-    const init = Array.from({ length: count }, (_, i) => addStep(start, scale, i));
-
-    setAxisSlots(init);
-    setIsInitialized(false);
-
-    fetchGraphLog(end, count);
-  }, [boardId, getSensorGraphLog]);
-
-  useEffect(() => {
-    if (!isInitialized || axisSlots.length === 0) return;
-
-    const currentCenter = axisSlots[Math.floor(axisSlots.length / 2)];
-    const truncatedCenter = truncateToBucket(currentCenter, scale);
-
-    const count = SLOT_COUNT[scale];
-    const newStart = addStep(currentCenter, scale, -Math.floor(count / 2));
-    const newSlots = Array.from({ length: count }, (_, i) => addStep(newStart, scale, i));
-
-    setAxisSlots(newSlots);
-
-    fetchGraphLog(truncatedCenter, count);
-  }, [scale]);
-
-  const getCurrentDateFromScroll = useCallback((): Date | null => {
-    const { x, w, cw } = metricsRef.current;
-    if (!cw || !w || !axisSlots.length) return null;
-
-    const viewportCenter = x + (w / 2);
-    const totalWidth = axisSlots.length * spacing;
-    const progressRatio = Math.max(0, Math.min(1, viewportCenter / totalWidth));
-    const slotIndex = Math.floor(progressRatio * axisSlots.length);
-    const clampedIndex = Math.max(0, Math.min(slotIndex, axisSlots.length - 1));
-
-    return axisSlots[clampedIndex] || null;
-  }, [axisSlots, spacing]);
-
-  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
-    metricsRef.current = {
-      x: contentOffset?.x ?? 0,
-      w: layoutMeasurement?.width ?? 1,
-      cw: contentSize?.width ?? 1,
+    const fetchDataForWindow = async () => {
+      setIsLoading(true);
+      try {
+        await getSensorGraphLog();
+      } catch (error) {
+        console.error("Failed to fetch summary graph data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-  }, []);
+    fetchDataForWindow();
+  }, [getSensorGraphLog]);
 
-  const extendLeft = useCallback(async () => {
-    if (isExtending.current) return;
-    isExtending.current = true;
-
-    try {
-      const count = SLOT_COUNT[scale];
-      if (!axisSlots.length) return;
-
-      const left = axisSlots[0];
-      const newStart = addStep(left, scale, -count);
-      const newSlots = Array.from({ length: count }, (_, i) => addStep(newStart, scale, i));
-      const dx = count * spacing;
-
-      setAxisSlots(prev => {
-        const newAxisSlots = [...newSlots, ...prev];
-
-        if (newAxisSlots.length > AGGRESSIVE_TRIM_THRESHOLD) {
-          const trimmed = newAxisSlots.slice(0, -(TRIM_AMOUNT + 20));
-          return trimmed;
-        } else if (newAxisSlots.length > MAX_TOTAL_SLOTS) {
-          const trimmed = newAxisSlots.slice(0, -TRIM_AMOUNT);
-          return trimmed;
-        }
-
-        return newAxisSlots;
+  const chartSeries = useMemo((): D3ChartSeries[] => {
+    // This check correctly shows "No log" when data is empty
+    if (isLoading || !graphData || graphData.length === 0) { 
+      return [
+        { data: [], lineColor: '#CDB4DB', areaColor: '#CDB4DB' },
+        { data: [], lineColor: '#F2BC79', areaColor: '#F2BC79' },
+        { data: [], lineColor: '#F77979', areaColor: '#F77979' },
+      ];
+    }
+  
+    const tempBinned = binToSlots('Temperature', graphData, axisSlots);
+    const ecBinned = binToSlots('EC', graphData, axisSlots);
+    const phBinned = binToSlots('pH', graphData, axisSlots);
+  
+    const mapToPoints = (binnedData: number[]) => {
+      return axisSlots.map((slot, i) => {
+        const roundedVal = Math.round(binnedData[i] * 100) / 100;
+        return {
+          value: roundedVal,
+          label: formatLabel(slot, scale),
+          dataPointText: roundedVal > 0 ? `${roundedVal}` : '', 
+        };
       });
-
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ x: (metricsRef.current.x + dx), animated: false });
-      });
-
-      await getSensorGraphLog(left.toISOString(), scale, count);
-    } finally {
-      isExtending.current = false;
-    }
-  }, [axisSlots, scale, boardId, spacing]);
-
-  const extendRight = useCallback(async () => {
-    if (isExtending.current) return;
-    isExtending.current = true;
-
-    try {
-      const count = SLOT_COUNT[scale];
-      if (!axisSlots.length) return;
-
-      const right = axisSlots[axisSlots.length - 1];
-      const firstNew = addStep(right, scale, 1);
-      const newEnd = addStep(right, scale, count);
-      const newSlots = Array.from({ length: count }, (_, i) => addStep(firstNew, scale, i));
-
-      setAxisSlots(prev => {
-        const newAxisSlots = [...prev, ...newSlots];
-
-        if (newAxisSlots.length > AGGRESSIVE_TRIM_THRESHOLD) {
-          const trimAmount = TRIM_AMOUNT + 20;
-          const trimmed = newAxisSlots.slice(trimAmount);
-
-          const adjustedX = metricsRef.current.x - (trimAmount * spacing);
-          requestAnimationFrame(() => {
-            scrollRef.current?.scrollTo({ x: Math.max(0, adjustedX), animated: false });
-          });
-
-          return trimmed;
-        } else if (newAxisSlots.length > MAX_TOTAL_SLOTS) {
-          const trimmed = newAxisSlots.slice(TRIM_AMOUNT);
-
-          const adjustedX = metricsRef.current.x - (TRIM_AMOUNT * spacing);
-          requestAnimationFrame(() => {
-            scrollRef.current?.scrollTo({ x: Math.max(0, adjustedX), animated: false });
-          });
-
-          return trimmed;
-        }
-
-        return newAxisSlots;
-      });
-
-      await getSensorGraphLog(newEnd.toISOString(), scale, count);
-    } finally {
-      isExtending.current = false;
-    }
-  }, [axisSlots, scale, boardId, spacing]);
-
-  const onScrollEnd = useCallback((e?: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const now = Date.now();
-    if (now < cooldown.current || isExtending.current) return;
-
-    if (e?.nativeEvent) {
-      const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
-      metricsRef.current = {
-        x: contentOffset?.x ?? 0,
-        w: layoutMeasurement?.width ?? 1,
-        cw: contentSize?.width ?? 1,
-      };
-    }
-
-    const { x, w, cw } = metricsRef.current;
-    if (!cw || !w) return;
-
-    const leftRatio = x / cw;
-    const rightRatio = (x + w) / cw;
-
-    if (leftRatio < EDGE_LEFT) {
-      extendLeft();
-      cooldown.current = now + 500;
-    } else if (rightRatio > EDGE_RIGHT) {
-      extendRight();
-      cooldown.current = now + 500;
-    }
-  }, [extendLeft, extendRight]);
-
-  const handleScaleChange = useCallback((value: sensorLogScale) => {
-    console.log('Scale changed to:', value);
-    setScale(value);
-  }, []);
-
-  const processAllSensorData = useCallback(() => {
-    const tempMap = new Map<number, { sum: number; c: number }>();
-    const ecMap = new Map<number, { sum: number; c: number }>();
-    const phMap = new Map<number, { sum: number; c: number }>();
-
-    (mergedGraph ?? []).forEach(row => {
-      const t = new Date(row.created_at);
-      const b = truncateToBucket(t, scale).getTime();
-      
-      // Process Temperature
-      const temp = Number(row.temperature);
-      if (Number.isFinite(temp)) {
-        const acc = tempMap.get(b) ?? { sum: 0, c: 0 };
-        acc.sum += temp; acc.c += 1;
-        tempMap.set(b, acc);
-      }
-
-      // Process EC
-      const ec = Number(row.ec);
-      if (Number.isFinite(ec)) {
-        const acc = ecMap.get(b) ?? { sum: 0, c: 0 };
-        acc.sum += ec; acc.c += 1;
-        ecMap.set(b, acc);
-      }
-
-      // Process pH
-      const ph = Number(row.ph);
-      if (Number.isFinite(ph)) {
-        const acc = phMap.get(b) ?? { sum: 0, c: 0 };
-        acc.sum += ph; acc.c += 1;
-        phMap.set(b, acc);
-      }
-    });
-
-    return { tempMap, ecMap, phMap };
-  }, [mergedGraph, scale]);
-
-  const { tempMap, ecMap, phMap } = useMemo(() => processAllSensorData(), [processAllSensorData]);
-
-  const temperatureData = useMemo(() => {
-    return axisSlots.map(slot => {
-      const key = slot.getTime();
-      const acc = tempMap.get(key);
-      const y = acc ? acc.sum / acc.c : 0;
-      const roundedValue = Math.round(y * 100) / 100;
-
-      return {
-        value: roundedValue,
-        label: formatLabel(slot, scale),
-        dataPointText: roundedValue > 0 ? `${roundedValue}°C` : '',
-      };
-    });
-  }, [axisSlots, tempMap, scale]);
-
-  const ecData = useMemo(() => {
-    return axisSlots.map(slot => {
-      const key = slot.getTime();
-      const acc = ecMap.get(key);
-      const y = acc ? acc.sum / acc.c : 0;
-      const roundedValue = Math.round(y * 100) / 100;
-
-      return {
-        value: roundedValue,
-        label: formatLabel(slot, scale),
-        dataPointText: roundedValue > 0 ? `${roundedValue}` : '',
-      };
-    });
-  }, [axisSlots, ecMap, scale]);
-
-  const phData = useMemo(() => {
-    return axisSlots.map(slot => {
-      const key = slot.getTime();
-      const acc = phMap.get(key);
-      const y = acc ? acc.sum / acc.c : 0;
-      const roundedValue = Math.round(y * 100) / 100;
-
-      return {
-        value: roundedValue,
-        label: formatLabel(slot, scale),
-        dataPointText: roundedValue > 0 ? `${roundedValue}` : '',
-      };
-    });
-  }, [axisSlots, phMap, scale]);
-
-  // Calculate max value across all datasets
-  const { maxValue } = useMemo(() => {
-    const allValues = [
-      ...temperatureData.map(p => p.value),
-      ...ecData.map(p => p.value),
-      ...phData.map(p => p.value)
+    };
+  
+    return [
+      { data: mapToPoints(tempBinned), lineColor: '#CDB4DB', areaColor: '#CDB4DB' },
+      { data: mapToPoints(ecBinned), lineColor: '#F2BC79', areaColor: '#F2BC79' },
+      { data: mapToPoints(phBinned), lineColor: '#F77979', areaColor: '#F77979' },
     ];
-    
-    let min = Math.min(...allValues), max = Math.max(...allValues);
-    if (!Number.isFinite(min) || !Number.isFinite(max)) return { minValue: 0, maxValue: 1 };
-    if (min === max) { min -= 1; max += 1; }
-    return { minValue: Math.floor(min), maxValue: Math.ceil(max * 1.2) };
-  }, [temperatureData, ecData, phData]);
+  }, [axisSlots, graphData, scale, isLoading]);
+  
+  const { maxValue } = useMemo(() => {
+    const allValues = chartSeries.flatMap(series => series.data.map(p => p.value));
+    const max = Math.max(...allValues, 0);
+    return {
+      maxValue: Number.isFinite(max) ? Math.ceil(max * 1.2) || 10 : 10,
+    };
+  }, [chartSeries]);
+
+  // --- Wrapped handlers in useCallback ---
+  const shiftWindow = useCallback((dir: 1 | -1) => {
+    const newDate = addStep(selectedDate, scale, dir);
+    setSelectedDate(newDate);
+  }, [selectedDate, scale]);
+
+  const handleDateChange = useCallback((event: any, date?: Date) => {
+    setShowPicker(Platform.OS === 'ios');
+    if (date && event.type === 'set') {
+      const newSelectedDate = new Date(selectedDate.getTime());
+      newSelectedDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      setSelectedDate(newSelectedDate);
+    }
+  }, [selectedDate]);
+
+  const handleTimeChange = useCallback((event: any, date?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (date && event.type === 'set') {
+      const newSelectedDate = new Date(selectedDate.getTime());
+      newSelectedDate.setHours(date.getHours(), date.getMinutes());
+      setSelectedDate(newSelectedDate);
+    }
+  }, [selectedDate]);
+
+  const handleScaleChange = useCallback((newScale: sensorLogScale) => {
+    setScale(newScale);
+    const newDate = new Date();
+    if (newScale === 'day' || newScale === 'week' || newScale === 'month') {
+      newDate.setHours(23, 59, 59, 999);
+    }
+    setSelectedDate(newDate);
+  }, []);
 
   const scaleButtons = useMemo(() => {
     return sensorOption.map(option => ({
       id: option,
-      label: option.toUpperCase(),
-      value: option,
-      color: '#f5f5f5',
-      focusColor: '#1A736A',
-      textColor: '#666',
-      focusTextColor: '#ffffff',
-      onPress: handleScaleChange
+      label: t(option),
+      value: t(option),
+      onPress: () => handleScaleChange(option as sensorLogScale),
     }));
-  }, [handleScaleChange]);
-
-  const currentDate = getCurrentDateFromScroll();
-
-  const jumpToDate = useCallback(async (targetDate: Date) => {
-    if (isJumpingToDate) return;
-
-    setIsJumpingToDate(true);
-
-    try {
-      const truncatedTarget = truncateToBucket(targetDate, scale);
-      const count = SLOT_COUNT[scale];
-      const newStart = addStep(truncatedTarget, scale, -Math.floor(count / 2));
-      const newSlots = Array.from({ length: count }, (_, i) => addStep(newStart, scale, i));
-
-      setAxisSlots(newSlots);
-      await getSensorGraphLog(truncatedTarget.toISOString(), scale, count);
-
-      requestAnimationFrame(() => {
-        const targetIndex = Math.floor(count / 2);
-        const targetX = targetIndex * spacing - (metricsRef.current.w / 2.1);
-        scrollRef.current?.scrollTo({ x: targetX, animated: true });
-      });
-
-    } catch (error) {
-    } finally {
-      setIsJumpingToDate(false);
-    }
-  }, [boardId, scale, spacing, getSensorGraphLog, isJumpingToDate]);
-
-  const handleDatePickerChange = useCallback((event: any, date?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-
-    if (event.type === 'set' && date) {
-      setSelectedDate(date);
-      if (Platform.OS === 'ios') {
-        setShowDatePicker(false);
-      }
-      jumpToDate(date);
-    } else if (event.type === 'dismissed') {
-      setShowDatePicker(false);
-    }
-  }, [jumpToDate]);
-
+  }, [t, handleScaleChange]); // Added handleScaleChange dependency
+  
   return (
-    <View style={style.container}>
-      <View style={style.container_header}>
-        <TouchableOpacity
-          style={style.datePickerButton}
-          onPress={() => setShowDatePicker(true)}
-          disabled={isJumpingToDate}
-        >
-          <MaterialIcons name="date-range" size={15} color="black" />
-          <Text style={style.datePickerText}>
-            {isJumpingToDate ? t('Loading...') : selectedDate.toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              ...(scale === 'hour' || scale === 'minute' ? {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              } : {})
-            })}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={{ padding: 4, borderWidth: 1, borderColor: '#e9ecef', borderRadius: 48,  }}>
-            <RowButtonGroup
-            buttons={scaleButtons}
-            defaultSelected={scale}
-            gap={6}
-            buttonStyle={{ paddingHorizontal: 12, paddingVertical: 6 }}
-            scrollable={true}
-            />
+    <View style={[style.container, { backgroundColor: activeTheme.backgroundColor }]}>
+      <View style={style.header}>
+        <View style={style.controlRow}>
+          <TouchableOpacity style={style.navBtn} onPress={() => shiftWindow(-1)} disabled={isLoading}>
+            <MaterialIcons name="chevron-left" size={24} color={isLoading ? '#555' : '#FFF'} />
+          </TouchableOpacity>
+          {(scale === 'hour' || scale === 'all') ? (
+            <>
+              <TouchableOpacity
+                style={[style.datePickerButton, { flex: 0.7 }]}
+                onPress={() => setShowPicker(true)}
+                disabled={isLoading}
+              >
+                <MaterialIcons name="date-range" size={16} color="white" />
+                <Text style={style.datePickerText}>
+                  {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[style.datePickerButton, { flex: 0.3 }]}
+                onPress={() => setShowTimePicker(true)}
+                disabled={isLoading}
+              >
+                <MaterialIcons name="access-time" size={16} color="white" />
+                <Text style={style.datePickerText}>
+                  {selectedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity style={style.datePickerButton} onPress={() => setShowPicker(true)} disabled={isLoading}>
+              <MaterialIcons name="date-range" size={16} color="white" />
+              <Text style={style.datePickerText}>
+                {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={style.navBtn} onPress={() => shiftWindow(1)} disabled={isLoading}>
+            <MaterialIcons name="chevron-right" size={24} color={isLoading ? '#555' : '#FFF'} />
+          </TouchableOpacity>
         </View>
+        <RowButtonGroup buttons={scaleButtons} defaultSelected={scale} scrollable />
       </View>
 
-      <View style={style.chartContainer}>
+      <View style={[style.chartContainer, { opacity: isLoading ? 0.5 : 1 }]}>
         <View style={style.legendContainer}>
-          <View style={style.legendItem}>
-            <View style={[style.legendColor, { backgroundColor: '#CDB4DB' }]} />
-            <Text style={style.legendText}>{t('Temperature')} (°C)</Text>
-          </View>
-          <View style={style.legendItem}>
-            <View style={[style.legendColor, { backgroundColor: '#F2BC79' }]} />
-            <Text style={style.legendText}>{t('EC')}</Text>
-          </View>
-          <View style={style.legendItem}>
-            <View style={[style.legendColor, { backgroundColor: '#F77979' }]} />
-            <Text style={style.legendText}>{t('pH')}</Text>
-          </View>
+          <View style={style.legendItem}><View style={[style.legendColor, { backgroundColor: '#CDB4DB' }]} /><Text style={style.legendText}>{t('Temperature')} (°C)</Text></View>
+          <View style={style.legendItem}><View style={[style.legendColor, { backgroundColor: '#F2BC79' }]} /><Text style={style.legendText}>{t('EC')} (μS)</Text></View>
+          <View style={style.legendItem}><View style={[style.legendColor, { backgroundColor: '#F77979' }]} /><Text style={style.legendText}>{t('pH')}</Text></View>
         </View>
-        <View style={{ overflow: 'hidden' }}>
-          <LineChart
-            data={temperatureData}
-            data2={ecData}
-            data3={phData}
-            height={200}
-            initialSpacing={0}
-            spacing={spacing}
-            xAxisThickness={2}
-            yAxisLabelSuffix={''}
-            yAxisThickness={2}
-            hideRules={false}
-            xAxisLabelTextStyle={{ fontSize: 10 }}
-            yAxisTextStyle={{ fontSize: 10 }}
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <D3MultiLineChart
+            series={chartSeries}
+            height={300}
             maxValue={maxValue}
-            scrollEventThrottle={16}
-            onScroll={onScroll}
-            onScrollEndDrag={onScrollEnd}
-            onMomentumScrollEnd={onScrollEnd}
-            showVerticalLines
-            scrollRef={scrollRef as any}
-            showValuesAsDataPointsText={false} // Disable for cleaner view with 3 lines
-            
-            // Styling for first dataset (Temperature)
-            curved
-            color="#CDB4DB"
-            dataPointsColor="#CDB4DB"
-            textColor1='#CDB4DB'
-
-            // Styling for second dataset (EC)
-            color2="#F2BC79"
-            dataPointsColor2="#F2BC79"
-            textColor2='#F2BC79'
-
-            // Styling for third dataset (pH)
-            color3="#F77979"
-            dataPointsColor3="#F77979"
-            textColor3='#F77979'
-            // dataPointLabelShiftY={10}
-
-            stripHeight={180}
-            stripWidth={2}
-            stripColor="#FF4444"
-            stripOpacity={0.8}
-            textFontSize={12}
-            textShiftY={-15}
-            textShiftX={-8}
-            animateOnDataChange
-            scrollAnimation
-            animationDuration={10}
+            yAxisSuffix="" // Legend already has units
+            theme={activeTheme}
+            spacing={100}
+            initialSpacing={20}
           />
-        </View>
-
-        <View style={style.centerLineContainer} pointerEvents="none">
-          <View style={style.centerLine} />
-        </View>
-
-        <View style={style.dateDisplayContainer} pointerEvents="none">
-          <View style={style.dateDisplay}>
-            <Text style={style.currentDate}>
-              {formatCurrentDate(currentDate, scale)}
-            </Text>
-          </View>
-        </View>
+        </ScrollView>
       </View>
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode={scale === 'minute' || scale === 'hour' ? 'datetime' : 'date'}
-          display="default"
-          onChange={handleDatePickerChange}
-        />
+
+      {showPicker && (
+        <DateTimePicker value={selectedDate} mode="date" display="default" onChange={handleDateChange} />
+      )}
+      {showTimePicker && (
+        <DateTimePicker value={selectedDate} mode="time" display="default" onChange={handleTimeChange} />
       )}
     </View>
   );
 }
 
 const style = StyleSheet.create({
-  container: {
-    flexDirection: 'column',
-    gap: 40,
-    backgroundColor: '#FCFCFC',
-    paddingVertical: 10,
-  },
-  container_header: {
-    flexDirection: 'column',
-    gap: 12,
-  },
-  title: {
-    fontFamily: themeStyle.fontFamily.bold,
-    fontSize: themeStyle.fontSize.header2,
-    color: themeStyle.colors.primary,
-  },
-  chartContainer: {
-    position: 'relative',
-    width: '100%',
-    // paddingHorizontal: 1,
-  },
-  centerLine: {
-    position: 'absolute',
-    top: -10,
-    bottom: 25,
-    width: 2,
-    backgroundColor: '#FF4444',
-    zIndex: 10,
-    shadowColor: '#FF4444',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  dateDisplay: {
-    position: 'absolute',
-    top: -30,
-    width: 150,
-    backgroundColor: '#FF4444',
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    alignItems: 'center',
-    zIndex: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-  currentDate: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  centerLineContainer: {
-    position: 'absolute',
-    top: -10,
-    bottom: 0,
-    left: '50%',
-    width: 2,
-    marginLeft: 10,
-    zIndex: 10,
-    pointerEvents: 'none',
-  },
-  dateDisplayContainer: {
-    position: 'absolute',
-    top: 0,
-    bottom: -50,
-    left: '50%',
-    width: 150,
-    marginLeft: -65,
-    zIndex: 15,
-    pointerEvents: 'none',
-  },
+  container: { paddingVertical: 10, paddingHorizontal: 16, gap: 20, borderRadius: 12 },
+  header: { gap: 12 },
+  controlRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  navBtn: { backgroundColor: '#333', borderRadius: 8, padding: 4 },
   datePickerButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    backgroundColor: '#3C3C3E',
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: '#555',
     borderRadius: 8,
     gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    width: '30%'
   },
-  datePickerIcon: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  datePickerText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#495057',
-    flex: 1,
-  },
-  legendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-    paddingHorizontal: 20,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#666',
-  },
+  datePickerText: { fontSize: 12, fontWeight: '600', color: '#FFFFFF' },
+  chartContainer: { width: '100%' },
+  legendContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginBottom: 16 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendColor: { width: 12, height: 12, borderRadius: 6 },
+  legendText: { fontSize: 12, color: '#E5E5EA' }, 
 });
+
+export default React.memo(SummaryChart);

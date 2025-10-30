@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { axiosImageProInstance } from "@/src/api/apiManager";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { axiosImageProInstance, axiosMainInstance } from "@/src/api/apiManager";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { nanoid } from 'nanoid/non-secure';
+import { t } from "i18next";
 
 export type PondDiagnoseResponse = {
     health_status: "Healthy" | "At Risk" | "Unhealthy" | string;
@@ -12,22 +13,30 @@ export type PondDiagnoseResponse = {
 };
 
 export type PondDiagnoseHistory = PondDiagnoseResponse & {
-    _id: string;       // local unique id
-    _ts: number;       // optional timestamp
-    image_uri?: string; // optional URL to the uploaded image
+    _id: number;
+    _ts: number;
+    image_uri?: string;
+};
+
+export type ServerPondHealth = {
+    PondID: number;      
+    UserID: number;
+    Picture: string; 
+    Result: string;  
+    data: string;    
+    Description: string;
 };
 
 export type UploadableImage =
-    | { uri: string; name?: string; type?: string } // React Native
+    | { uri: string; name?: string; type?: string } 
     | File
     | Blob;
 
-const HISTORY_KEY = "pond_health_history_v1"; // storage key
-const HISTORY_MAX = 50; // optional cap to avoid unbounded growth
+const HISTORY_KEY = "pond_health_history_v1"; 
+const HISTORY_MAX = 50; 
 
 function buildFormData(file: UploadableImage, fieldName = "file"): FormData {
     const fd = new FormData();
-
     if (typeof file === "object" && "uri" in file) {
         const name = file.name ?? `upload-${Date.now()}.jpg`;
         const type =
@@ -41,21 +50,16 @@ function buildFormData(file: UploadableImage, fieldName = "file"): FormData {
         fd.append(fieldName, { uri: file.uri, name, type });
         return fd;
     }
-
     if (typeof File !== "undefined" && file instanceof File) {
         fd.append(fieldName, file, file.name);
         return fd;
     }
-
-    // Blob on web
     fd.append(fieldName, file, `upload-${Date.now()}.jpg`);
     return fd;
 }
 
 function getPreviewUri(file: UploadableImage): string | undefined {
-  // RN: use the asset uri
   if (typeof file === "object" && "uri" in file) return file.uri;
-  // Web: make an object URL when available
   if (typeof window !== "undefined" && "URL" in window) {
     try {
       if (typeof File !== "undefined" && file instanceof File) {
@@ -70,35 +74,75 @@ function getPreviewUri(file: UploadableImage): string | undefined {
 }
 
 export function usePondHealths() {
-    const [history_result, setHistoryResult] = useState<PondDiagnoseHistory[]>([]);
+    const queryClient = useQueryClient();
+    const { 
+        data: history_result, 
+        isLoading: isHistoryLoading,
+        refetch: refetchHistory,
+    } = useQuery<ServerPondHealth[], Error, PondDiagnoseHistory[]>({
+        queryKey: ['pondHealthHistory'],
+        
+        queryFn: async () => {
+            const res = await axiosMainInstance.get<ServerPondHealth[]>("/v1/pondhealthByUserId");
+            return res.data;
+        },
 
-    // Load history once on mount
-    useEffect(() => {
-        (async () => {
-            try {
-                const raw = await AsyncStorage.getItem(HISTORY_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw) as PondDiagnoseHistory[];
-                    setHistoryResult(Array.isArray(parsed) ? parsed : []);
-                }
-            } catch (e) {
-                console.warn("Failed to load pond history:", e);
-            }
-        })();
-    }, []);
+        select: (data) => {
+            console.log("Raw pond health history from server:", data);
+            if (!Array.isArray(data)) return [];
+            return data 
+                .map(item => ({
+                    _id: item.PondID, 
+                    _ts: new Date(item.data).getTime(),
+                    health_status: item.Result,
+                    image_uri: item.Picture,
+                    description_and_recommendation: item.Description,
+                    detected_classes: (item.Result ?? '').split(","),
+                }))
+                .sort((a, b) => b._ts - a._ts); 
+        },
+    });
 
-    // Small helper to persist state
-    const persistHistory = async (next: PondDiagnoseHistory[]) => {
-        setHistoryResult(next);
-        try {
-            await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(next));
-        } catch (e) {
-            console.warn("Failed to persist pond history:", e);
+    const saveToBackendMut = useMutation<
+        unknown,
+        Error,
+        { file: UploadableImage; result: PondDiagnoseResponse } 
+    >({
+        mutationKey: ['savePondHealthToBackend'],
+        mutationFn: async ({ file, result }) => {
+
+            const form = buildFormData(file, "image");
+
+            form.append("result", result.health_status);
+            form.append("description", result.description_and_recommendation);
+            form.append("classification", result.detected_classes.join(","));
+
+            const res = await axiosMainInstance.post("/v1/PostPondHealth", form, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            
+            return res.data;
+        },
+        onError: (err) => {
+            console.error("Failed to save result to backend:", err);
+            Toast.show({
+                type: "errorToast",
+                text1: t("toast.syncFailedTitle"), 
+                text2: t("toast.syncFailedText"), 
+                position: "bottom", 
+            });
+        },
+        onSuccess: () => {
+            console.log("Pond health result saved to Go backend.");
+            queryClient.invalidateQueries({ queryKey: ['pondHealthHistory'] });
         }
-    };
+    });
 
-    // Mutation
-    const diagnoseMut = useMutation<PondDiagnoseResponse, Error, UploadableImage>({
+    const diagnoseMut = useMutation<
+        PondDiagnoseResponse, 
+        Error,
+        UploadableImage 
+    >({
         mutationFn: async (file) => {
             const form = buildFormData(file);
             const res = await axiosImageProInstance.post("/diagnose/", form, {
@@ -108,54 +152,75 @@ export function usePondHealths() {
             return res.data as PondDiagnoseResponse;
         },
         onSuccess: (data, file) => {
-            // toast
             Toast.show({
-                type: "success",
-                text1: "Pond health analysis completed!",
-                text2: `Status: ${data.health_status}`,
+                type: "successToast",
+                text1: t("toast.analysisCompleteTitle"), // --- TRANSLATED ---
+                text2: t("toast.analysisStatusText", { status: data.health_status }), // --- TRANSLATED ---
                 position: "top",
             });
 
-            // add to history (prepend newest first, cap length)
-            const enriched: PondDiagnoseHistory = {
-                ...data,
-                _id: nanoid(),       
-                _ts: Date.now(),
-                image_uri: getPreviewUri(file), 
-            };
-
-            const next = [enriched, ...history_result].slice(0, HISTORY_MAX);
-            void persistHistory(next);
+            saveToBackendMut.mutate({ file: file, result: data });
         },
         onError: (err) => {
             Toast.show({
-                type: "error",
-                text1: "Analysis failed",
-                text2: err.message ?? "Please try again.",
+                type: "errorToast",
+                text1: t("toast.analysisFailedTitle"), // --- TRANSLATED ---
+                text2: err.message ?? t("toast.analysisFailedText"), // --- TRANSLATED ---
                 position: "top",
             });
         },
     });
 
-    // Utilities
-    const clearHistory = async () => {
-        await persistHistory([]);
-    };
+    const clearHistory = useMutation<unknown, Error, void>({
+        mutationFn: async () => {
+            // --- You need to create this endpoint in your Go backend ---
+            // e.g., api.Delete("/pondhealth/all", pondHealthHandler.ClearAllPondHealth)
+            await axiosMainInstance.delete('/pondhealth/all');
+        },
+        onSuccess: () => {
+            Toast.show({ type: 'info', text1: t('toast.historyCleared') });
+            queryClient.invalidateQueries({ queryKey: ['pondHealthHistory'] });
+        }
+    });
 
-    const removeHistoryAt = async (id: string) => {
-        const next = history_result.filter(item => item._id !== id);
-        await persistHistory(next);
-    };
+    const removeHistoryAt = useMutation<unknown, Error, number>({
+        mutationFn: async (historyId: number) => {
+            if (!historyId) throw new Error("Invalid history ID");
+
+            await axiosMainInstance.delete(`/v1/pondhealth-delete/${historyId}`);
+        },
+        onSuccess: () => {
+            Toast.show({ type: 'info', text1: t('toast.historyItemRemoved') });
+
+            queryClient.invalidateQueries({ queryKey: ['pondHealthHistory'] });
+        },
+        onError: (err) => {
+            Toast.show({ type: 'errorToast', text1: t('toast.removeItemFailed') });
+        }
+    });
+
+    const getHistory = () => queryClient.fetchQuery({
+        queryKey: ['pondHealthHistory'],
+        queryFn: async () => {
+            const res = await axiosMainInstance.get('/v1/pondhealthByUserId');
+            queryClient.invalidateQueries({ queryKey: ['pondHealthHistory'] });
+            return res.data;
+        },
+    });
 
     return {
         diagnose: diagnoseMut.mutateAsync,
-        diagnosing: diagnoseMut.isPending,
-        diagnoseError: diagnoseMut.error,
+        diagnosing: diagnoseMut.isPending || saveToBackendMut.isPending,
+        diagnoseError: diagnoseMut.error ?? saveToBackendMut.error,
         diagnoseResult: diagnoseMut.data,
         history_result,
         clearHistory,
-        removeHistoryAt,
+        removeHistoryAt: removeHistoryAt.mutateAsync,
 
-        resetDiagnose: diagnoseMut.reset,
+        resetDiagnose: () => {
+            diagnoseMut.reset();
+            saveToBackendMut.reset();
+        },
+        getHistory: getHistory,
     };
 }

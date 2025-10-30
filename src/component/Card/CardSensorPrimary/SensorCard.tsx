@@ -1,18 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from '@/theme';
 import SensorBoardExpand from "./SensorBoardExpand";
 import { SensorDataBackend } from "@/src/interfaces/sensor";
 import { useTranslation } from "react-i18next";
+import { useSensorExpandStore } from "@/src/api/hooks/useSensor";
 
-const SensorTab: React.FC<{ sensor: SensorDataBackend , board_uuid: string}> = ({ sensor , board_uuid}) => {
-    const [expanded, setExpanded] = useState(false);
+const SensorExpandMemo = React.memo(SensorBoardExpand);
 
-    const {t} = useTranslation();
+const SensorTab: React.FC<{
+    sensor: SensorDataBackend,
+    board_uuid: string,
+}> = ({ sensor, board_uuid }) => {
+    const { expandedSensors, toggleSensor } = useSensorExpandStore();
+    const expanded = expandedSensors[sensor.id] || false;
+
+    const { t } = useTranslation();
 
     return (
         <View>
-            <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+            <TouchableOpacity onPress={() => toggleSensor(sensor.id.toString())}>
                 <View key={sensor.id} style={[styles.sensorCard,
                     , {
                     borderBottomEndRadius: expanded ? 0 : theme.borderRadius.lg,
@@ -27,7 +34,9 @@ const SensorTab: React.FC<{ sensor: SensorDataBackend , board_uuid: string}> = (
                     </View>
                 </View>
             </TouchableOpacity>
-            {expanded && <SensorBoardExpand sensor={sensor} boardId={board_uuid}/>}
+            <View style={{ display: expanded ? 'flex' : 'none' }}>
+                <SensorExpandMemo sensor={sensor} boardId={board_uuid} />
+            </View>
         </View>
     );
 }

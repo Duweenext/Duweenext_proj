@@ -66,7 +66,7 @@ export function useNotification(): UseNotificationReturn {
         queryKey: notificationKeys.all,
         queryFn: async (): Promise<Notification[]> => {
             const res = await axiosMainInstance.get('/v1/notifications');
-            console.log('Fetched notifications:', res.data);
+            // console.log('Fetched notifications:', res.data);
             return (res.data?.data ?? res.data ?? []) as Notification[];
         },
         staleTime: 60_000,
@@ -78,7 +78,7 @@ export function useNotification(): UseNotificationReturn {
             staleTime: 60_000,
             queryFn: async (): Promise<Notification[]> => {
                 const res = await axiosMainInstance.get('/v1/notifications');
-                console.log('Fetched notifications:', res.data);
+                // console.log('Fetched notifications:', res.data);
                 return res.data.data as Notification[];
             },
         });

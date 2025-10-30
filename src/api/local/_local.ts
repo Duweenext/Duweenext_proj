@@ -21,11 +21,8 @@ export function useGlobalRefresh() {
 
   const refresh = async () => {
     setRefreshing(true);
-
-    // 1. bump zustand (for local state listeners)
     bumpRefresh();
 
-    // 2. invalidate queries (forces refetch for all active ones)
     await queryClient.invalidateQueries();
 
     setRefreshing(false);

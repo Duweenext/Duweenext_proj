@@ -1,4 +1,3 @@
-// component-v2/Card/CardNotification.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -13,7 +12,7 @@ import { Trash2 } from 'lucide-react-native';
 import ButtonCard from '../Buttons/ButtonCard';
 import ModalSaveNote from '../Modals/ModalSaveNote';
 import ModalViewNote from '../Modals/ViewNoteModal';
-import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { Swipeable } from 'react-native-gesture-handler'; // Corrected import
 import { Icon } from 'react-native-paper';
 
 interface NotificationCardProps {
@@ -29,6 +28,8 @@ interface NotificationCardProps {
   onArchive?: () => void;
   rightAccessory?: React.ReactNode;
   resolvedBy?: string;
+  messageType?: string;
+  archived?: boolean;
 }
 
 export const CardNotification: React.FC<NotificationCardProps> = ({
@@ -44,6 +45,9 @@ export const CardNotification: React.FC<NotificationCardProps> = ({
   onArchive,
   rightAccessory,
   resolvedBy,
+  // --- ADDED: Destructure new props ---
+  messageType,
+  archived = false, // Default to false
 }) => {
   const [noteModal, setNoteModal] = useState(false);
 
@@ -55,96 +59,114 @@ export const CardNotification: React.FC<NotificationCardProps> = ({
     if (onResolve) onResolve(newNote);
     setNoteModal(false);
   };
-
-  const renderRightActions = () => (
+  
+  // --- CHANGED: Swipe-to-archive is now disabled if already archived ---
+  const renderRightActions = !archived ? () => (
     <TouchableOpacity
-      style={{
-        backgroundColor: "#9ca3af",
-        justifyContent: "center",
-        alignItems: "center",
-        width: 100,
-        height: "100%",
-      }}
+      style={styles.archiveAction}
       onPress={onArchive}
     >
-      <Text style={{ color: "white", fontWeight: "600" }}>Archive</Text>
+      <Text style={styles.archiveActionText}>Archive</Text>
     </TouchableOpacity>
-  );
+  ) : undefined;
 
-  return (
-    <Swipeable renderRightActions={renderRightActions}>
-      <View style={[styles.card, style]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            {icon}
-            <Text style={styles.title}>{title}</Text>
-          </View>
 
-          <View style={styles.headerRight}>
-            {rightAccessory}
-            {!!time && <Text style={styles.time}>{time}</Text>}
-            {onDelete && (
-              <TouchableOpacity
-                accessibilityLabel="Delete notification"
-                hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-                onPress={onDelete}
-                style={styles.deleteBtn}
-              >
-                <Trash2 size={18} color="#FFF" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
+  // --- CHANGED: Conditional styling based on the 'archived' prop ---
+  const cardStyle = [styles.card, archived && styles.archivedCard, style];
+  const textStyle = archived ? styles.archivedText : styles.defaultText;
+  const titleStyle = archived ? styles.archivedText : styles.defaultTitle;
+  const timeStyle = archived ? styles.archivedText : styles.defaultText;
+  const iconColor = archived ? '#333333' : '#FFFFFF';
 
-        <Text style={styles.headline}>{headline}</Text>
-        <View style={{ gap: 16 }}>
-          <Text style={styles.message}>{message}</Text>
-
-          {note ? (
-            <ButtonCard
-              text="View Note"
-              onPress={() => setNoteModal(true)}
-              filledColor="#FFFFFF"
-              textColor="#000000"
-            />
-          ) : (
-            onResolve && !note && (
-              <ButtonCard
-                text="Resolve"
-                onPress={handleResolve}
-                filledColor="#FFFFFF"
-                textColor="#000000"
-              />
-            )
-          )}
-        </View>
-        <View style={{ alignItems: 'flex-start', flexDirection: 'row', gap: 8, alignSelf: 'flex-end' }}>
-          <Icon source={require('@/assets/icons/user.png')} size={20} color='#FFFFFF' />
-          <Text style={{ color: '#FFFFFF', fontFamily: themeStyle.fontFamily.medium }}>
-            {resolvedBy}
+  const CardContent = (
+    <View style={cardStyle}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          {icon}
+          {/* --- CHANGED: Title is now truncated if too long --- */}
+          <Text style={[styles.title, titleStyle]} numberOfLines={1} ellipsizeMode='tail'>
+            {title}
           </Text>
         </View>
 
-        {/* Modal */}
-        {!note && onResolve && (
-          <ModalSaveNote
-            visible={noteModal}
-            onClose={() => setNoteModal(false)}
-            initialNote={note}
-            onSave={handleSaveNote}
-          />
-        )}
+        <View style={styles.headerRight}>
+          {rightAccessory}
+          {!!time && <Text style={[styles.time, timeStyle]}>{time}</Text>}
+          {onDelete && (
+            <TouchableOpacity
+              accessibilityLabel="Delete notification"
+              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+              onPress={onDelete}
+              style={styles.deleteBtn}
+            >
+              <Trash2 size={18} color={iconColor} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
-        {note && <ModalViewNote
+      <Text style={styles.headline}>{headline}</Text>
+      <View style={{ gap: 16 }}>
+        <Text style={[styles.message, textStyle]}>{message}</Text>
+
+        {/* --- CHANGED: The logic for showing Resolve/View Note buttons --- */}
+        {note ? (
+          <ButtonCard
+            text="View Note"
+            onPress={() => setNoteModal(true)}
+            filledColor={archived ? themeStyle.colors.primary : "#FFFFFF"}
+            textColor={archived ? '#FFFFFF' : '#000000'}
+          />
+        ) : (
+          // --- Hides "Resolve" button for 'Request' type or if no onResolve function exists ---
+          onResolve && messageType !== 'Request' && (
+            <ButtonCard
+              text="Resolve"
+              onPress={handleResolve}
+              filledColor="#FFFFFF"
+              textColor="#000000"
+            />
+          )
+        )}
+      </View>
+      
+      {/* --- ADDED: Conditionally render the resolved by section --- */}
+      {resolvedBy && (
+         <View style={styles.resolvedByContainer}>
+          <Icon source={require('@/assets/icons/user.png')} size={20} color={iconColor} />
+          <Text style={[{fontFamily: themeStyle.fontFamily.medium }, textStyle]}>
+            {resolvedBy}
+          </Text>
+        </View>
+      )}
+
+
+      {/* Modal */}
+      {!note && onResolve && (
+        <ModalSaveNote
           visible={noteModal}
           onClose={() => setNoteModal(false)}
-          note={note}
-        />}
-      </View>
+          initialNote={note}
+          onSave={handleSaveNote}
+        />
+      )}
+
+      {note && <ModalViewNote
+        visible={noteModal}
+        onClose={() => setNoteModal(false)}
+        note={note}
+      />}
+    </View>
+  );
+
+  return (
+    <Swipeable renderRightActions={renderRightActions} enabled={!archived}>
+      {CardContent}
     </Swipeable>
   );
 };
+
 
 const styles = StyleSheet.create({
   card: {
@@ -153,14 +175,15 @@ const styles = StyleSheet.create({
     borderRadius: parseInt(themeStyle.borderRadius.lg, 10),
     padding: 16,
     ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 4 },
       android: { elevation: 4 },
     }),
+  },
+  // --- ADDED: Style for archived cards ---
+  archivedCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB', // A light grey border
   },
   header: {
     flexDirection: 'row',
@@ -168,18 +191,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center' },
+  // --- CHANGED: Allow left header to shrink for long titles ---
+  headerLeft: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    marginRight: 8, // Add space between left and right side
+  },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: {
     marginLeft: 8,
     fontSize: parseInt(themeStyle.fontSize['header-2'], 10),
     fontFamily: themeStyle.fontFamily.semibold,
-    color: '#FFFFFF',
   },
   time: {
     fontSize: parseInt(themeStyle.fontSize.description, 10),
     fontFamily: themeStyle.fontFamily.regular,
+  },
+  // --- ADDED: Default and Archived text styles ---
+  defaultText: {
     color: '#FFFFFF',
+  },
+  defaultTitle: {
+    color: '#FFFFFF',
+  },
+  archivedText: {
+    color: '#1F2937', // A dark grey for text on white background
   },
   deleteBtn: { marginLeft: 8 },
   headline: {
@@ -191,7 +228,25 @@ const styles = StyleSheet.create({
   message: {
     fontSize: parseInt(themeStyle.fontSize.description, 10),
     fontFamily: themeStyle.fontFamily.regular,
-    color: '#FFFFFF',
     lineHeight: 22,
   },
+  resolvedByContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    alignSelf: 'flex-end',
+    marginTop: 12,
+  },
+  archiveAction: {
+    backgroundColor: "#9ca3af",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 100,
+    height: "100%",
+    borderRadius: parseInt(themeStyle.borderRadius.lg, 10),
+  },
+  archiveActionText: {
+    color: "white",
+    fontWeight: "600"
+  }
 });

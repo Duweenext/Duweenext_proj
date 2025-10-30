@@ -1,44 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
-import { theme } from '@/theme';
-import TextFieldSensorValue from '@/src/component/TextFields/TextFieldSensorValue';
-import SensorChart from '../../Chart/SensorChart/SensorChart';
-import { Ionicons } from '@expo/vector-icons';
-import { useSensor } from '@/src/api/hooks/useSensor';
-import { BackendSensorLogData, SensorDataBackend } from '@/src/interfaces/sensor';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+// --- MODIFIED --- Added ScrollView
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions, Modal, FlatList, ScrollView } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
-
-interface SensorThreshold {
-  max: number;
-  min: number;
-}
-
-interface ChartDataPoint {
-  day: string;
-  value: number;
-  x: number;
-  y: number;
-  timestamp: string;
-  date: Date;
-}
-
-interface SensorData {
-  id: number;
-  name: string;
-  type: string;
-  isConnected: boolean;
-  currentValue?: number;
-  unit?: string;
-  threshold: SensorThreshold;
-  historicalData: { day: string; value: number; x: number; y: number }[];
-}
-
+import { theme } from '@/src/theme';
+import RowButtonGroup from '../../Buttons/ButtonFilter';
+import { SensorDataBackend, sensorLogScale } from '@/src/interfaces/sensor';
+import { useSensorGraph } from '@/src/api/hooks/useSensorGraph';
+import {
+  addStep,
+  buildWindowDomain,
+  makeSlots,
+  binToSlots,
+  formatLabel,
+  SLOT_COUNT,
+  sensorOption,
+  makeSlotsFromRange,
+} from '@/src/utils/chartUtils';
+import { chart_themes, ThemeKey } from './chartTheme';
+import D3LineChart from './D3Linechart'; 
 interface SensorBoardExpandProps {
   boardId: string;
   sensor: SensorDataBackend;
 }
-
-export const getSensorSuffix = (type : string) : string => {
+export const getSensorSuffix = (type: string): string => {
   switch (type) {
     case 'Temperature': return '°C';
     case 'pH': return '';
@@ -48,482 +34,324 @@ export const getSensorSuffix = (type : string) : string => {
 };
 
 const SensorBoardExpand: React.FC<SensorBoardExpandProps> = ({ boardId, sensor }) => {
-  const { setBoardThreshold, mergedGraph , sensorDataLoading, graphMetaData} = useSensor(boardId);
-  const {t} = useTranslation();
-  const [selectedSensor, setSelectedSensor] = useState<SensorData>({
-    id: sensor?.id ?? 0,
-    name: sensor.sensor_type,
-    type: sensor.sensor_type,
-    isConnected: true,
-    unit: '',
-    threshold: {
-      max: sensor?.sensor_threshold_max,
-      min: sensor?.sensor_threshold_min
-    },
-    historicalData: [
-      { day: 'Day1', value: 5.6, x: 1, y: 5.6 },
-    ],
-  });
-
-  function getValueFromBackendData(data: BackendSensorLogData, sensorType: string): number {
-    switch (sensorType.toLowerCase()) {
-      case 'temperature':
-        return data.temperature;
-      case 'ph':
-        return data.ph;
-      case 'ec':
-        return data.ec;
-      default:
-        return 0;
+  const { t } = useTranslation();
+  const [scale, setScale] = useState<sensorLogScale>('day');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [isThemeModalVisible, setThemeModalVisible] = useState(false);
+  const [activeThemeKey, setActiveThemeKey] = useState<ThemeKey>('default');
+  const activeTheme = useMemo(() => chart_themes[activeThemeKey].styles, [activeThemeKey]);
+  const handleThemeSelect = (themeKey: ThemeKey) => {
+    setActiveThemeKey(themeKey);
+    setThemeModalVisible(false);
+  };
+  const apiEndDate = useMemo(() => {
+    const { end } = buildWindowDomain(selectedDate, scale);
+    return end;
+  }, [selectedDate, scale]);
+  const { graphData, timeRange, getSensorGraphLog } = useSensorGraph(
+    boardId,
+    scale,
+    apiEndDate.toISOString()
+  );
+  const chartDomain = useMemo(() => {
+    if (scale === 'all' && timeRange.start && timeRange.end) {
+      return {
+        start: new Date(timeRange.start),
+        end: new Date(timeRange.end),
+      };
     }
-  }
+    return buildWindowDomain(selectedDate, scale);
+  }, [selectedDate, scale, timeRange]);
+  useEffect(() => {
+    const fetchDataForWindow = async () => {
+      setIsLoading(true);
+      try {
+        await getSensorGraphLog();
+      } catch (error) {
+        console.error(`Failed to fetch graph data for scale "${scale}":`, error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDataForWindow();
+  }, [getSensorGraphLog]);
+  const axisSlots = useMemo(() => {
+    const { start, end } = chartDomain;
+    if (scale === 'all') {
+      if (!timeRange.start || !timeRange.end) {
+        return []; 
+      }
+      return makeSlotsFromRange(
+        new Date(timeRange.start),
+        new Date(timeRange.end),
+        SLOT_COUNT[scale]
+      );
+    }
+    return makeSlots(start, scale, SLOT_COUNT[scale]);
+  }, [chartDomain, scale, timeRange.start, timeRange.end]); 
 
-    const convertBackendDataToChart = (backendData: BackendSensorLogData[]): ChartDataPoint[] => {
-    if (!backendData || backendData.length === 0) {
+  const points = useMemo(() => {
+    if (!isLoading && graphData && graphData.length === 0) {
       return [];
     }
 
-    return backendData
-      .map((item, index) => {
-        const date = new Date(item.created_at);
-        const value = getValueFromBackendData(item, sensor.sensor_type);
-        
-        return {
-          day: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          value: value,
-          x: index + 1,
-          y: value,
-          timestamp: item.created_at,
-          date: date,
-        };
-      })
-      .sort((a, b) => a.date.getTime() - b.date.getTime()); 
-  };
+    const binnedValues = binToSlots(sensor.sensor_type, graphData, axisSlots);
+    return axisSlots.map((slot, i) => {
+      const val = binnedValues[i];
+      const roundedVal = Math.round(val * 100) / 100;
+      return {
+        value: roundedVal,
+        label: formatLabel(slot, scale),
+        dataPointText: roundedVal > 0 ? `${roundedVal}` : '',
+      };
+    });
+  }, [axisSlots, graphData, scale, sensor.sensor_type, isLoading]);
 
-    useEffect(() => {
-    if (mergedGraph && mergedGraph.length > 0) {
-      
-      const chartData = convertBackendDataToChart(mergedGraph);
-      const latestValue = chartData.length > 0 ? chartData[chartData.length - 1].value : undefined;
-      
-      setSelectedSensor(prev => ({
-        ...prev,
-        historicalData: chartData,
-        currentValue: latestValue,
-      }));
+  const { maxValue } = useMemo(() => {
+    const ys = points.map(p => p.value); 
+    const max = Math.max(...ys, 0);
+    const calculatedMax = Number.isFinite(max) ? Math.ceil(max * 1.2) || 10 : 10;
+    return { maxValue: calculatedMax }; 
+  }, [points]); 
+  const shiftWindow = (dir: 1 | -1) => {
+    const newDate = addStep(selectedDate, scale, dir);
+    setSelectedDate(newDate);
+  };
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowPicker(Platform.OS === 'ios');
+    if (date && event.type === 'set') {
+      const newSelectedDate = new Date(selectedDate.getTime());
+      newSelectedDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+      setSelectedDate(newSelectedDate);
     }
-  }, [mergedGraph, sensor.sensor_type]);
-
-  const handleMaxThresholdChange = (value: string) => {
-    setSelectedSensor(prev => ({
-      ...prev,
-      threshold: {
-        ...prev.threshold,
-        max: parseFloat(value) || 0
-      }
-    }));
   };
-
-  const handleMinThresholdChange = (value: string) => {
-    setSelectedSensor(prev => ({
-      ...prev,
-      threshold: {
-        ...prev.threshold,
-        min: parseFloat(value) || 0
-      }
-    }));
+  const handleTimeChange = (event: any, date?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (date && event.type === 'set') {
+      const newSelectedDate = new Date(selectedDate.getTime());
+      newSelectedDate.setHours(date.getHours(), date.getMinutes(), date.getSeconds());
+      setSelectedDate(newSelectedDate);
+    }
   };
+  const displayDateText = useMemo(() => {
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    if (scale === 'hour') {
+      const startHour = new Date(selectedDate);
+      startHour.setMinutes(0, 0, 0);
+      const endHour = new Date(startHour);
+      endHour.setHours(startHour.getHours() + 1);
+      endHour.setMinutes(59);
+      return `${startHour.toLocaleString('en-US', options)}, ${startHour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - ${endHour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    if (scale === 'all') {
+      return selectedDate.toLocaleString('en-US', { ...options, hour: '2-digit', minute: '2-digit' });
+    }
+    return selectedDate.toLocaleDateString('en-US', options);
+  }, [selectedDate, scale]);
+  const handleScaleChange = useCallback((newScale: sensorLogScale) => {
+    setScale(newScale);
+    setSelectedDate(new Date());
+  }, []);
+  const scaleButtons = useMemo(() => {
+    return sensorOption.map(option => ({
+      id: option,
+      label: t(option),
+      value: t(option),
+      onPress: () => handleScaleChange(option as sensorLogScale),
+    }));
+  }, [t, handleScaleChange]);
 
-  const changeBoardThreshold = async () => {
-    await setBoardThreshold(selectedSensor.type, selectedSensor.threshold.max, selectedSensor.threshold.min);
-  }
 
   return (
-    <ScrollView style={styles.container}>
-        <>
-          <View style={styles.thresholdContainer}>
-            <View style={styles.thresholdHeader}>
-              <Text style={styles.thresholdTitle}>{t('Threshold')}:</Text>
-              <View style={styles.infoIcon}>
-                <Text style={styles.infoText}>?</Text>
-              </View>
-            </View>
-            
-            <View style={styles.thresholdRow}>
-              <View style={styles.thresholdItem}>
-                <Text style={styles.thresholdLabel}>{t('Max')}:</Text>
-                <TextFieldSensorValue 
-                  defaultValue={selectedSensor.threshold.max.toString()}
-                  onChange={handleMaxThresholdChange}
-                  height={38}
-                  fontSize={14}
-                />
-                <Text style={styles.unitText}>{getSensorSuffix(sensor.sensor_type)}</Text>
-                <TouchableOpacity
-                  style={[
-                    styles.submitButton,
-                    sensorDataLoading && styles.submitButtonDisabled
-                  ]}
-                  onPress={changeBoardThreshold}
-                  disabled={sensorDataLoading}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons 
-                    name="checkmark" 
-                    size={16} 
-                    color={theme.colors.white} 
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.thresholdRow}>
-              <View style={styles.thresholdItem}>
-                <Text style={styles.thresholdLabel}>{t('Min')}:</Text>
-                <TextFieldSensorValue 
-                  defaultValue={selectedSensor.threshold.min.toString()}
-                  onChange={handleMinThresholdChange}
-                  height={38}
-                  fontSize={14}
-                />
-                <Text style={styles.unitText}>{getSensorSuffix(sensor.sensor_type)}</Text>
-                <TouchableOpacity
-                  style={[
-                    styles.submitButton,
-                    sensorDataLoading && styles.submitButtonDisabled
-                  ]}
-                  onPress={changeBoardThreshold}
-                  disabled={sensorDataLoading}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons 
-                    name="checkmark" 
-                    size={16} 
-                    color={theme.colors.white} 
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.divider} />
-
-          {selectedSensor.historicalData.length > 0 ? (
-              <SensorChart 
-                boardId={boardId}
-                sensor={sensor}
-              />
+    <View style={style.container}>
+      {/* --- Header is unchanged --- */}
+      <View style={style.header}>
+        <View style={style.titleRow}>
+          <Text style={style.title}>
+            {t('Summary Graph of')} {t(sensor.sensor_type)}
+          </Text>
+          <TouchableOpacity onPress={() => setThemeModalVisible(true)}>
+            <MaterialIcons name="palette" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <View style={style.controlRow}>
+          <TouchableOpacity style={style.navBtn} onPress={() => shiftWindow(-1)} disabled={isLoading}>
+            <MaterialIcons name="chevron-left" size={24} color={isLoading ? '#ccc' : '#000'} />
+          </TouchableOpacity>
+          {(scale === 'hour' || scale === 'all') ? (
+            <>
+              <TouchableOpacity
+                style={[style.datePickerButton, { flex: 0.7 }]}
+                onPress={() => setShowPicker(true)}
+                disabled={isLoading}
+              >
+                <MaterialIcons name="date-range" size={16} color="black" />
+                <Text style={style.datePickerText}>
+                  {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[style.datePickerButton, { flex: 0.3 }]}
+                onPress={() => setShowTimePicker(true)}
+                disabled={isLoading}
+              >
+                <MaterialIcons name="access-time" size={16} color="black" />
+                <Text style={style.datePickerText}>
+                  {selectedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                </Text>
+              </TouchableOpacity>
+            </>
           ) : (
-            <View style={styles.chartPlaceholder}>
-              <Text style={styles.chartPlaceholderText}>
-                {sensorDataLoading ? (t('Loading sensor data...')) : t('No data available')}
-              </Text>
-              <Text style={styles.chartSubtext}>
-                {sensorDataLoading ? t('Please wait while we fetch your sensor readings') : t('Check your sensor connection and try again')}
-              </Text>
-            </View>
+            <TouchableOpacity style={style.datePickerButton} onPress={() => setShowPicker(true)} disabled={isLoading}>
+              <MaterialIcons name="date-range" size={16} color="black" />
+              <Text style={style.datePickerText}>{displayDateText}</Text>
+            </TouchableOpacity>
           )}
-        </>
-    </ScrollView>
+          <TouchableOpacity style={style.navBtn} onPress={() => shiftWindow(1)} disabled={isLoading}>
+            <MaterialIcons name="chevron-right" size={24} color={isLoading ? '#ccc' : '#000'} />
+          </TouchableOpacity>
+        </View>
+        <RowButtonGroup buttons={scaleButtons} defaultSelected={scale} scrollable />
+      </View>
+
+      <View style={[style.chartContainer, { opacity: isLoading ? 0.5 : 1 }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <D3LineChart
+            data={points}
+            height={220}
+            maxValue={maxValue}
+            yAxisSuffix={getSensorSuffix(sensor.sensor_type)}
+            theme={activeTheme}
+            spacing={100}
+            initialSpacing={30} 
+          />
+        </ScrollView>
+      </View>
+
+      {showPicker && (
+        <DateTimePicker value={selectedDate} mode="date" display="default" onChange={handleDateChange} />
+      )}
+      {showTimePicker && (
+        <DateTimePicker value={selectedDate} mode="time" display="default" onChange={handleTimeChange} />
+      )}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isThemeModalVisible}
+        onRequestClose={() => setThemeModalVisible(false)}
+      >
+        <View style={style.modalContainer}>
+          <View style={style.modalContent}>
+            <Text style={style.modalTitle}>Select a Theme</Text>
+            <FlatList
+              data={Object.entries(chart_themes)}
+              numColumns={2}
+              style={{ alignSelf: 'stretch', maxHeight: 340 }} 
+               contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 8 }}
+               columnWrapperStyle={{ justifyContent: 'space-between' }}
+              keyExtractor={(item) => item[0]}
+              renderItem={({ item }) => {
+                const [key, themeData] = item;
+                return (
+                  <TouchableOpacity style={style.themeItem} onPress={() => handleThemeSelect(key as ThemeKey)}>
+                    <View style={[style.themeSwatch, { backgroundColor: themeData.styles.backgroundColor, borderColor: themeData.styles.textColor }]} />
+                    <Text style={style.themeName}>{themeData.name}</Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+            <TouchableOpacity style={style.closeButton} onPress={() => setThemeModalVisible(false)}>
+              <Text style={style.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.white,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderBottomRightRadius: theme.borderRadius.lg,
-    borderBottomLeftRadius: theme.borderRadius.lg,
-    
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.header1,
-    fontFamily: theme.fontFamily.semibold,
-    color: 'black',
-    marginBottom: theme.spacing.lg,
-  },
-  emptyState: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xl,
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  emptyStateText: {
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.medium,
-    // color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
-  },
-  emptyStateSubtext: {
-    fontSize: theme.fontSize.description,
-    fontFamily: theme.fontFamily.regular,
-    color: theme.colors.secondary,
-    textAlign: 'center',
-  },
-  loadingState: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xl,
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  loadingText: {
-    fontSize: theme.fontSize.description,
-    fontFamily: theme.fontFamily.medium,
-    // color: theme.colors.primary,
-  },
-  sensorCard: {
-    // backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sensorInfo: {
-    flex: 1,
-  },
-  sensorName: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.semibold,
-    marginBottom: theme.spacing.xxs,
-  },
-  sensorType: {
-    color: theme.colors.secondary,
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.regular,
-    marginBottom: theme.spacing.xxs,
-  },
-  sensorStatus: {
-    color: theme.colors.secondary,
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.regular,
-    marginBottom: theme.spacing.xxs,
-  },
-  lastReading: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.medium,
-  },
-  sensorActions: {
-    padding: theme.spacing.sm,
-  },
-  chevron: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize['2xl'],
+const style = StyleSheet.create({
+  container: { backgroundColor: '#FCFCFC', padding: 16, gap: 20 },
+  header: { gap: 12 },
+  title: {
     fontFamily: theme.fontFamily.bold,
+    fontSize: theme.fontSize.header2,
+    color: theme.colors.primary,
   },
-  actionSection: {
-    marginTop: theme.spacing.lg,
-    gap: theme.spacing.md,
-  },
-  actionButton: {
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    alignItems: 'center',
-  },
-  refreshButton: {
-    // backgroundColor: theme.colors.primary,
-  },
-  configButton: {
-    backgroundColor: theme.colors.white,
-  },
-  actionButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.description,
-    fontFamily: theme.fontFamily.semibold,
-  },
-  // New styles for sensor expand
-  headerContainer: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing.lg,
-  },
-  headerContent: {
+  chartContainer: { 
+    width: '100%',
+  }, 
+  controlRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  navBtn: { backgroundColor: '#f0f0f0', borderRadius: 8, padding: 4 },
+  datePickerButton: {
     flex: 1,
-  },
-  sensorTitle: {
-    color: theme.colors.white,
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.semibold,
-    marginBottom: theme.spacing.xs,
-  },
-  statusText: {
-    color: theme.colors.secondary,
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.regular,
-  },
-  thresholdContainer: {
-    padding: theme.spacing.xs,
-    gap: 10,
-  },
-  thresholdHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  thresholdTitle: {
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.medium,
-    color: '#1A736A',
-    marginRight: theme.spacing.xs,
-  },
-  infoIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#1A736A',
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoText: {
-    color: 'white',
-    fontSize: 12,
-    fontFamily: theme.fontFamily.bold,
-  },
-  thresholdRow: {
-    marginBottom: theme.spacing.md,
-  },
-  thresholdItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: theme.spacing.sm,
-  },
-  thresholdLabel: {
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.medium,
-    color: '#1A736A',
-    minWidth: 40,
-  },
-  unitText: {
-    fontSize: theme.fontSize.description,
-    fontFamily: theme.fontFamily.regular,
-    color: '#1A736A',
-    alignSelf: 'center',
-  },
-  chartPlaceholder: {
-    height: 200,
-    backgroundColor: 'white',
-    borderRadius: theme.borderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderStyle: 'dashed',
-  },
-  chartPlaceholderText: {
-    fontSize: theme.fontSize.description,
-    fontFamily: theme.fontFamily.medium,
-    color: '#9CA3AF',
-    marginBottom: theme.spacing.xs,
-  },
-  chartSubtext: {
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.regular,
-    color: '#9CA3AF',
-    textAlign: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: theme.spacing.md,
-  },
-  chartTooltip: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(26, 115, 106, 0.9)',
-    padding: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-  },
-  tooltipText: {
-    color: 'white',
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.medium,
-  },
-  submitButton: {
-    backgroundColor: '#1A736A',
-    borderRadius: 6,
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-    opacity: 0.6,
-  },
-  statsContainer: {
     backgroundColor: '#f8f9fa',
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 8,
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  statsTitle: {
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.medium,
-    color: '#1A736A',
-    marginBottom: theme.spacing.md,
-    textAlign: 'center',
-  },
-  statsGrid: {
+  datePickerText: { fontSize: 12, fontWeight: '600', color: '#495057' },
+  titleRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
-  },
-  statItem: {
-    width: '48%',
-    backgroundColor: 'white',
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
-  statLabel: {
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.regular,
-    color: '#666',
-    marginBottom: theme.spacing.xxs,
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  statValue: {
-    fontSize: theme.fontSize.header2,
-    fontFamily: theme.fontFamily.semibold,
-    color: '#1A736A',
+  modalContent: {
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    maxHeight: '70%'
   },
-  dataCount: {
-    fontSize: theme.fontSize.data_text,
-    fontFamily: theme.fontFamily.regular,
-    color: '#666',
-    textAlign: 'center',
-    fontStyle: 'italic',
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  themeItem: {
+    flex: 1,
+    alignItems: 'center',
+    margin: 10,
+    width: '48%', 
+  },
+  themeSwatch: {
+    width: 80,
+    height: 50,
+    borderRadius: 8,
+    borderWidth: 2,
+    marginBottom: 8,
+  },
+  themeName: {
+    fontSize: 14,
+    color: '#333',
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
-export default SensorBoardExpand;
+export default React.memo(SensorBoardExpand);

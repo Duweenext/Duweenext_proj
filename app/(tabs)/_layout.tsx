@@ -1,7 +1,6 @@
-// app/(tabs)/_layout.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, Image, Dimensions } from "react-native";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import TopBar from "@/src/component/NavBar/TopBar";
 import { icons } from "@/src/constants/icons";
 import { themeStyle } from "@/src/theme";
@@ -10,20 +9,21 @@ import { useTranslation } from "react-i18next";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
+// ... (getResponsiveSize and constants are unchanged) ...
 const getResponsiveSize = (size: number) => {
   const scale = screenWidth / 320;
   const newSize = size * scale;
   return Math.max(newSize, size * 0.9);
 };
 const responsiveMinWidth = Math.min(screenWidth * 0.8, 160);
-const responsiveHeight = Math.min(screenHeight * 0.08, 300);
 const responsivePadding = getResponsiveSize(1);
 const responsiveMarginTop = getResponsiveSize(14);
 const responsiveTabBarMargin = Math.max(screenWidth * 0.05, 20);
 const responsiveTabBarMarginBottom = Math.max(screenHeight * 0.018, 1);
+const TAB_BAR_HEIGHT = 80;
 
-const TAB_BAR_HEIGHT = 80; 
 
+// --- TabIcon component is unchanged ---
 function TabIcon({
   focused,
   icon,
@@ -53,7 +53,6 @@ function TabIcon({
         }}
         resizeMode="contain"
       />
-
       <Text
         style={{
           color: "#000",
@@ -62,15 +61,16 @@ function TabIcon({
           marginTop: 4,
         }}
       >
-        {title}
+        {title} {/* Title is passed in already translated */}
       </Text>
-
       {focused && (
         <View
           style={{
             width: "50%",
+            height: 4, // Added height for visibility
             backgroundColor: themeStyle.colors.primary,
-            borderRadius: 15,
+            borderRadius: 15, // Might want smaller radius for a line
+            marginTop: 2, // Added margin
           }}
         />
       )}
@@ -78,9 +78,10 @@ function TabIcon({
   );
 }
 
+
 export default function Layout() {
   const insets = useSafeAreaInsets();
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -105,14 +106,14 @@ export default function Layout() {
           marginBottom: responsiveTabBarMarginBottom,
           paddingTop: 10,
           height: TAB_BAR_HEIGHT,
-          position: "absolute", // floating bar
+          position: "absolute",
           overflow: "hidden",
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
         },
         sceneStyle: {
-          backgroundColor: "black",
+          backgroundColor: "black", // Assuming outer background is black
           paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 12,
         },
       }}
@@ -120,12 +121,12 @@ export default function Layout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "",
+          title: "", // Keep empty as TopBar handles title
           headerShown: true,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.home} title={t("Home")} />
+            <TabIcon focused={focused} icon={icons.home} title={t("tabs.home")} />
           ),
-          header: () => <TopBar title="Home Page" showBackButton={false} />,
+          header: () => <TopBar title={t("tabs.header.home")} showBackButton={false} showInbox/>, // --- TRANSLATED ---
         }}
       />
       <Tabs.Screen
@@ -134,9 +135,9 @@ export default function Layout() {
           title: "",
           headerShown: true,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.educate} title={t("Education")} />
+            <TabIcon focused={focused} icon={icons.educate} title={t("tabs.education")} />
           ),
-          header: () => <TopBar title="Education" />,
+          header: () => <TopBar title={t("tabs.header.education")} showInbox/>, // --- TRANSLATED ---
         }}
       />
       <Tabs.Screen
@@ -145,9 +146,9 @@ export default function Layout() {
           title: "",
           headerShown: true,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.setting} title={t("Setting")} />
+            <TabIcon focused={focused} icon={icons.setting} title={t("tabs.setting")} />
           ),
-          header: () => <TopBar title="Setting" />,
+          header: () => <TopBar title={t("tabs.header.setting")} showInbox/>, // --- TRANSLATED ---
         }}
       />
       {/* Hidden group for stack screens */}
@@ -156,9 +157,10 @@ export default function Layout() {
         options={{
           title: "",
           headerShown: false,
-          href: null,
+          href: null, // Keep hidden
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.educate} title="Screen" />
+            // Use a translated title even if hidden
+            <TabIcon focused={focused} icon={icons.educate} title={t("tabs.screens")} />
           ),
         }}
       />

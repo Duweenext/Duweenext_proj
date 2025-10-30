@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import WifiConfigModal from '../Modals/wificonfigModal';
@@ -12,24 +12,57 @@ import ConnectionPasswordModal from '@/src/component/Modals/ConnectionPasswordMo
 import { useAuth } from '@/src/auth/context/auth_context';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from 'react-i18next';
+import { BoardRelationship } from '@/src/interfaces/board';
 
 interface AddBoardSectionProps {
   onSelectBLE?: () => void;
   onManualSubmit?: (boardId: string) => void;
+  reprovisionBoardId: string;
+  onFlowComplete: () => void;
 }
 
 const AddBoardSection: React.FC<AddBoardSectionProps> = ({
+  reprovisionBoardId,
+  onFlowComplete,
 }) => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const [isBoardExist, setIsBoardExist] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<"manual" | "ble" | "option" | "wifi-config" | "connect-password" | "">("");
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [pastBoard, setPastBoard] = useState<BoardRelationship[]>([]);
   const {
     verifyBoardInformation,
     createBoardRelationship,
     refetchBoards,
     verifyConnectionPassword,
+    pastAddedBoardId,
+    getPastAddedBoardId,
   } = useBoard();
+
+  const [mode, setMode] = useState<'add' | 'reprovision'>(
+    reprovisionBoardId ? 'reprovision' : 'add'
+  );
+
+  useEffect(() => {
+    const fetchPastAddedBoard = async () => {
+      const pastBoard = await getPastAddedBoardId();
+      if (pastBoard) {
+        console.log("Fetched past added board:", pastBoard);
+        setPastBoard(pastBoard);
+      }
+    };
+
+    fetchPastAddedBoard();
+  }, []);
+
+  React.useEffect(() => {
+    if (reprovisionBoardId && mode === 'reprovision') {
+      setSelectedBoardId(reprovisionBoardId);
+      setIsBoardExist(true);
+      setModalVisible('ble'); 
+    }
+  }, [reprovisionBoardId, mode]);
+
 
   const { user } = useAuth();
 
@@ -42,13 +75,17 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
   const [isProvisioning, setIsProvisioning] = useState<boolean>(false);
 
   const handleAddBoard = () => setModalVisible("option");
-  const handleCloseModal = () => setModalVisible("");
+  const handleCloseModal = () => {
+    setModalVisible("");
+    if (mode === 'reprovision') {
+      onFlowComplete?.();
+    }
+  };
   const handleManualSelect = () => setModalVisible("manual");
   const handleBLESelect = () => setModalVisible("ble");
   const onSelectDevice = (boardId: string) => { };
   const handleWifiConfigModal = () => setModalVisible("wifi-config");
   const handleConnectedPasswordModal = () => setModalVisible("connect-password");
-  
 
   const handleConnectionPasswordSubmit = async (password: string) => {
     console.log("Submitting connection password and creating board relationship...", user?.id);
@@ -66,6 +103,14 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     setModalVisible("");
   }
 
+  const handlePasswordSubmit = (password: string) => {
+    if (isProvisioning) {
+      verifyConPasswordAndSubmit(password);
+    } else {
+      handleConnectionPasswordSubmit(password);
+    }
+  };
+
   const handleManualConnect = async (boardId: string) => {
     setSelectedBoardId(boardId);
     setSelectedMacAddress("");
@@ -73,7 +118,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
       const result = await verifyBoardInformation(boardId);
       if (!result) {
         Toast.show({
-          type: "error",
+          type: "errorToast",
           text1: "Board not found",
           text2: "This board ID does not exist.",
         });
@@ -94,10 +139,9 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     setIsProvisioning(true);
     try {
       const res = await verifyBoardInformation(boardId);
-      if(res)
-      {
+      if (res) {
         Toast.show({
-          type: "success",
+          type: "successToast",
           text1: "Board found",
           text2: "This board ID exists.",
         });
@@ -139,6 +183,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
           con_method: "bluetooth",
           con_password: password,
           user_id: user?.id!,
+          mac_address: selectedMacAddress
         });
         console.log("Connection password verified and WiFi submitted successfully.");
       } catch (error) {
@@ -147,7 +192,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
       }
     } else {
       await handleWifiSubmit({ ...wifiInfo, connectionPassword: password });
-    } 
+    }
     setSubmitting(false);
     setModalVisible("");
   }
@@ -183,6 +228,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
           con_password: values.connectionPassword,
           user_id: user.id,
           board_name: values.boardModelName,
+          mac_address: selectedMacAddress
         });
         console.log("Board relationship created successfully!");
       }
@@ -201,9 +247,6 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{t("Add Board")}</Text>
-        <TouchableOpacity>
-          <Ionicons name="help-circle-outline" size={20} color="white" />
-        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.addButton} onPress={handleAddBoard} activeOpacity={0.8}>
@@ -230,6 +273,7 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
         visible={modalVisible === "manual"}
         onClose={handleCloseModal}
         onSubmit={handleManualConnect}
+        pastBoards={pastBoard}
       />
 
       <WifiConfigModal
@@ -243,8 +287,8 @@ const AddBoardSection: React.FC<AddBoardSectionProps> = ({
       <ConnectionPasswordModal
         visible={modalVisible === "connect-password"}
         onClose={handleCloseModal}
-        onSubmit={isProvisioning ? verifyConPasswordAndSubmit : handleConnectionPasswordSubmit}
-        // loading={submitting}
+        onSubmit={handlePasswordSubmit}
+      // loading={submitting}
       />
     </View>
   );

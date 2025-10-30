@@ -1,25 +1,22 @@
-import i18next from 'i18next';
+// src/i18n/i18n.config.ts
+import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { en, th } from './translation';
+// import resources for both 'en' and 'th'
+import en from './translation/en.json';
+import th from './translation/th.json';
 
-const resources =
-{
-    en: {
-        translation: en
-    },
-    th: {
-        translation: th
-    }
+if (!i18n.isInitialized) {
+  i18n
+    .use(initReactI18next)
+    .init({
+      resources: { en: { translation: en }, th: { translation: th } },
+      fallbackLng: 'th',             // only as fallback, not forced
+      interpolation: { escapeValue: false },
+      // optional but helpful:
+      returnNull: false,
+      // Turn off language detectors unless you explicitly need them:
+      // detection: { order: [], caches: [] },
+    });
 }
 
-i18next.use(initReactI18next).init({
-    debug: true,
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-        escapeValue: false,
-    },
-    resources
-})
-
-export default i18next;
+export default i18n;

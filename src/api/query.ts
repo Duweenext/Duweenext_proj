@@ -17,7 +17,7 @@ export const qc = new QueryClient({
       onError: (error: unknown) => {
         const e = error as AppError;
         Toast.show({
-          type: "error",
+          type: "errorToast",
           text1: "Action failed",
           text2: e?.message ?? "Something went wrong.",
         });

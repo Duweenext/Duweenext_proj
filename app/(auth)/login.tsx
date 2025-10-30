@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { View, Text, SafeAreaView, StatusBar, ImageBackground, ScrollView, Modal, TouchableOpacity, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { jwtDecode } from "jwt-decode";
 
 import { themeStyle } from '@/src/theme';
 import { images } from '@/src/constants/images';
@@ -14,12 +13,14 @@ import ButtonUnderline from '@/src/component/Buttons/ButtonUnderline';
 import ButtonPrimary from '@/src/component/Buttons/ButtonPrimary';
 import ButtonGoogle from '@/src/component/Buttons/ButtonGoogle';
 import { useTranslation } from 'react-i18next';
-import i18n from "i18next";
 import { z } from "zod";
 import ForgotPasswordFlow from '@/src/flows/ForgotPasswordFlow';
 import { GoogleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useDeviceStore } from './_local';
+import { useUser } from '@/src/api/hooks/useUser';
+import ModalChangeInformation from '@/src/component/Modals/ModalChangeInformation';
+import Toast from 'react-native-toast-message';
 
 const loginSchema = z.object({
   email: z.string().trim().min(1, "errors.emailRequired").email("errors.invalidEmail"),
@@ -37,18 +38,31 @@ const Login: React.FC = () => {
   const [password, setPassword] = React.useState('');
 
   const { login: authLogin } = useAuth();
-
-
-  const { login: apiLogin, googleLogin } = useAuthentication();
+  const { } = useUser();
 
   const [emailError, setEmailError] = React.useState<string | undefined>();
   const [pwdError, setPwdError] = React.useState<string | undefined>();
 
   const [forgotOpen, setForgotOpen] = React.useState(false);
 
+  const [modal, setModal] = React.useState<string | null>(null);
+  const [code, setCode] = React.useState('');
+  const [codeError, setCodeError] = React.useState<string | undefined>();
+
   const [showErrorPopup, setShowErrorPopup] = React.useState(false);
   const [errorTitle, setErrorTitle] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
+  const {
+    login: apiLogin,
+    googleLogin,
+    loginError,
+  } = useAuthentication();
+
+  const {
+    sendOTPEmailVerification,
+    verifyOTPEmailVerification,
+    verificationResponse
+  } = useUser();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -88,10 +102,65 @@ const Login: React.FC = () => {
     return signInWithCredential(getAuth(), googleCredential);
   }
 
+  const onResendVerification = async () => {
+    if (!email) {
+      console.error('No email available to resend verification');
+      return;
+    }
+    try {
+      await sendOTPEmailVerification(email);
+      setShowErrorPopup(false); // Close the error modal
+      setModal('verify-email'); // Open the OTP modal
+      setCode(''); // Clear any old code
+      setCodeError(undefined); // Clear any old error
+      console.log('Verifying code:', verificationResponse?.challenge_token);
+    } catch (error) {
+      console.error('Failed to resend verification:', error);
+      // Show the error in the main error popup
+      showError(t('auth.resendFailed', 'Resend Failed'), (error as Error).message);
+    }
+  };
+
+  const handleConfirmVerificationCode = async () => {
+    if (!verificationResponse?.verification_id) {
+      setCodeError(t('errors.noVerificationId', 'Verification session expired. Please resend.'));
+      return;
+    }
+    if (code.length < 6) { // Or adjust length as needed
+      setCodeError(t('errors.invalidCode', 'Invalid code. Must be 6 digits.'));
+      return;
+    }
+
+
+    setCodeError(undefined);
+
+    try {
+      await verifyOTPEmailVerification(
+        {
+          verification_id: verificationResponse.verification_id,
+          code: code,
+          email: email,
+        },
+        verificationResponse.challenge_token
+      );
+
+      setModal(null);
+
+      Toast.show({
+        type: 'success',
+        text1: t('auth.emailVerified', 'Email verified successfully! You can now log in.'),
+      });
+
+    } catch (error) {
+      console.error('Failed to verify code:', error);
+      setCodeError((error as Error).message);
+    }
+  };
+
   const showError = (title: string, message: string) => {
     console.log('Showing error popup:', title, message);
     setErrorTitle(title);
-    setErrorMessage(message);
+    setErrorMessage(loginError.message);
     setShowErrorPopup(true);
   };
 
@@ -111,13 +180,21 @@ const Login: React.FC = () => {
     console.log("Device token from store:", deviceToken);
 
     const res = await apiLogin({
-      Email: email,
-      Password: password,
-      DeviceToken: deviceToken,
-      Platform: Platform.OS === 'ios' ? 'ios' : 'android'
+      email: email,
+      password: password,
+      device_token: deviceToken,
+      platform: Platform.OS === 'ios' ? 'ios' : 'android'
     }).catch((error) => {
       console.error('Login error:', error);
-      showError(t('auth.login'), error.message);
+      let errorKey = 'errors.unknownError'; 
+      if (error.code === 'AUTH/EMAIL-NOT-VERIFIED') {
+        errorKey = 'errors.emailNotVerified';
+      } else if (error.code === 'AUTH/INVALID-CREDENTIALS') {
+        errorKey = 'errors.invalidCredentials';
+      }
+      showError(t('auth.login'), t(errorKey)); 
+    }).finally(() => {
+      console.log('Login attempt finished');
     });
 
     if (res?.token) {
@@ -273,12 +350,38 @@ const Login: React.FC = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{errorTitle}</Text>
             <Text style={styles.modalMessage}>{errorMessage}</Text>
+            {errorMessage === t('errors.emailNotVerified') && (
+              <View style={{ marginTop: 0, marginBottom: 15 }}>
+                <ButtonUnderline
+                  text={t('auth.resendVerificationEmail', 'Resend verification email')}
+                  onPress={onResendVerification}
+                />
+              </View>
+            )}
             <TouchableOpacity style={styles.modalButton} onPress={() => setShowErrorPopup(false)}>
               <Text style={styles.modalButtonText}>{t('common.ok')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
+      <ModalChangeInformation
+        visible={modal === 'verify-email'}
+        title={t("auth.verifyEmailTitle", "Verify Your Email")}
+        titleColor={themeStyle.colors.primary}
+        descriptionText={t("auth.verificationSent", "The verification code has been sent to")}
+        email={email}
+        errorMessage={codeError}
+        fields={[{ type: 'code', placeholder: '123456', value: code, onChangeText: setCode }]}
+        underlineButton={{ text: t('common.sendAgain', 'Send again'), onPress: onResendVerification }}
+        button={{
+          text: t('common.confirm', 'Confirm'),
+          onPress: handleConfirmVerificationCode,
+          filledColor: themeStyle.colors.primary,
+          textColor: themeStyle.colors.white,
+        }}
+        onClose={() => { setModal(null); }}
+      />
     </SafeAreaView>
   );
 };

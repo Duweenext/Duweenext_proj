@@ -11,10 +11,11 @@ import { SettingCard } from '@/src/component/Card/SettingCard';
 import { useUser } from '@/src/api/hooks/useUser';
 import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
 import { useTranslation } from 'react-i18next';
+import { useLang } from '@/src/api/local/_languageConfig';
 
 const Setting: React.FC = () => {
   const router = useRouter();
-  const [lang, setLang] = useState<'en' | 'th'>('th');
+  const {lang, setLang} = useLang();
   const [langOpen, setLangOpen] = useState(false);
   const { userLanguage, updateLocale } = useUser();
 
@@ -28,10 +29,10 @@ const Setting: React.FC = () => {
     i18n.changeLanguage(code);
     await updateLocale(code);
     setLangOpen(false);
+    console.log('Language changed to:', lang);
   };
 
   return (
-    <PullToRefreshScreen >
       <View style={{
         flexDirection: 'column',
         marginTop: 20,
@@ -194,7 +195,6 @@ const Setting: React.FC = () => {
           )}
         </View>
       </View>
-    </PullToRefreshScreen>
   );
 };
 

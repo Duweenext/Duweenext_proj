@@ -11,6 +11,9 @@ import { CardNotification } from '@/src/component/Card/CardNotification';
 import { useNotification } from '@/src/api/hooks/useNotification';
 import { t } from 'i18next';
 import PullToRefreshScreen from '@/src/component/Screens/PullToRefresh';
+import { useQueryClient } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
+import { MaterialIcons } from '@expo/vector-icons';
 
 // ===== Types =====
 type NotificationSeverity = 'info' | 'warning' | 'success' | 'error';
@@ -153,9 +156,7 @@ function WebCalendarPortal({
   );
 }
 
-// ===== Screen =====
 export default function NotificationHistoryScreen() {
-  // filters
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [showFromPicker, setShowFromPicker] = useState(false);
@@ -165,6 +166,30 @@ export default function NotificationHistoryScreen() {
 
   const { notifications, resolveNotification, archiveNotification, deleteNotification, getNotifications } = useNotification();
   const [loading, setLoading] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const onRefreshNotifications = async () => {
+    try {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+      Toast.show({
+        type: 'successToast',
+        text1: t('Refreshed'),
+        text2: t('Notifications refreshed successfully.'),
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error("Error refreshing notifications:", error);
+      Toast.show({
+        type: 'errorToast',
+        text1: t('Error'),
+        text2: t('Could not refresh notifications.'),
+        position: 'top',
+      });
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,59 +236,74 @@ export default function NotificationHistoryScreen() {
   const openToPicker = () => Platform.OS === 'web' ? setWebPicker('end') : setShowToPicker(true);
 
   return (
-    <PullToRefreshScreen>
-      <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, paddingBottom: 200 }}>
 
-        <View style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          backgroundColor: themeStyle.colors.primary,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: "#374151",
-        }}>
-          <TouchableOpacity
-            onPress={() => setView("active")}
-            style={{
-              flex: 1,
-              alignItems: "center",
-              paddingVertical: 8,
-              borderBottomWidth: view === "active" ? 3 : 0,
-              borderBottomColor: view === "active" ? "#fff" : "transparent",
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600" }}>{t('History')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setView("archived")}
-            style={{
-              flex: 1,
-              alignItems: "center",
-              paddingVertical: 8,
-              borderBottomWidth: view === "archived" ? 3 : 0,
-              borderBottomColor: view === "archived" ? "#fff" : "transparent",
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600" }}>{t('Archived')}</Text>
-          </TouchableOpacity>
+      <View style={{
+        flexDirection: "row",
+        justifyContent: "center",
+        backgroundColor: themeStyle.colors.primary,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: "#374151",
+      }}>
+        <TouchableOpacity
+          onPress={() => setView("active")}
+          style={{
+            flex: 1,
+            alignItems: "center",
+            paddingVertical: 8,
+            borderBottomWidth: view === "active" ? 3 : 0,
+            borderBottomColor: view === "active" ? "#fff" : "transparent",
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>{t('History')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setView("archived")}
+          style={{
+            flex: 1,
+            alignItems: "center",
+            paddingVertical: 8,
+            borderBottomWidth: view === "archived" ? 3 : 0,
+            borderBottomColor: view === "archived" ? "#fff" : "transparent",
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>{t('Archived')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
+        <View style={{ alignSelf: 'flex-start', alignItems: 'flex-start', gap: 8, paddingVertical: 4, paddingHorizontal: 10 }}>
+          <Text style={{ color: '#fff' }}>{t('Filter by date')}:</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <CalendarChip label={t('From')} value={fromDate} onCalendarPress={openFromPicker} />
+            <CalendarChip label={t('To')} value={toDate} onCalendarPress={openToPicker} />
+          </View>
+          {(fromDate || toDate) && (
+            <TouchableOpacity
+              onPress={() => { setFromDate(null); setToDate(null); }}
+              style={{ paddingHorizontal: 12, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ color: '#111827' }}>Clear</Text>
+            </TouchableOpacity>
+          )}
         </View>
+        <View style={{ height: 12 }} />
 
-        {/* Filter row */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-          <View style={{ alignSelf: 'flex-start', alignItems: 'flex-start', gap: 8, paddingVertical: 4, paddingHorizontal: 10 }}>
-            <Text style={{ color: '#fff' }}>{t('Filter by date')}:</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <CalendarChip label={t('From')} value={fromDate} onCalendarPress={openFromPicker} />
-              <CalendarChip label={t('To')} value={toDate} onCalendarPress={openToPicker} />
+        <View style={{ alignSelf: 'flex-start', alignItems: 'flex-start', paddingVertical: 4, paddingHorizontal: 10, backgroundColor: themeStyle.colors.white, marginBottom: 8, width: '100%' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ alignSelf: 'flex-start', alignItems: 'flex-start', paddingVertical: 4, paddingHorizontal: 10, marginBottom: 8, width: '90%' }}>
+              <Text style={{ fontFamily: themeStyle.fontFamily.medium, color: '#111827', fontSize: 28 }}>{t('Notifications')}</Text>
+              <Text style={{ color: '#111827' }}>{t('Showing')} {sections.reduce((acc, sec) => acc + sec.data.length, 0)} {t('notifications')}</Text>
             </View>
-            {(fromDate || toDate) && (
-              <TouchableOpacity
-                onPress={() => { setFromDate(null); setToDate(null); }}
-                style={{ paddingHorizontal: 12, height: 32, borderRadius: 6, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Text style={{ color: '#111827' }}>Clear</Text>
-              </TouchableOpacity>
-            )}
+
+            <TouchableOpacity onPress={onRefreshNotifications} style={{ padding: 8 }}>
+              <MaterialIcons
+                name="refresh"
+                size={26}
+                color={themeStyle.colors.black}
+              />
+            </TouchableOpacity>
           </View>
 
           {Platform.OS !== 'web' && (
@@ -294,7 +334,7 @@ export default function NotificationHistoryScreen() {
         <SectionList
           sections={sections}
           keyExtractor={(item, index) => item.id ? String(item.id) : `notification-${index}`}
-          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 8, paddingBottom: 40 }}
           SectionSeparatorComponent={() => <View style={{ height: 8 }} />}
           renderSectionHeader={({ section: { title } }) => (
             <Text style={{ color: '#d1d5db', marginVertical: 10, marginLeft: 4, fontFamily: themeStyle.fontFamily.medium }}>
@@ -321,6 +361,7 @@ export default function NotificationHistoryScreen() {
                 }}
                 note={item.note}
                 resolvedBy={item.resolvedBy || ''}
+                messageType={item.messageType}
               />
             </View>
           )}
@@ -328,7 +369,8 @@ export default function NotificationHistoryScreen() {
           ListEmptyComponent={!loading ? <View style={{ padding: 24, alignItems: 'center' }}><Text style={{ color: '#fff' }}>No notifications.</Text></View> : null}
         />
       </View>
-    </PullToRefreshScreen>
+
+    </View>
   );
 }
 

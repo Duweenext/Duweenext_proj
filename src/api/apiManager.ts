@@ -46,9 +46,9 @@ function withAuth(instance: AxiosInstance) {
 
 export const axiosMainInstance = withAuth(
   axios.create({
-    baseURL: "https://a7294ce81606.ngrok-free.app",
+    baseURL: "https://duckweed.shiroha.biz",
     responseType: "json",
-    timeout: 10_000,
+    timeout: 20_000,
     headers: { "Content-Type": "application/json" },
   })
 );

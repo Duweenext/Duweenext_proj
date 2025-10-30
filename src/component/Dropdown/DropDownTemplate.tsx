@@ -47,7 +47,10 @@ const DropDownTemplate: React.FC<DropDownTemplateProps> = ({
 
       {isOpen && (
         <View style={[styles.dropdown, width ? { width } : { minWidth: 150 }]}>
-          <ScrollView>
+          <ScrollView
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={false}
+          >
             <FlatList
               data={options.filter(opt => opt !== selected)}
               keyExtractor={(item, index) => index.toString()}

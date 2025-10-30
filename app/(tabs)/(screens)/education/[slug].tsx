@@ -1,40 +1,43 @@
 // app/(screens)/education/[slug].tsx
+
 import React, { useMemo } from 'react';
 import { View, Text, Image, ScrollView } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getTopicBySlug } from '../../../../src/data/educationData';
-import type { EduSection } from '../../../../src/interfaces/typesEducation'; // or your updated path
+import type { EduSection } from '../../../../src/interfaces/typesEducation'; // Adjust path if needed
 import { themeStyle } from '../../../../src/theme';
-import TopBar from '@/src/component/NavBar/TopBar';
-import { t } from 'i18next';
+// REFINED: Import the hook, not the 't' function directly
+import { useTranslation } from 'react-i18next';
 
 export default function EducationDetail() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const insets = useSafeAreaInsets();
+  // REFINED: Instantiate the hook to get the 't' function
+  const { t } = useTranslation();
+
   const topic = useMemo(() => getTopicBySlug(slug ?? ''), [slug]);
 
   if (!topic) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text>{t('Topic not found.')}</Text>
+        {/* REFINED: Use a key for this text as well, for consistency */}
+        <Text>{t('common.topicNotFound')}</Text> 
       </View>
     );
   }
 
-  const headerBg = themeStyle.colors.primary; // teal header bar
-  const bodyBorder = themeStyle.colors.black; // thin body border color
-  const TOPBAR_HEIGHT = 56; // adjust if your TopBar is taller/shorter
+  const headerBg = themeStyle.colors.primary;
+  const bodyBorder = themeStyle.colors.black;
+  const TOPBAR_HEIGHT = 56;
 
   return (
     <>
       <Stack.Screen options={{ title: 'Education' }} />
 
-      {/* Root stays white; TopBar will overlay on top */}
       <View style={{ flex: 1, backgroundColor: themeStyle.colors.white }}>
         <ScrollView
           contentContainerStyle={{
-            // ensure content starts below the overlaid TopBar
             paddingTop: insets.top + TOPBAR_HEIGHT + 28,
             paddingBottom: 16,
             paddingHorizontal: 12,
@@ -46,141 +49,120 @@ export default function EducationDetail() {
           }}
         >
           {/* Page Title */}
-          <View style={{
-            width: '92%',
-            alignItems: 'center',
-          }}>
-          <Text
-            style={{
+          <View style={{ width: '92%', alignItems: 'center' }}>
+            <Text style={{
               fontFamily: themeStyle.fontFamily.bold,
               fontSize: themeStyle.fontSize.header1,
               marginTop: 18,
               marginBottom: 12,
               color: themeStyle.colors.primary,
-              alignItems: 'center',
-            }}
-          >
-            {t(topic.title)}
-          </Text>
+              textAlign: 'center', // Added for better centering
+            }}>
+              {/* REFINED: Use the new 'titleKey' property */}
+              {t(topic.titleKey)}
+            </Text>
           </View>
-          {/* Hero Icon in rounded bordered box */}
-          <View
-            style={{
-              width: '45%',
-              alignItems: 'center',
-              paddingVertical: 16,
-              borderWidth: 1,
-              borderColor: headerBg,
-              borderRadius: 16,
-              backgroundColor: themeStyle.colors.white,
-            }}
-          >
+
+          {/* Hero Icon */}
+          <View style={{
+            width: '45%',
+            alignItems: 'center',
+            paddingVertical: 16,
+            borderWidth: 1,
+            borderColor: headerBg,
+            borderRadius: 16,
+            backgroundColor: themeStyle.colors.white,
+          }}>
             <Image
               source={topic.heroIcon}
               style={{ width: 100, height: 100, resizeMode: 'contain' }}
             />
           </View>
 
-          {/* Tagline in pink */}
-          {!!topic.tagline && (
-            <Text
-              style={{
-                textAlign: 'center',
-                color: themeStyle.colors.fail,
-                fontFamily: themeStyle.fontFamily.medium,
-                fontSize: themeStyle.fontSize.descriptionL,
-                marginTop: 10,
-                marginBottom: 16,
-                width: '80%',
-              }}
-            >
-              {`"${t(topic.tagline)}"`}
+          {/* Tagline */}
+          {/* REFINED: Use 'taglineKey' and check if it exists */}
+          {topic.taglineKey && t(topic.taglineKey) && (
+            <Text style={{
+              textAlign: 'center',
+              color: themeStyle.colors.fail,
+              fontFamily: themeStyle.fontFamily.medium,
+              fontSize: themeStyle.fontSize.descriptionL,
+              marginTop: 10,
+              marginBottom: 16,
+              width: '80%',
+            }}>
+              {`"${t(topic.taglineKey)}"`}
             </Text>
           )}
 
           {/* Sections as cards */}
           <View style={{ width: '92%', alignSelf: 'center', marginTop: 20 }}>
-            {topic.sections.map((s, idx) => {
-              const fallbackTitle =
-                (s as any).title ??
-                (idx === 0 && s.kind !== 'quote' ? `What is ${topic.title}?` : undefined);
-
-              return (
-                <Section
-                  key={idx}
-                  section={{ ...(s as any), title: fallbackTitle }}
-                  headerBg={headerBg}
-                  bodyBorder={bodyBorder}
-                />
-              );
-            })}
+            {/* REFINED: Simplified map, no need for fallback logic */}
+            {topic.sections.map((section, idx) => (
+              <Section
+                key={idx}
+                section={section}
+                headerBg={headerBg}
+                bodyBorder={bodyBorder}
+              />
+            ))}
           </View>
         </ScrollView>
-
-        {/* TopBar OVERLAY (absolute, above ScrollView) */}
-        <View
-          pointerEvents="box-none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            elevation: 16, // Android stacking
-          }}
-        >
-          {/* <TopBar title="" /> */}
-        </View>
       </View>
     </>
   );
 }
 
+// REFINED: Updated the props for the Section component to use keys
 const Section = ({
   section,
   headerBg,
   bodyBorder,
 }: {
-  section: EduSection & { title?: string };
+  section: {
+    kind: string;
+    titleKey?: string;
+    textKey?: string;
+    itemsKey?: string;
+  };
   headerBg: string;
   bodyBorder: string;
 }) => {
+  // REFINED: Must also get the 't' function here
+  const { t } = useTranslation();
+
   const Header = () =>
-    !!section.title ? (
-      <View
-        style={{
-          backgroundColor: headerBg,
-          paddingVertical: 10,
-          paddingHorizontal: 12,
-          borderTopLeftRadius: 8,
-          borderTopRightRadius: 8,
-        }}
-      >
-        <Text
-          style={{
-            color: themeStyle.colors.white,
-            fontFamily: themeStyle.fontFamily.semibold,
-            fontSize: themeStyle.fontSize.description,
-          }}
-        >
-          {t(section.title)}
+    // REFINED: Check for 'titleKey'
+    !!section.titleKey ? (
+      <View style={{
+        backgroundColor: headerBg,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderTopLeftRadius: 8,
+        borderTopRightRadius: 8,
+      }}>
+        <Text style={{
+          color: themeStyle.colors.white,
+          fontFamily: themeStyle.fontFamily.semibold,
+          fontSize: themeStyle.fontSize.description,
+        }}>
+          {/* REFINED: Translate using 'titleKey' */}
+          {t(section.titleKey)}
         </Text>
       </View>
     ) : null;
 
   const Body: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <View
-      style={{
-        backgroundColor: themeStyle.colors.white,
-        padding: 12,
-        borderWidth: 1,
-        borderColor: bodyBorder,
-        borderTopWidth: 0,
-        borderBottomLeftRadius: 8,
-        borderBottomRightRadius: 8,
-        marginBottom: 16,
-      }}
-    >
+    <View style={{
+      backgroundColor: themeStyle.colors.white,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: bodyBorder,
+      borderTopWidth: 0,
+      borderBottomLeftRadius: 8,
+      borderBottomRightRadius: 8,
+      marginBottom: 16,
+    }}>
       {children}
     </View>
   );
@@ -191,26 +173,27 @@ const Section = ({
         <View style={{ alignSelf: 'stretch' }}>
           <Header />
           <Body>
-            <Text
-              style={{
-                fontFamily: themeStyle.fontFamily.regular,
-                fontSize: themeStyle.fontSize.description,
-                color: themeStyle.colors.black,
-                lineHeight: 22,
-              }}
-            >
-              {t(section.text)}
+            <Text style={{
+              fontFamily: themeStyle.fontFamily.regular,
+              fontSize: themeStyle.fontSize.description,
+              color: themeStyle.colors.black,
+              lineHeight: 22,
+            }}>
+              {/* REFINED: Translate using 'textKey' */}
+              {section.textKey ? t(section.textKey) : ''}
             </Text>
           </Body>
         </View>
       );
 
     case 'bullets':
+      // REFINED: The correct way to translate and render a list
+      const bulletItems = section.itemsKey ? t(section.itemsKey, { returnObjects: true }) as string[] : [];
       return (
         <View style={{ alignSelf: 'stretch' }}>
           <Header />
           <Body>
-            {(section.items || []).map((it, i) => (
+            {Array.isArray(bulletItems) && bulletItems.map((item, i) => (
               <Text
                 key={i}
                 style={{
@@ -219,29 +202,16 @@ const Section = ({
                   color: themeStyle.colors.black,
                   lineHeight: 22,
                   marginTop: i === 0 ? 0 : 4,
-                }}
-              >
-                {`\u2022 ${it}`}
+                }}>
+                {`\u2022 ${item}`}
               </Text>
             ))}
           </Body>
         </View>
       );
 
-    case 'quote':
-      return (
-        <Text
-          style={{
-            marginTop: 12,
-            fontStyle: 'italic',
-            textAlign: 'center',
-            color: '#8c3a3a',
-          }}
-        >
-          {section.text}
-        </Text>
-      );
-
+    // Note: 'quote' kind was not in your data structure, but if you add it,
+    // remember to use 'textKey' as well.
     default:
       return null;
   }

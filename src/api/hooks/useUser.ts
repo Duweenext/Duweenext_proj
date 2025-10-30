@@ -1,11 +1,12 @@
 import { useQuery, useQueryClient, useIsFetching, useMutation } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { axiosMainInstance } from "../apiManager";
 import { qc } from "../query";
 import Toast from "react-native-toast-message";
 import axios from "axios";
 import { DeleteGoogleResponse, VerifyCredentialRequest, VerifyCredentialResponse } from "./useAuth";
 import { VerificationResponse } from "@/src/flows/_deletelocal";
+import { t } from "i18next";
 
 export type ChangeForgotPasswordInput = {
     email: string
@@ -83,10 +84,16 @@ type UseUserReturn = {
 
     updateLocale: (locale: string) => Promise<void>;
     updateNotificationSettingMutation: (settings: NotificationSetting) => Promise<void>;
+ 
+    sendOTPEmailVerification: (email: string) => Promise<VerificationResponse>;
+    verifyOTPEmailVerification: (data: VerifyCredentialRequest, challenge: string) => Promise<any>;
+    verificationResponse?: VerifyCredentialResponse;
 };
 const key = ["verificationResponse"] as const;
 
 export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn {
+
+    const [verificationResponse, setVerificationResponse] = useState<VerifyCredentialResponse | undefined>();
 
     const {
         data: userLanguage,
@@ -110,7 +117,7 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             staleTime: 60_000,
             queryFn: async (): Promise<UserData> => {
                 const res = await axiosMainInstance.get(`/v1/user/profile`);
-                console.log('Fetched user profile:', res.data);
+                // console.log('Fetched user profile:', res.data);
                 return res.data as UserData;
             },
         });
@@ -149,14 +156,14 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
         },
         onError: (err, _vars, ctx) => {
             if (ctx?.previous) qc.setQueryData(userKeys.current, ctx.previous);
-            Toast.show({
-                type: "error",
-                text1: "Update failed",
-                text2: (err as any)?.message ?? "Please try again.",
+           Toast.show({
+                type: "errorToast",
+                text1: t("toast.updateFailedTitle"), // --- TRANSLATED ---
+                text2: (err as any)?.message ?? t("toast.usernameUpdateFailedText"), // --- TRANSLATED ---
             });
         },
         onSuccess: (data) => {
-            Toast.show({ type: "success", text1: data?.message ?? "Username updated" });
+            Toast.show({ type: "successToast", text1: data?.message ?? t("toast.usernameUpdateSuccess") });
         },
         onSettled: () => {
             qc.invalidateQueries({ queryKey: userKeys.current, exact: true });
@@ -182,8 +189,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             }
 
             Toast.show({
-                type: 'error',
-                text1: 'Verify Password Failed',
+                type: "errorToast",
+                text1: t('toast.verifyPasswordFailedTitle'), // --- TRANSLATED ---
                 text2: message,
             });
         },
@@ -206,8 +213,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             }
 
             Toast.show({
-                type: 'error',
-                text1: 'Failed to send OTP',
+                type: "errorToast",
+                text1: t('toast.sendOtpFailedTitle'), // --- TRANSLATED ---
                 text2: message,
             });
         },
@@ -230,8 +237,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             }
 
             Toast.show({
-                type: 'error',
-                text1: 'Failed to send OTP',
+                type: "errorToast",
+                text1: t('toast.sendOtpFailedTitle'), // --- TRANSLATED ---
                 text2: message,
             });
         },
@@ -265,7 +272,7 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
                     : status === 429
                         ? "Verification code expired. Please request a new one."
                         : apiMsg || (axios.isAxiosError(error) ? error.message : "Something went wrong.");
-            Toast.show({ type: "error", text1: "Verification failed", text2: msg });
+            Toast.show({ type: "errorToast", text1: t("toast.verificationFailedTitle"), text2: msg });
         },
     })
 
@@ -285,8 +292,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
                             : apiMsg || error.message || "Something went wrong.";
 
                 Toast.show({
-                    type: "error",
-                    text1: "Verification failed",
+                    type: "errorToast",
+                    text1: t("toast.verificationFailedTitle"), 
                     text2: msg,
                 });
                 throw new Error(msg);
@@ -302,8 +309,9 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
         },
         onSuccess: (data) => {
             Toast.show({
-                type: 'success',
-                text1: 'Password changed successfully',
+                type: 'successToast',
+                text1: t('toast.passwordChangeSuccessTitle'), // --- TRANSLATED ---
+                props: { lottieSource: require('@/assets/animations/Success.json') }
             });
         },
         onError: (error: any) => {
@@ -318,8 +326,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             }
 
             Toast.show({
-                type: 'error',
-                text1: 'Failed to reset password',
+                type: "errorToast",
+                text1: t('toast.passwordResetFailedTitle'), // --- TRANSLATED ---
                 text2: message,
             });
         },
@@ -342,8 +350,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             }
 
             Toast.show({
-                type: 'error',
-                text1: 'Failed to send OTP',
+                type: "errorToast",
+                text1: t('toast.sendOtpFailedTitle'), // --- TRANSLATED ---
                 text2: message,
             });
         },
@@ -365,8 +373,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
                             : apiMsg || error.message || "Something went wrong.";
 
                 Toast.show({
-                    type: "error",
-                    text1: "Verification failed",
+                    type: "errorToast",
+                    text1: t("toast.verificationFailedTitle"), // --- TRANSLATED ---
                     text2: msg,
                 });
                 throw new Error(msg);
@@ -391,8 +399,21 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             return res.data as ChangeForgotPasswordResponse
         },
         onSuccess: async () => {
-            Toast.show({ type: 'success', text1: 'Password reset successfully. Please log in.' });
+            Toast.show({ type: 'successToast', text1: t('toast.passwordResetSuccessTitle') }); // --- TRANSLATED ---
             if (onLoggedOut) await onLoggedOut()
+        },
+         onError: (error: any) => { // --- ADDED onError ---
+            let message = t('errors.unknownError');
+            if (axios.isAxiosError(error)) {
+                const apiMsg = error.response?.data?.data || error.response?.data?.message;
+                if (apiMsg) message = apiMsg;
+                else if (error.message) message = error.message;
+            }
+            Toast.show({
+                type: "errorToast",
+                text1: t('toast.passwordResetFailedTitle'),
+                text2: message,
+            });
         }
     })
 
@@ -413,8 +434,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             }
 
             Toast.show({
-                type: 'error',
-                text1: 'Failed to send OTP',
+                type: "errorToast",
+                text1: t('toast.sendOtpFailedTitle'), // --- TRANSLATED ---
                 text2: message,
             });
         },
@@ -436,8 +457,8 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
                             : apiMsg || error.message || "Something went wrong.";
 
                 Toast.show({
-                    type: "error",
-                    text1: "Verification failed",
+                    type: "errorToast",
+                    text1: t("toast.verificationFailedTitle"), // --- TRANSLATED ---
                     text2: msg,
                 });
                 throw new Error(msg);
@@ -453,6 +474,19 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             });
             return res.data as VerifyCredentialResponse;
         },
+        onError: (error: any) => { // --- ADDED onError ---
+             let message = t('errors.unknownError');
+            if (axios.isAxiosError(error)) {
+                const apiMsg = error.response?.data?.data || error.response?.data?.message;
+                if (apiMsg) message = apiMsg;
+                else if (error.message) message = error.message;
+            }
+             Toast.show({
+                type: "errorToast",
+                text1: t('toast.actionFailedTitle'), // Or a more specific title
+                text2: message,
+            });
+        }
     });
 
     const recoverUserMutation = useMutation({
@@ -460,6 +494,23 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             const res = await axiosMainInstance.post('/v1/recover-user');
             return res.data;
         },
+        onSuccess: (data) => { // --- ADDED onSuccess ---
+            Toast.show({ type: "successToast", text1: data?.message ?? "Account recovery initiated" }); // Example message
+             qc.invalidateQueries({ queryKey: userKeys.current }); // Refresh user data
+        },
+         onError: (error: any) => { // --- ADDED onError ---
+             let message = t('errors.unknownError');
+            if (axios.isAxiosError(error)) {
+                const apiMsg = error.response?.data?.data || error.response?.data?.message;
+                if (apiMsg) message = apiMsg;
+                else if (error.message) message = error.message;
+            }
+             Toast.show({
+                type: "errorToast",
+                text1: t('toast.actionFailedTitle'), // Or "Recovery Failed"
+                text2: message,
+            });
+        }
     });
 
     const updateLocaleMutation = useMutation({
@@ -467,8 +518,23 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
             await axiosMainInstance.patch("/v1/user/language", {language: locale });
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['user'] }); 
+            qc.invalidateQueries({ queryKey: ['user'] }); // Invalidate user queries including language
+            // Optional: Show success toast
+            // Toast.show({ type: "successToast", text1: t('toast.languageUpdated') });
         },
+        onError: (error: any) => { // --- ADDED onError ---
+            let message = t('errors.unknownError');
+            if (axios.isAxiosError(error)) {
+                const apiMsg = error.response?.data?.data || error.response?.data?.message;
+                if (apiMsg) message = apiMsg;
+                else if (error.message) message = error.message;
+            }
+             Toast.show({
+                type: "errorToast",
+                text1: t('toast.updateFailedTitle'), // Or "Language update failed"
+                text2: message,
+            });
+        }
     });
 
     const updateNotificationSettingMutation = useMutation({
@@ -481,12 +547,69 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
         },
     });
 
+    const sendOTPEmailVerification = useMutation<VerificationResponse, unknown, string>({
+        mutationFn: async (email: string) => {
+            const res = await axiosMainInstance.post("/visit/sent-otp-email", { email });
+            return res.data as VerificationResponse;
+        },
+        onSuccess: (data) => {
+            setVerificationResponse(data);
+        },
+        onError: (error: any) => {
+            let message = 'Something went wrong.';
+            if (axios.isAxiosError(error)) {
+                const apiMsg = error.response?.data?.data || error.response?.data?.message;
+                if (apiMsg) {
+                    message = apiMsg;
+                } else if (error.message) {
+                    message = error.message;
+                }
+            }
+
+            Toast.show({
+                type: "errorToast",
+                text1: t('toast.sendOtpFailedTitle'), // --- TRANSLATED ---
+                text2: message,
+            });
+        },
+    });
+
+    const verifyOTPEmailVerification = useMutation<any, unknown, { payload: VerifyCredentialRequest; challenge: string }>({
+        mutationFn: async ({ payload, challenge }) => {
+            console.log('Verifying email with challenge:', challenge);
+            const res = await axiosMainInstance.post(`/public/challenge/verify-otp-email`, payload, {
+                headers: { "X-Challenge": challenge },
+            });
+            return res.data;
+        },
+        onError: (error: any) => {
+            if (axios.isAxiosError(error)) {
+                const status = error.response?.status;
+                const apiMsg = (error.response?.data as any)?.message;
+
+                const msg =
+                    status === 401 ? "Invalid verification code."
+                        : status === 429 ? "Verification code expired. Please request a new one."
+                            : apiMsg || error.message || "Something went wrong.";
+
+                Toast.show({
+                    type: "errorToast",
+                    text1: t("toast.verificationFailedTitle"), // --- TRANSLATED ---
+                    text2: msg,
+                });
+                throw new Error(msg);
+            }
+            throw new Error("Something went wrong.");
+        }
+    });
+
     return {
         userData,
         userDataLoading,
         userDataError,
         getProfile,
         clearUserCache,
+        verificationResponse: verificationResponse,
 
         changeUsername: (username: string) => changeUsernameMut.mutateAsync({ username }),
         isChangingUsername: changeUsernameMut.isPending,
@@ -527,5 +650,7 @@ export function useUser(onLoggedOut?: () => Promise<void> | void): UseUserReturn
 
         updateLocale: (locale: string) => updateLocaleMutation.mutateAsync(locale),
         updateNotificationSettingMutation: (settings: NotificationSetting) => updateNotificationSettingMutation.mutateAsync(settings),
+        sendOTPEmailVerification: (email: string) => sendOTPEmailVerification.mutateAsync(email),
+        verifyOTPEmailVerification: (data: VerifyCredentialRequest, challenge: string) => verifyOTPEmailVerification.mutateAsync({ payload: data, challenge }),
     };
 }

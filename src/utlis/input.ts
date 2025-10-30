@@ -1,4 +1,4 @@
-import i18next, { t } from "i18next";
+import i18next, { t, TFunction } from "i18next";
 
 export type Strength = 'Weak' | 'Medium' | 'Strong';
 
@@ -71,25 +71,58 @@ export const calculateRunningTime = (updatedAt: string): number => {
   }
 };
 
-export const formatRunningTimeFromTimestamp = (updatedAt: string): string => {
-  const totalSeconds = calculateRunningTime(updatedAt);
-  
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  
-  if (days >= 1) {
-    return `${days} ${t('day')}${days > 1 && i18next.language !== 'th' ? 's' : ''}`;
-  }
-  else if (hours > 0) {
-    return `${hours} ${t('hour')}${hours > 1 && i18next.language !== 'th' ? 's' : ''} ${minutes} ${t('minute')}${minutes > 1 && i18next.language !== 'th' ? 's' : ''}`;
-  } else if (minutes > 0) {
-    return `${minutes} ${t('minute')}${minutes > 1 && i18next.language !== 'th' ? 's' : ''} ${seconds} ${t('second')}${seconds > 1 && i18next.language !== 'th' ? 's' : ''}`;
-  } else {
-    return `${seconds} ${t('second')}${seconds > 1 && i18next.language !== 'th' ? 's' : ''}`;
-  }
-};
+export function formatRunningTimeFromTimestamp(timestamp: string | null | undefined, t: TFunction): string {
+    if (!timestamp) {
+        return 'N/A';
+    }
+
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffInSeconds = Math.round((now.getTime() - past.getTime()) / 1000);
+
+    const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60,
+    };
+
+    if (diffInSeconds < 60) {
+        return t('time.justNow');
+    }
+
+    let counter;
+    if ((counter = Math.floor(diffInSeconds / intervals.year)) > 0) {
+        const time = t('time.year', { count: counter }); // e.g., "1 year" or "2 years"
+        return t('time.timeAgo', { time }); // e.g., "1 year ago"
+    }
+    if ((counter = Math.floor(diffInSeconds / intervals.month)) > 0) {
+        const time = t('time.month', { count: counter });
+        return t('time.timeAgo', { time });
+    }
+    if ((counter = Math.floor(diffInSeconds / intervals.week)) > 0) {
+        const time = t('time.week', { count: counter });
+        return t('time.timeAgo', { time });
+    }
+    if ((counter = Math.floor(diffInSeconds / intervals.day)) > 0) {
+        const time = t('time.day', { count: counter });
+        return t('time.timeAgo', { time });
+    }
+    if ((counter = Math.floor(diffInSeconds / intervals.hour)) > 0) {
+        const time = t('time.hour', { count: counter });
+        return t('time.timeAgo', { time });
+    }
+    if ((counter = Math.floor(diffInSeconds / intervals.minute)) > 0) {
+        const time = t('time.minute', { count: counter });
+        return t('time.timeAgo', { time });
+    }
+    
+    // Fallback for seconds, though the < 60 check should catch it.
+    const time = t('time.second', { count: diffInSeconds });
+    return t('time.timeAgo', { time });
+}
 
 export const formatRunningTimeHumanReadable = (updatedAt: string): string => {
   const totalSeconds = calculateRunningTime(updatedAt);

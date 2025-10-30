@@ -115,7 +115,7 @@
     "Username": "Username",
     "Your account will be delete within": "Your account will be delete within",
     "days": "วัน",
-    "You are unable to perform delete account for 24 hours":"You are unable to perform delete account for 24 hours",
+    "You are unable to perform delete account for 24 hours": "You are unable to perform delete account for 24 hours",
     "Account": "Account",
     "Profile Information": "Profile Information",
     "Google Account": "Google Account",
@@ -209,6 +209,7 @@
         "emailRequired": "Email is required",
         "passwordRequired": "Password is required",
         "noToken": "No authentication token received from server",
+        "Email not verified": "Email not verified. Please check your email.",
         "loginFailed": "Email or password is incorrect. Please check your credentials and try again.",
         "inputError": "Please check your input and try again.",
         "serverError": "Something went wrong on our end. Please try again later.",
@@ -216,190 +217,484 @@
         "networkError": "Please check your internet connection and try again.",
         "unexpectedError": "An unexpected error occurred. Please try again."
     },
+    "all": "All",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "Last Connected": "Last Connected",
+    "time": {
+        "year_one": "{{count}} year",
+        "year_other": "{{count}} years",
+        "month_one": "{{count}} month",
+        "month_other": "{{count}} months",
+        "week_one": "{{count}} week",
+        "week_other": "{{count}} weeks",
+        "day_one": "{{count}} day",
+        "day_other": "{{count}} days",
+        "hour_one": "{{count}} hour",
+        "hour_other": "{{count}} hours",
+        "minute_one": "{{count}} minute",
+        "minute_other": "{{count}} minutes",
+        "second_one": "{{count}} second",
+        "second_other": "{{count}} seconds",
+        "justNow": "Just now",
+        "timeAgo": "{{time}} ago"
+    },
+    "tabs": {
+        "home": "Home",
+        "education": "Education",
+        "setting": "Setting",
+        "screens": "Screens",
+        "header": {
+            "home": "Home Page",
+            "education": "Education",
+            "setting": "Setting"
+        },
+        "content": "Content",
+        "member": "Members"
+    },
+    "education": {
+        "step-by-step-guide": {
+            "title": "Step-by-step Guide on how to grow Wolffia Globosa",
+            "tagline": "",
+            "sections": [
+                {
+                    "title": "Understanding Wolffia Globosa",
+                    "text": "Wolffia globosa, also known as Asian watermeal or duckweed, is the world's smallest flowering plant. It floats on the surface of the water and grows rapidly under the right conditions. This plant is highly valued for its high protein content and its ability to purify water. Growing Wolffia globosa successfully requires careful control of environmental conditions, nutrients, and water quality."
+                },
+                {
+                    "title": "Choosing the Right Growing Environment",
+                    "text": "Wolffia globosa thrives in warm, nutrient-rich, and stagnant or slow-moving freshwater environments. It is commonly found in ponds, lakes, and slow-moving rivers in tropical and subtropical regions. When cultivating it at home or on a farm, a controlled water body such as an aquarium, pond, or water trough is ideal. The water should be clean and free from contaminants that could hinder growth."
+                }
+            ]
+        },
+        "status": {
+            "connected": "Connected",
+            "disconnected": "Disconnected",
+            "notAvailable": "N/A"
+        },
+        "pesticide-contamination": {
+            "title": "Pesticide Contamination",
+            "tagline": "If your pond is near a rice field or plantation, always check water sources — clean water = safe duckweed = safe consumers.",
+            "sections": [
+                {
+                    "text": "Pesticide contamination happens when harmful chemicals used to kill pests in nearby farms or plantations wash into your duckweed pond, usually through rainwater runoff or contaminated water sources."
+                },
+                {
+                    "title": "Common Sources",
+                    "items": [
+                        "Runoff water from nearby plantations or rice fields",
+                        "Water pumped from canals collecting farm runoff",
+                        "Leftover water from pesticide-sprayed crops"
+                    ]
+                },
+                {
+                    "title": "How to Prevent",
+                    "items": [
+                        "Avoid using water from areas near plantations or crop fields that may have been sprayed with pesticides",
+                        "Use safe water sources such as: \n \t 1. Rainwater (properly stored) \n \t 2. Well water/ underground water \n \t 3. Tested, filtered pond or canal water",
+                        "After heavy rain, be extra cautious — rain can carry pesticides from fields into natural water bodies",
+                        "Do not reuse water from other farms unless you're sure it’s chemical-free"
+                    ]
+                },
+                {
+                    "title": "Risks to Your Duckweed & Consumers",
+                    "items": [
+                        "Poor duckweed growth or sudden die-off",
+                        "Chemical residues may remain in duckweed, making it unsafe for consumption",
+                        "Could lead to long-term pond contamination, requiring full pond replacement",
+                        "Affects your reputation and consumer trust if unsafe duckweed is sold"
+                    ]
+                }
+            ]
+        },
+        "heavy-metal-contamination": {
+            "title": "Heavy Metal Contamination",
+            "tagline": "Just because water looks clean doesn’t mean it’s safe. Choose water sources wisely to protect your duckweed and your customers.",
+            "sections": [
+                {
+                    "title": "What is Heavy Metal Contamination?",
+                    "text": "Heavy metals like lead, cadmium, mercury, and arsenic can pollute your duckweed pond if your water source comes from industrial zones, old mining areas, or heavily polluted canals and rivers. These metals are invisible and odorless—you won’t notice them without testing."
+                },
+                {
+                    "title": "Common Sources",
+                    "items": [
+                        "Water from canals or rivers near factories or industrial estates",
+                        "Runoff from areas around old mining or waste disposal sites",
+                        "Contaminated groundwater in polluted regions",
+                        "Irrigation water that flows through multiple farm zones"
+                    ]
+                },
+                {
+                    "title": "How to Prevent",
+                    "items": [
+                        "Do not use water from unknown or untested sources, espcially near industrial zones",
+                        "Prefer safe water source like: \n \t 1. Well/underground water from clean, uncontaminated wells \n\t 2. Properly stored rainwater \n\t 3.Water source verified by agricultural advisors or local authorities",
+                        "If you're unsure, get your water tested - especially if your area has a history of pollution",
+                        "Avoid mixing water from multiple uncertain sources"
+                    ]
+                },
+                {
+                    "title": "Risks to Your Duckweed & Consumers",
+                    "items": [
+                        "Causes slow or stunted growth in duckweed",
+                        "Makes duckweed unsafe to eat due to toxic metal buildup",
+                        "Contamination can persist in your pond even after water is changed",
+                        "Can damage the health of animals or people who consume contaminated duckweed",
+                        "May result in regulatory or health safety issues if you're supplying food-grade duckweed"
+                    ]
+                }
+            ]
+        },
+        "overuse-of-NPK": {
+            "title": "Overuse of Chemical Fertilizers (NPK)",
+            "tagline": "Fertilizer is food, not a cure. Too much can do more harm than good. Watch your duckweed, check your data, and apply only what’s needed.",
+            "sections": [
+                {
+                    "title": "What is Overuse of Chemical Fertilizers (NPK)?",
+                    "text": "Chemical fertilizers containing Nitrogen (N), Phosphorus (P), and Potassium (K)—commonly known as NPK—are helpful when used correctly. But when overused, they can disrupt pond balance, leading to unhealthy duckweed and poor water quality."
+                },
+                {
+                    "title": "Common Signs of NPK Overuse",
+                    "items": [
+                        "Sudden drop or spike in pH or TDS (check with DuweeNext sensors)",
+                        "Appearance of unhealthy bubbles or cloudy water",
+                        "Duckweed turns yellowish, grows slowly, or starts dying off",
+                        "Thick green scum or algae on the water surface"
+                    ]
+                },
+                {
+                    "title": "How to Apply NPK Safely",
+                    "items": [
+                        "Follow the recommended dosage based on your pond size and duckweed density",
+                        "Start with small amounts and observe duckweed reaction",
+                        "Avoid applying fertilizer just before or after rain, as it can lead to runoff buildup",
+                        "Use DuweeNext to monitor pH and TDS regularly—unusual changes could be a warning"
+                    ]
+                },
+                {
+                    "title": "Risks to Your Duckweed & Pond",
+                    "items": [
+                        "Excess nutrients can suffocate duckweed and promote harmful algae",
+                        "Leads to unstable pH and TDS levels, making it harder to manage water quality",
+                        "Increases the risk of producing unsafe or low-quality duckweed",
+                        "May cause long-term pond health problems, requiring full cleaning"
+                    ]
+                }
+            ]
+        },
+        "user-of-organic-fertilizers": {
+            "title": "Use of Organic Fertilizers (Animal Waste)",
+            "tagline": "Just because it’s organic doesn’t mean it’s safe. Avoid animal waste in ponds to protect your duckweed and your health.",
+            "sections": [
+                {
+                    "title": "What is Organic Fertilizers (Animal Waste)?",
+                    "text": "Some farmers use animal waste (like pig, cow, or chicken manure) as organic fertilizer. While it may seem natural, it can introduce dangerous bacteria and pathogens into your pond, making your duckweed unsafe for consumption."
+                },
+                {
+                    "title": "Common Issues from Animal Waste Use",
+                    "items": [
+                        "Bacterial contamination (e.g., E. coli, Salmonella)",
+                        "Murky or foul-smelling water",
+                        "Rapid duckweed death or discoloration",
+                        "Unsafe duckweed that can’t be sold or eaten"
+                    ]
+                },
+                {
+                    "title": "Safer Organic Alternatives",
+                    "items": [
+                        "If using organic methods, choose plant-based compost or properly treated bio-fertilizers",
+                        "Never apply raw animal waste directly into ponds",
+                        "Maintain pond hygiene and clean water flow"
+                    ]
+                },
+                {
+                    "title": "Risks to Your Duckweed & Consumers",
+                    "items": [
+                        "Contaminated duckweed can make people or animals sick",
+                        "Water may require full draining and cleaning",
+                        "Reduces credibility and trust from buyers or processors",
+                        "Creates long-term biohazard issues in your farming system"
+                    ]
+                }
+            ]
+        }
+    },
+    "Current": "Current",
+    "Unnamed User": "Unnamed User",
+    "Confirm Action": "Confirm Action",
+    "Are you sure you want to proceed?": "Are you sure you want to proceed?",
+    "Are you sure you want to remove": "Are you sure you want to remove",
+    "this user": "this user",
+    "kickMemberTitle": "Remove Member",
+    "Board Members": "Board Members",
+    "No members found": "No members found",
+    "Only board owners can manage members.": "Only board owners can manage members.",
+    "owner": "Owner",
+    "admin": "Admin",
+    "labor": "Operator",
+    "user": "User",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "Can not perform measurement": "Can not perform measurement",
     "textfield": {
         "matched": "Matched",
         "notMatch": "Passwords do not match"
     },
-    "education": {
-        "topics": {
-            "step-by-step-guide": {
-                "title": "Step-by-step Guide on how to grow Wolffia globosa",
-                "tagline": "",
-                    "sections": [
-                        {
-                            "kind": "paragraph",
-                            "title": "Understanding Wolffia globosa",
-                            "text": "Wolffia globosa, also known as Asian watermeal or duckweed, is the world's smallest flowering plant. It floats on the water surface and grows rapidly under the right conditions. This plant is valued for its high protein content and its ability to help purify water. Successful cultivation requires careful control of environment, nutrients, and water quality."
-                        },
-                        {
-                            "kind": "paragraph",
-                            "title": "Choosing the Right Growing Environment",
-                            "text": "Wolffia globosa thrives in warm, nutrient-rich, stagnant or slow-moving freshwater. For home or farm cultivation, use a controlled body of water (aquarium, pond, trough) that’s clean and free of contaminants."
-                        }
-                    ]
-                },
-                "pesticide-contamination": {
-                    "title": "Pesticide Contamination",
-                    "tagline": "If your pond is near a rice field or plantation, always check water sources — clean water = safe duckweed = safe consumers.",
-                    "sections": [
-                        {
-                            "kind": "paragraph",
-                            "text": "Pesticide contamination happens when chemicals used on nearby farms wash into your pond via rain runoff or contaminated sources."
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Common Sources",
-                            "items": [
-                                "Runoff from nearby plantations or rice fields",
-                                "Water pumped from canals collecting farm runoff",
-                                "Leftover water from pesticide-sprayed crops"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "How to Prevent",
-                            "items": [
-                                "Avoid water from areas near sprayed fields",
-                                "Prefer safe sources: 1) properly stored rainwater 2) clean well/groundwater 3) tested/filtered canal or pond water",
-                                "Be extra cautious after heavy rain",
-                                "Do not reuse water from other farms unless chemical-free"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Risks to Your Duckweed & Consumers",
-                            "items": [
-                                "Poor growth or sudden die-off",
-                                "Residues can make duckweed unsafe to eat",
-                                "Long-term pond contamination may require full replacement",
-                                "Damaged reputation and consumer trust"
-                            ]
-                        }
-                    ]
-                },
-                "heavy-metal-contamination": {
-                    "title": "Heavy Metal Contamination",
-                    "tagline": "Just because water looks clean doesn’t mean it’s safe. Choose water sources wisely to protect your duckweed and your customers.",
-                    "sections": [
-                        {
-                            "kind": "paragraph",
-                            "title": "What is Heavy Metal Contamination?",
-                            "text": "Heavy metals like lead, cadmium, mercury, and arsenic can enter your pond if water comes from industrial areas, old mining zones, or polluted canals/rivers. They’re invisible and odorless—testing is required."
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Common Sources",
-                            "items": [
-                                "Canals/rivers near factories or industrial estates",
-                                "Runoff from old mining or waste sites",
-                                "Contaminated groundwater in polluted regions",
-                                "Irrigation water flowing through many farm zones"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "How to Prevent",
-                            "items": [
-                                "Avoid unknown/untested sources, especially near industrial zones",
-                                "Prefer: 1) clean well/groundwater 2) properly stored rainwater 3) sources verified by advisors/authorities",
-                                "Get water tested if unsure or in historically polluted areas",
-                                "Avoid mixing uncertain sources"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Risks to Your Duckweed & Consumers",
-                            "items": [
-                                "Slow or stunted growth",
-                                "Duckweed becomes unsafe to eat (metal buildup)",
-                                "Contamination can persist even after water changes",
-                                "Potential harm to animals or people consuming it",
-                                "Possible regulatory/food safety issues"
-                            ]
-                        }
-                    ]
-                },
-                "overuse-of-NPK": {
-                    "title": "Overuse of Chemical Fertilizers (NPK)",
-                    "tagline": "Fertilizer is food, not a cure. Too much can do more harm than good. Watch your duckweed, check your data, and apply only what’s needed.",
-                    "sections": [
-                        {
-                            "kind": "paragraph",
-                            "title": "What is Overuse of Chemical Fertilizers (NPK)?",
-                            "text": "NPK helps when used correctly. Overuse can destabilize your pond—leading to unhealthy duckweed and poor water quality."
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Common Signs of NPK Overuse",
-                            "items": [
-                                "Sudden pH or TDS spikes/drops",
-                                "Unhealthy bubbles or cloudy water",
-                                "Yellowing, slow growth, or die-off",
-                                "Thick scum/algae on the surface"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "How to Apply NPK Safely",
-                            "items": [
-                                "Follow recommended dosage for pond size/density",
-                                "Start small and observe",
-                                "Avoid applying near rain events",
-                                "Monitor pH/TDS regularly with DuweeNext"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Risks to Your Duckweed & Pond",
-                            "items": [
-                                "Excess nutrients suffocate duckweed and boost harmful algae",
-                                "Unstable pH/TDS makes management harder",
-                                "Unsafe or low-quality duckweed",
-                                "Possible need for full pond cleaning"
-                            ]
-                        }
-                    ]
-                },
-                "user-of-organic-fertilizers": {
-                    "title": "Use of Organic Fertilizers (Animal Waste)",
-                    "tagline": "Just because it’s organic doesn’t mean it’s safe. Avoid animal waste in ponds to protect your duckweed and your health.",
-                    "sections": [
-                        {
-                            "kind": "paragraph",
-                            "title": "What is Organic Fertilizers (Animal Waste)?",
-                            "text": "Using animal manure (pig, cow, chicken) can introduce dangerous bacteria and pathogens, making duckweed unsafe."
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Common Issues from Animal Waste Use",
-                            "items": [
-                                "Bacterial contamination (e.g., E. coli, Salmonella)",
-                                "Murky or foul-smelling water",
-                                "Rapid duckweed death/discoloration",
-                                "Unsafe for sale or consumption"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Safer Organic Alternatives",
-                            "items": [
-                                "Choose plant-based compost or treated bio-fertilizers",
-                                "Never apply raw animal waste directly",
-                                "Maintain pond hygiene and clean water flow"
-                            ]
-                        },
-                        {
-                            "kind": "bullets",
-                            "title": "Risks to Your Duckweed & Consumers",
-                            "items": [
-                                "Can cause illness in people/animals",
-                                "May require full draining and cleaning",
-                                "Hurts credibility with buyers/processors",
-                                "Long-term biohazard in your system"
-                            ]
-                        }
-                    ]
-                }
-            }
+    "faqs": {
+        "title": "FAQs From Farmers",
+        "water-source": {
+            "q": "Can I use river or canal water for my duckweed pond?",
+            "a": "It's risky but possible if the source is clean. It's always best to use well water, rainwater, or other tested sources. Tip: After heavy rainfall, avoid pumping new water immediately as it may contain runoff chemicals."
+        },
+        "too-much-fertilizer": {
+            "q": "How do I know if I'm using too much fertilizer?",
+            "a": "Watch for sudden spikes in your pH or TDS readings on DuweeNext. Unhealthy bubbles, cloudy water, or a layer of green scum are also common signs of over-fertilizing."
+        },
+        "unhealthy-bubbles": {
+            "q": "What do unhealthy bubbles mean in my pond?",
+            "a": "They often indicate poor water quality. This can be caused by a fertilizer imbalance, contamination from an outside source, or a lack of oxygen in the water."
+        },
+        "animal-waste": {
+            "q": "Is it okay to use animal waste as fertilizer?",
+            "a": "No, this is not recommended. Raw animal waste can introduce harmful bacteria like E. coli and Salmonella, making your duckweed unsafe for consumption. Use clean compost or recommended fertilizers instead."
+        },
+        "yellow-slow": {
+            "q": "What should I do if my duckweed turns yellow or grows slowly?",
+            "a": "This is usually a sign of a problem with nutrients, sunlight, or water quality. Use DuweeNext to check your pH/TDS levels first, then adjust fertilizer or check for adequate sunlight."
+        },
+        "check-pond-frequency": {
+            "q": "How often should I check my pond with DuweeNext?",
+            "a": "For best results, a quick check daily is great. At a minimum, check 2-3 times per week. Always check after heavy rain, adding fertilizer, or changing your water source to see the impact immediately."
+        },
+        "lack-knowledge-sensors": {
+            "q": "What if I don't understand what pH or TDS means?",
+            "a": "Don't worry! Think of pH as the 'sourness' or 'sweetness' of your water. TDS is like the 'richness' or amount of food (nutrients) in it. DuweeNext helps you keep both in the healthy 'green zone' for your duckweed."
+        },
+        "lack-knowledge-DuweeNext": {
+            "q": "Is DuweeNext only for experts?",
+            "a": "Not at all! DuweeNext is designed for everyone, from beginners to experts. It acts like a helpful assistant, giving you simple, clear data so you can make smart decisions without any guesswork."
         }
+    },
+    "profile": {
+        "title": "Profile",
+        "email": "Email",
+        "emailLabel": "Email:",
+        "edit_email": "Edit Email",
+        "resume": {
+            "prefix": "Resume: ",
+            "verifyOldEmail": "Verify code (old email)",
+            "enterNewEmail": "Enter new email",
+            "verifyNewEmail": "Verify code (new email)"
+        },
+        "changeEmailTitle": "Change Email",
+        "verifyPasswordDescription": "To perform email change please verify yourself. Your current email is",
+        "enterPasswordBelow": "Enter password below",
+        "placeholder": {
+            "enterPassword": "Enter your password",
+            "newEmail": "your@email.com"
+        },
+        "forgotPassword": "Forgot password",
+        "verificationSentTo": "The verification code has been sent to",
+        "enterNewEmailDescription": "Please put your new email information below",
+        "newEmailLabel": "New Email",
+        "submit": "Submit",
+        "password": "Password",
+        "oldPasswordLabel": "Enter old password",
+        "newPasswordLabel": "Enter new password",
+        "confirmNewPasswordLabel": "Confirm new password",
+        "old_password": "Old Password",
+        "enter_current_password": "Enter your current password",
+        "rules": {
+            "mustMatchCurrentPassword": "Must match your current password"
+        },
+        "confirm_password": "Confirm Password",
+        "reenter_new_password": "Re-enter your new password",
+        "must_match_new_password": "Must match the new password",
+        "change_password": "Change Password",
+        "linked_accounts": "Linked Accounts",
+        "google": "Google",
+        "logout": "Logout",
+        "deleteAccount": "Delete Account",
+        "recovery": "Recovery",
+        "deleteAccountWarningPrefix": "Your account will be delete within",
+        "deleteLocked": "You are unable to perform delete account for 24 hours",
+        "enter_password_below": "Enter password below",
+        "enter_your_password": "Enter your password",
+        "next": "Next",
+        "verification_code_sent": "The verification code has been sent to",
+        "send_again": "Send again",
+        "confirm": "Confirm",
+        "errors": {
+            "changePasswordFailed": "Failed to change password. Please try again."
+        },
+        "emailChangedTitle": "Email changed",
+        "emailChangedMessage": "Your email address has been updated."
+    },
+    "noti_setting": {
+        "enable_notifications": "Enable Notifications",
+        "enable_alert_sound": "Enable Alert Sound",
+        "alert_sound": "Alert Sound",
+        "sounds": {
+            "default": "Default",
+            "chime": "Chime",
+            "ripple": "Ripple",
+            "wave": "Wave"
+        }
+    },
+    "help": {
+        "introduction": "Duweenext is designed to help you efficiently monitor and manage your duckweed ponds using real-time data from IoT sensors. To begin, download and install the app, then sign up or log in to access your dashboard. From there, you can connect your sensors and start receiving live updates on pH, EC, light, and temperature conditions. If you don’t have IoT sensors, you can manually enter pond data for basic monitoring. The app works on both Android and iOS and requires internet connectivity for real-time updates and cloud storage access.",
+        "commonIssuesTitle": "Common Issues & Solutions",
+        "commonIssuesContent": "If you are experiencing issues with sensor data updates, first ensure that your ESP32 board is powered on and properly connected. Check whether the backend services and EMQX MQTT broker are running correctly, and verify that your internet connection is stable. If your threshold alerts are not working, make sure that the correct values have been set in the app and that notifications are enabled on your mobile device. For image processing issues, confirm that your images are in supported formats such as JPEG or PNG and that the MinIO storage has sufficient space. If the issue persists, try restarting the app or checking for updates.",
+        "faqTitle": "Frequently Asked Questions (FAQs)",
+        "q1": "1. Can I use Duweenext without IoT sensors?",
+        "a1": "Yes! If you don’t have IoT sensors, you can still manually enter pond data for basic monitoring. While automatic sensor data collection provides more accuracy and convenience, manual input allows you to track pond conditions effectively.",
+        "q2": "2. How often does the sensor data update?",
+        "a2": "Sensor data updates occur at intervals based on your device settings and network connectivity. Typically, readings are refreshed every few minutes. If you notice a delay, check your internet connection and ensure that your sensors are properly synced.",
+        "q3": "3. Is there a web version of Duweenext?",
+        "a3": "Currently, Duweenext is available only as a mobile application. However, a web version is under development to provide additional flexibility for users who prefer to access their pond data on a computer.",
+        "q4": "4. What should I do if my notifications are not working?",
+        "a4": "If you are not receiving notifications, check that your threshold settings are configured correctly in the app. Also, ensure that notifications are enabled in your mobile device’s settings. If the issue persists, try restarting the app or reinstalling it.",
+        "q5": "5. What types of images can I upload for analysis?",
+        "a5": "Duweenext supports common image formats such as JPEG and PNG. If your images are not uploading or processing, check the file size and format. Also verify that the MinIO storage system is running properly.",
+        "q6": "6. Can I integrate Duweenext with other farm management tools?",
+        "a6": "Yes, Duweenext provides API access for developers who want to integrate the app with third-party tools or dashboards. For more information, please contact our support team via the in-app Help & Support section.",
+        "q7": "7. How can I back up my pond data?",
+        "a7": "All sensor readings and manually entered data are stored securely in the cloud. You can export your data from the app if needed. In case of any issues, contact our support team for assistance with data recovery.",
+        "q8": "8. How do I update the app to the latest version?",
+        "a8": "To ensure you’re using the latest features and improvements, always keep your app updated. You can check for updates on the Google Play Store or Apple App Store. If you experience any issues after an update, try reinstalling the app or clearing the cache.",
+        "q9": "9. Can multiple users access the same pond data?",
+        "a9": "Yes, Duweenext supports multi-user access for farm management teams. You can share access with team members and set different permission levels based on their roles.",
+        "q10": "10. How do I reset my password if I forget it?",
+        "a10": "If you forget your password, go to the login screen and tap on Forgot Password. Follow the instructions to reset your password via email. If you do not receive a reset link, check your spam folder or contact support."
+    },
+    "privacy": {
+        "introduction": "Welcome to Duweenext! Your privacy is important to us, and we are committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and share your information when you use our application. By using Duweenext, you agree to the terms of this Privacy Policy.",
+        "section1Title": "1. Information We Collect",
+        "section1Content": "When you use Duweenext, we collect different types of information to improve your experience. This includes personal information such as your name, email address, phone number, and login credentials when you register for an account. Additionally, we collect sensor data from your IoT devices, including pH, EC, light, and temperature readings, to monitor your pond conditions. We may also gather technical data such as your device type, operating system, IP address, and usage patterns to optimize performance and enhance security.",
+        "section2Title": "2. How We Use Your Information",
+        "section2Content": "We use the collected information to provide and improve our services. Your personal data helps us authenticate your account, manage your account, and communicate important updates. Sensor data is processed to generate real-time analytics, send notifications, and assist in pond management. We also analyze technical data to diagnose issues, enhance app performance, and ensure system security. Additionally, we may use your contact details to send promotional offers, updates, or support-related messages, but you can opt out of marketing communications at any time.",
+        "section3Title": "3. Data Sharing and Third-Party Services",
+        "section3Content": "We do not sell or rent your personal data to third parties. However, we may share information with trusted service providers who assist us in running the application, such as cloud storage providers, analytics tools, and customer support services. These parties are required to protect your data and use it only for the intended purpose. If required by law, we may disclose your information to comply with legal obligations or protect our rights and the safety of users.",
+        "section4Title": "4. Data Storage and Security",
+        "section4Content": "Your data is securely stored in our cloud infrastructure, utilizing industry-standard encryption and security measures. We take all necessary precautions to protect your personal and sensor data from unauthorized access, alteration, or loss. However, no system is completely secure, and we advise users to safeguard their account credentials and use strong passwords to enhance protection.",
+        "section5Title": "5. Your Rights and Choices",
+        "section5Content": "As a user, you have the right to access, update, or delete your personal information at any time. You can manage your data settings through the app or contact our support team for assistance. If you wish to withdraw consent for certain data processing activities, you may do so through your account settings. However, some features of Duweenext may be affected if certain data collection is disabled.",
+        "section6Title": "6. Changes to This Privacy Policy",
+        "section6Content": "We may update this Privacy Policy from time to time to reflect changes in our practices, legal requirements, or improvements to our services. We will notify you of material updates through the app or our official website. We encourage you to review this policy periodically to stay informed about how we protect your information."
+    },
+    "terms": {
+        "introduction": "Welcome to Duweenext! These Terms & Conditions (“Terms”) govern your access to and use of the Duweenext mobile application and services. By downloading, installing, or using Duweenext, you agree to comply with these Terms. If you do not agree with any part of these Terms, please do not use the application.",
+        "section1Title": "1. Eligibility and Account Registration",
+        "section1Content": "To use Duweenext, you must be at least 13 years old. If you are under 18, you must have permission from a parent or legal guardian. By creating an account, you agree to provide accurate and complete information and to keep your account details secure. You are responsible for all activities that occur under your account and must notify us immediately if you suspect unauthorized access.",
+        "section2Title": "2. Use of the Application",
+        "section2Content": "Duweenext is designed to help users monitor and manage duckweed ponds using IoT sensors and manual data input. You agree to use the app only for its intended purposes and in compliance with all applicable laws. Unauthorized activities such as hacking, data scraping, reverse engineering, or any form of exploitation of the app’s services are strictly prohibited.",
+        "section3Title": "3. User Content and Data",
+        "section3Content": "By using Duweenext, you may input sensor data, upload images, and provide other content. You retain ownership of your content, but you grant us a license to process, store, and display the data as necessary to provide our services. You are responsible for ensuring that your content does not violate any laws, infringe on third-party rights, or contain harmful material.",
+        "section4Title": "4. Data Privacy",
+        "section4Content": "We take your privacy seriously. Our Privacy Policy explains how we collect, use, and protect your personal and sensor data. By using Duweenext, you acknowledge and agree to our data practices as described in the Privacy Policy.",
+        "section5Title": "5. Limitation of Liability",
+        "section5Content": "Duweenext is provided on an “as-is” and “as-available” basis. While we strive to offer accurate and reliable services, we do not guarantee that the app will always be error-free, uninterrupted, or fully secure. We are not responsible for any loss, damage, or disruption caused by incorrect sensor data, system failures, or third-party services. Users are advised to verify critical data before making important decisions regarding pond management.",
+        "section6Title": "6. Intellectual Property Rights",
+        "section6Content": "All content, trademarks, logos, and intellectual property within Duweenext belong to us or our licensors. You are granted a limited, non-exclusive, non-transferable license to use the app for personal or business use. You may not copy, modify, distribute, or create derivative works based on our content without written permission.",
+        "section7Title": "7. Third-Party Services and Links",
+        "section7Content": "Duweenext may integrate with third-party services such as cloud storage providers, analytics tools, and payment processors. We are not responsible for the practices or content of these third-party services. Your interactions with them are governed by their respective terms and policies.",
+        "section8Title": "8. Changes to These Terms",
+        "section8Content": "We may update these Terms from time to time. Continued use of Duweenext after updates constitutes your acceptance of the revised Terms. We will notify you of material changes through the app or our website. We encourage you to review the Terms periodically.",
+        "section9Title": "9. Governing Law and Dispute Resolution",
+        "section9Content": "These Terms shall be governed by and interpreted in accordance with the laws of Thailand. Any disputes arising from these Terms will be resolved through arbitration or legal proceedings in Thailand.",
+        "section10Title": "10. Contact Us",
+        "section10Content": "If you have any questions about these Terms, please contact our support team via the in-app Help & support section or at support@duweenext.app."
+    },
+    "toast": {
+        "loginFailedTitle": "Login failed",
+        "verificationFailedTitle": "Verification failed",
+        "invalidVerificationCode": "Invalid verification code.",
+        "verificationCodeExpired": "Verification code expired. Please request a new one.",
+        "resendFailedTitle": "Resend failed",
+        "googleLoginFailedTitle": "Google login failed",
+        "loginSuccessTitle": "Login successful",
+        "boardAddedTitle": "Board added !!",
+        "boardAddedText": "New Board Added successfully.",
+        "addFailedTitle": "Add failed",
+        "addFailedTextBoardExists": "Board already exists in your application",
+        "frequencyUpdateTitle": "Frequency Updated !!",
+        "frequencyUpdateText": "Frequency has been updated successfully.",
+        "updateFailedTitle": "Update failed",
+        "boardNameUpdateTitle": "Board Name Updated",
+        "boardNameUpdateText": "The board name has been updated successfully.",
+        "boardDeleteTitle": "Board Deleted",
+        "boardDeleteText": "The board has been removed from your account.",
+        "deleteFailedTitle": "Delete failed",
+        "memberApprovedTitle": "Member Approved",
+        "memberApprovedText": "The member has been approved successfully.",
+        "memberRejectedTitle": "Member Rejected",
+        "memberRejectedText": "The member has been rejected successfully.",
+        "actionFailedTitle": "Action failed",
+        "memberRemovedTitle": "Member Removed",
+        "memberRemovedText": "The member has been removed successfully.",
+        "syncFailedTitle": "Sync Failed",
+        "syncFailedText": "Analysis complete, but failed to save to your cloud history.",
+        "analysisCompleteTitle": "Pond health analysis completed!",
+        "analysisStatusText": "Status: {{status}}",
+        "analysisFailedTitle": "Analysis failed",
+        "analysisFailedText": "Please try again.",
+        "historyCleared": "History cleared",
+        "historyItemRemoved": "History item removed",
+        "removeItemFailed": "Failed to remove item",
+        "measurementComplete": "Measurement complete",
+        "thresholdUpdateTitle": "Threshold updated",
+        "thresholdUpdateText": "Your changes have been saved.",
+        "usernameUpdateFailedText": "Please try again.",
+        "usernameUpdateSuccess": "Username updated",
+        "verifyPasswordFailedTitle": "Verify Password Failed",
+        "sendOtpFailedTitle": "Failed to send OTP",
+        "passwordChangeSuccessTitle": "Password changed successfully",
+        "passwordResetFailedTitle": "Failed to reset password",
+        "passwordResetSuccessTitle": "Password reset successfully. Please log in."
+    },
+    "Current frequency": "Current frequency",
+    "Sensor Thresholds": "Sensor Thresholds",
+    "Update": "Update",
+    "No boards found": "No boards found",
+    "Please select a board to view data.": "Please select a board to view data.",
+    "Refreshed": "Refreshed",
+    "Board refresh successfully.": "Board refresh successfully.",
+    "Your pond history is up to date.": "Your pond history is up to date.",
+    "Could not refresh history.": "Could not refresh history.",
+    "Could not refresh boards.": "Could not refresh boards.",
+    "Notifications refreshed successfully.": "Notifications refreshed successfully.",
+    "Could not refresh notifications.": "Could not refresh notifications.",
+    "Notifications": "Notifications",
+    "Showing": "Showing",
+    "notifications": "notifications",
+    "Profile Setting": "Profile Settings",
+    "404_notFound": "Page Not Found",
+    "camera": "Camera",
+    "Check-pond-health": "Check Pond Health",
+    "help-supports": "Help & Supports",
+    "inbox": "Inbox",
+    "manage-notifications": "Manage Notifications",
+    "notification_history": "Notification History",
+    "privacy-policy": "Privacy Policy",
+    "sensor": "Sensor Details",
+    "take-photo": "Take Photo",
+    "terms-conditions": "Terms & Conditions",
+    "topbar": {
+        "inboxNotification": "New message in inbox"
+    },
+    "screens": {
+        "home": "Home",
+        "sensor": "Sensor Details",
+        "checkPondHealth": "Check Pond Health",
+        "notificationHistory": "Notification History",
+        "education": "Education",
+        "setting": "Settings",
+        "profile": "Profile",
+        "help": "Help & Support",
+        "privacy": "Privacy Policy",
+        "terms": "Terms & Conditions",
+        "manageNotifications": "Manage Notifications"
     }
+}

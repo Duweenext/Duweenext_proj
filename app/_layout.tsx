@@ -1,5 +1,5 @@
-import React from 'react';
-import { ImageBackground, View, Text, Alert } from 'react-native'; // Add Text import
+import React, { useState } from 'react';
+import { ImageBackground, View, Text } from 'react-native';
 import { Slot } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { useFonts } from 'expo-font';
@@ -13,42 +13,62 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
-import CustomToast from '@/src/component/Modals/CustomToast';
 import messaging from '@react-native-firebase/messaging';
 import '@/src/i18n/i18n.config';
 import { useDeviceStore } from './(auth)/_local';
+import * as Notifications from 'expo-notifications';
+import CustomToast from '@/src/component/Notifications/CustomToast';
+import SuccessToast from '@/src/component/Notifications/SucceedNotification';
+import ErrorToastNotification from '@/src/component/Notifications/ErrorNotification';
+import { useLang } from '@/src/api/local/_languageConfig';
+import { useTranslation } from 'react-i18next';
 
 SplashScreen.preventAutoHideAsync();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: false,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
+  }),
+});
 
 export { getTitleFromPath };
 
 function AppContent() {
   const { isLoading } = useAuth();
+  const {lang} = useLang();
+  const {i18n} = useTranslation();
   const setDeviceToken = useDeviceStore(state => state.setDeviceToken);
+
+  useEffect(() => {
+      i18n.changeLanguage(lang);
+  },[])
 
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();
-    const enabled = 
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-    if(enabled)
-    {
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    if (enabled) {
       console.log('User has enabled notifications');
     }
 
-    return {enabled, authStatus};
+    return { enabled, authStatus };
   }
 
   useEffect(() => {
     const requesting = async () => {
-      await requestUserPermission().then(({enabled, authStatus}) => {
+      await requestUserPermission().then(({ enabled, authStatus }) => {
         if (enabled) {
           messaging().getToken().then(token => {
             setDeviceToken(token);
             console.log('Device FCM Token: ', token);
           });
         }
-        else{
+        else {
           console.log('Permission not granted', authStatus);
         }
       });
@@ -68,7 +88,21 @@ function AppContent() {
       });
 
       const unsubscribe = messaging().onMessage(async remoteMessage => {
-        Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
+        console.log('A new FCM message arrived in the foreground!', remoteMessage);
+
+        const { title, body } = remoteMessage.notification ?? {};
+
+        if (title && body) {
+          Toast.show({
+            type: 'customToast',
+            text1: title,
+            text2: body,
+            visibilityTime: 4000,
+            props:{
+              lottieSource: require('@/assets/animations/Bell ring.json'),
+            }
+          });
+        }
       });
 
       return unsubscribe;
@@ -98,7 +132,13 @@ function AppContent() {
       resizeMode="cover"
     >
       <Slot />
-      <Toast />
+      <Toast 
+        config={{
+          customToast: (props) => <CustomToast {...props} />,
+          successToast: (props) => <SuccessToast {...props} />,
+          errorToast: (props) => <ErrorToastNotification {...props} />,
+        }}
+      />
     </ImageBackground>
   );
 }
@@ -133,6 +173,8 @@ export default function RootLayout() {
               config={{
                 customToast: (props) => <CustomToast {...props} />,
                 newToast: (props) => <CustomToast {...props} />,
+                successToast: (props) => <SuccessToast {...props} />,
+                errorToast: (props) => <ErrorToastNotification {...props} />,
               }}
             />
           </AuthProvider>

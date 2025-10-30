@@ -215,7 +215,6 @@ const ProfileSettingGoogle: React.FC = () => {
 
     return (
         <>
-        <PullToRefreshScreen>
             <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }} key={refreshKey}>
 
                 <Text style={{ fontFamily: themeStyle.fontFamily.bold, fontSize: themeStyle.fontSize.header1, color: themeStyle.colors.white, paddingBottom: 20, left: 20, }}>
@@ -268,7 +267,6 @@ const ProfileSettingGoogle: React.FC = () => {
                     onClose={() => { setModal(null); }}
                 />
             </ScrollView>
-            </PullToRefreshScreen>
         </>
     );
 };

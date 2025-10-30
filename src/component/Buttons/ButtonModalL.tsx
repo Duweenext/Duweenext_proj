@@ -3,7 +3,7 @@ import React from 'react';
 import { TouchableOpacity, Text, GestureResponderEvent } from 'react-native';
 import LoadingSpinner from '../Others/LoadingIndicator';
 
-type ButtonSize = 'L' | 'XL' | '2XL' | '3XL';
+type Size = 'XS' | 'S'| 'M' | 'L' | 'XL' | '2XL' | '3XL';
 
 interface ButtonModalLProps {
   text: string;
@@ -11,9 +11,11 @@ interface ButtonModalLProps {
   textColor?: string;
   onPress?: (event: GestureResponderEvent) => void;
   marginBottom?: number;
-  size?: ButtonSize;
+  size?: Size;
   loading?: boolean;
-  borderRadius?: number;
+  borderRadius?: Size;
+  width?: number | string;
+  height?: number;
 }
 
 const ButtonModalL: React.FC<ButtonModalLProps> = ({
@@ -24,19 +26,23 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
   marginBottom,
   size = 'L',
   loading = false,
-  borderRadius = 12,
+  borderRadius = 'L',
+  width,
+  height,
 }) => {
   const sizeStyles = getSizeStyles(size);
+  const borderRadiusStyle = getBorderRadius(borderRadius);
 
   return (
     <TouchableOpacity
       style={{
-        borderRadius: borderRadius,
+        borderRadius: borderRadiusStyle,
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 6,
         backgroundColor: filledColor,
         marginBottom: marginBottom ?? 6,
+
         ...sizeStyles,
       }}
       activeOpacity={0.85}
@@ -58,8 +64,53 @@ const ButtonModalL: React.FC<ButtonModalLProps> = ({
   );
 };
 
-const getSizeStyles = (size: ButtonSize) => {
+const getBorderRadius = (size: Size) => {
   switch (size) {
+    case 'XS':
+      return 4;
+    case 'S':
+      return 10;
+    case 'M':
+      return 12;
+    case 'L':
+      return 14;
+    case 'XL':
+      return 16;
+    case '2XL':
+      return 18;
+    case '3XL':
+      return 20;
+    default:
+      return 12;
+  }
+};
+
+const getSizeStyles = (size: Size) => {
+  switch (size) {
+    case 'XS':
+      return {
+        width: 80,
+        height: 24,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        text: { fontSize: themeStyle.fontSize.xs },
+      };
+    case 'S':
+      return {
+        width: 100,
+        height: 28,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        text: { fontSize: themeStyle.fontSize.xs },
+      };
+    case 'M':
+      return {
+        width: 120,
+        height: 32,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        text: { fontSize: themeStyle.fontSize.xs },
+      };
     case 'L':
       return {
         width: 140,

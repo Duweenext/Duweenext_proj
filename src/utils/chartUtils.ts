@@ -1,53 +1,73 @@
-import { sensorLogScale } from '@/src/interfaces/sensor';
-
-export type ScrollMetrics = { x: number; w: number; cw: number };
-
-export interface UseChartScrollProps {
-  axisSlots: Date[];
-  setAxisSlots: React.Dispatch<React.SetStateAction<Date[]>>;
-  scale: sensorLogScale;
-  spacing: number;
-  getSensorGraphLog: (boardId: string, endTime: string, scale: sensorLogScale, count: number) => Promise<any>;
-  boardId: string;
-  setIsNavigating: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export const MAX_TOTAL_SLOTS = 150;
-export const TRIM_AMOUNT = 30;
-export const AGGRESSIVE_TRIM_THRESHOLD = 120;
-export const EDGE_LEFT = 0.06;
-export const EDGE_RIGHT = 0.94;
+import { BackendSensorLogData, sensorLogScale } from '@/src/interfaces/sensor';
 
 export const SLOT_COUNT: Record<sensorLogScale, number> = {
-  all: 240, minute: 120, hour: 48, day: 14, week: 8, month: 24, year: 8,
+  all: 100,
+  hour: 60,
+  day: 24,
+  week: 7,
+  month: 30, // Using a fixed 30 for consistency
+  year: 12,
 };
 
-export const SPACING_PER_SCALE: Record<sensorLogScale, number> = {
-  all: 28,minute: 60, hour: 80, day: 100, week: 120, month: 140, year: 180,
-};
 
-export const sensorOption: sensorLogScale[] = ['all', 'minute', 'hour', 'day', 'week', 'month', 'year'];
 
-export function truncateToBucket(d: Date, scale: sensorLogScale): Date {
-  const x = new Date(d);
-  if (scale === 'all') { x.setSeconds(0, 0); return x; }
-  if (scale === 'minute') { x.setSeconds(0, 0); return x; }
-  if (scale === 'hour') { x.setMinutes(0, 0, 0); return x; }
-  if (scale === 'day') { x.setHours(0, 0, 0, 0); return x; }
-  if (scale === 'week') { 
-    x.setHours(0, 0, 0, 0); 
-    const wd = (x.getDay() + 6) % 7; 
-    x.setDate(x.getDate() - wd); 
-    return x; 
+export const sensorOption: sensorLogScale[] = ['all', 'hour', 'day', 'week', 'month', 'year'];
+
+export function buildWindowDomain(d: Date, scale: sensorLogScale): { start: Date; end: Date } {
+  const start = new Date(d);
+
+  switch (scale) {
+    case 'all': // 'all' case doesn't depend on local time, it's driven by API response
+      start.setSeconds(0, 0);
+      const endAll = new Date(start);
+      endAll.setSeconds(start.getSeconds() + 1);
+      return { start, end: endAll };
+    case 'day':
+      start.setHours(0, 0, 0, 0); // CHANGED
+      const endDay = new Date(start);
+      endDay.setDate(start.getDate() + 1); // CHANGED
+      return { start, end: endDay };
+
+    case 'hour':
+      start.setMinutes(0, 0, 0); // CHANGED
+      const endHour = new Date(start);
+      endHour.setHours(start.getHours() + 1); // CHANGED
+      return { start, end: endHour };
+
+
+    case 'week':
+      start.setHours(0, 0, 0, 0); // CHANGED
+      const dayOfWeek = (start.getDay() + 6) % 7; // CHANGED: getDay() instead of getUTCDay()
+      start.setDate(start.getDate() - dayOfWeek); // CHANGED
+      const endWeek = new Date(start);
+      endWeek.setDate(start.getDate() + 7); // CHANGED
+      return { start, end: endWeek };
+
+    case 'month':
+      start.setHours(0, 0, 0, 0); // CHANGED
+      start.setDate(1); // CHANGED
+      const endMonth = new Date(start);
+      endMonth.setMonth(start.getMonth() + 1); // CHANGED
+      return { start, end: endMonth };
+
+    case 'year':
+      start.setHours(0, 0, 0, 0); // CHANGED
+      start.setMonth(0, 1); // CHANGED
+      const endYear = new Date(start);
+      endYear.setFullYear(start.getFullYear() + 1); // CHANGED
+      return { start, end: endYear };
+
+    default:
+      start.setHours(0, 0, 0, 0); // CHANGED
+      const endDefault = new Date(start);
+      endDefault.setDate(start.getDate() + 1); // CHANGED
+      return { start, end: endDefault };
   }
-  if (scale === 'month') { x.setDate(1); x.setHours(0, 0, 0, 0); return x; }
-  if (scale === 'year') { x.setMonth(0, 1); x.setHours(0, 0, 0, 0); return x; }
-  return x;
 }
 
 export function addStep(d: Date, scale: sensorLogScale, n: number): Date {
   const x = new Date(d);
-  if (scale === 'all') x.setSeconds(x.getSeconds() + n);
+  if (scale === 'all') x.setMinutes(x.getMinutes() + n);
   else if (scale === 'minute') x.setMinutes(x.getMinutes() + n);
   else if (scale === 'hour') x.setHours(x.getHours() + n);
   else if (scale === 'day') x.setDate(x.getDate() + n);
@@ -57,79 +77,115 @@ export function addStep(d: Date, scale: sensorLogScale, n: number): Date {
   return x;
 }
 
+export function makeSlots(start: Date, windowScale: sensorLogScale, n: number): Date[] {
+  if (n <= 0) return [];
+  const slots: Date[] = [];
+
+  const getStepUnit = (scale: sensorLogScale): sensorLogScale => {
+    switch (scale) {
+      case 'hour': return 'minute';
+      case 'day': return 'hour';
+      case 'week': return 'day';
+      case 'month': return 'day';
+      case 'year': return 'month';
+      default: return 'hour';
+    }
+  };
+
+  const stepUnit = getStepUnit(windowScale);
+
+  for (let i = 0; i < n; i++) {
+    slots.push(addStep(start, stepUnit, i));
+  }
+
+  return slots;
+}
+
+
 export function formatLabel(d: Date, scale: sensorLogScale): string {
   const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  if (scale === 'all')   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  if (scale === 'minute') return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  if (scale === 'hour') return `${pad(d.getHours())}:00`;
-  if (scale === 'day') return `${months[d.getMonth()]} ${d.getDate()}`;
-  if (scale === 'week') return `Wk of ${months[d.getMonth()]} ${d.getDate()}`;
-  if (scale === 'month') return `${months[d.getMonth()]} ${d.getFullYear()}`;
-  if (scale === 'year') return `${d.getFullYear()}`;
-  return d.toDateString();
+  if (scale === 'all') return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  if (scale === 'hour') return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (scale === 'day') return `${pad(d.getHours())}:00`;
+  if (scale === 'week') return `${days[d.getDay()]} ${d.getDate()}`;
+  if (scale === 'month') return `${pad(d.getDate())} ${months[d.getMonth()]}`;
+  if (scale === 'year') return months[d.getMonth()];
+  return d.toLocaleDateString();
 }
 
-export function formatCurrentDate(date: Date | null, scale: sensorLogScale): string {
-    if (!date) return '';
-
-    if (scale === 'hour' || scale === 'minute' || scale === 'all') {
-      const dateOptions: Intl.DateTimeFormatOptions = {
-        month: 'short',
-        day: 'numeric',
-      };
-
-      const timeOptions: Intl.DateTimeFormatOptions = {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      };
-
-      const datePart = date.toLocaleDateString('en-US', dateOptions);
-      const timePart = date.toLocaleTimeString('en-US', timeOptions);
-
-      return `${datePart} ${timePart}`;
-    }
-
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    };
-
-    return date.toLocaleDateString('en-US', options);
+export function pickY(sensorType: string, row: any) {
+  if (sensorType === "Temperature") return row.temperature;
+  if (sensorType === "EC") return row.ec;
+  if (sensorType === "pH") return row.ph;
+  return undefined;
 }
 
-
-// --- UTC-safe variants (new) ---
-export function truncateToBucketUTC(d: Date, scale: sensorLogScale): Date {
-  const x = new Date(d);
-  if (scale === 'all') { x.setUTCSeconds(0, 0); return x; }
-  if (scale === 'minute') { x.setUTCSeconds(0, 0); return x; }
-  if (scale === 'hour') { x.setUTCMinutes(0, 0, 0); return x; }
-  if (scale === 'day') { x.setUTCHours(0, 0, 0, 0); return x; }
-  if (scale === 'week') {
-    x.setUTCHours(0, 0, 0, 0);
-    // Monday=0..Sunday=6
-    const wd = (x.getUTCDay() + 6) % 7;
-    x.setUTCDate(x.getUTCDate() - wd);
-    return x;
+export function binToSlots(
+  sensorType: string,
+  raw: BackendSensorLogData[] | undefined,
+  slots: Date[]
+): number[] {
+  if (!raw || slots.length < 2) {
+    // If there is only 1 slot, or no slots/data, return an array of zeros.
+    return Array(slots.length).fill(0);
   }
-  if (scale === 'month') { x.setUTCDate(1); x.setUTCHours(0, 0, 0, 0); return x; }
-  if (scale === 'year') { x.setUTCMonth(0, 1); x.setUTCHours(0, 0, 0, 0); return x; }
-  return x;
+
+  const out = new Array<number>(slots.length).fill(0);
+  const cnt = new Array<number>(slots.length).fill(0);
+
+  const t0 = slots[0].getTime();
+  // THE FIX: Calculate step from the full range for better accuracy
+  const step = slots[1].getTime() - t0;
+
+  // Handle edge case where step is 0 (start and end are the same)
+  if (step === 0) {
+    // Average all values into the first slot
+    let total = 0;
+    let count = 0;
+    for (const row of raw) {
+      const y = Number(pickY(sensorType, row));
+      if (Number.isFinite(y)) {
+        total += y;
+        count++;
+      }
+    }
+    if (count > 0) {
+      out[0] = total / count;
+    }
+    return out;
+  }
+
+  for (const row of raw) {
+    const ts = new Date(row.created_at).getTime();
+    const idx = Math.round((ts - t0) / step);
+    if (idx >= 0 && idx < slots.length) {
+      const y = Number(pickY(sensorType, row));
+      if (Number.isFinite(y)) {
+        out[idx] += y;
+        cnt[idx] += 1;
+      }
+    }
+  }
+
+  return out.map((sum, i) => (cnt[i] > 0 ? sum / cnt[i] : 0));
 }
 
-export function addStepUTC(d: Date, scale: sensorLogScale, n: number): Date {
-  const x = new Date(d);
-  if (scale === 'all') x.setUTCMinutes(x.getUTCMinutes() + n);
-  else if (scale === 'minute') x.setUTCMinutes(x.getUTCMinutes() + n);
-  else if (scale === 'hour') x.setUTCHours(x.getUTCHours() + n);
-  else if (scale === 'day') x.setUTCDate(x.getUTCDate() + n);
-  else if (scale === 'week') x.setUTCDate(x.getUTCDate() + 7 * n);
-  else if (scale === 'month') x.setUTCMonth(x.getUTCMonth() + n);
-  else if (scale === 'year') x.setUTCFullYear(x.getUTCFullYear() + n);
-  return x;
+export function makeSlotsFromRange(start: Date, end: Date, n: number): Date[] {
+  if (n <= 0) return [];
+  if (!start || !end) return [];
+
+  const slots: Date[] = [];
+  const startTime = start.getTime();
+  const endTime = end.getTime();
+  const duration = endTime - startTime;
+
+  const step = n > 1 ? duration / (n - 1) : 0;
+
+  for (let i = 0; i < n; i++) {
+    slots.push(new Date(startTime + (step * i)));
+  }
+  return slots;
 }

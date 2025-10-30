@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, Dimensions, SafeAreaView } from 'react-native';
+import { View, FlatList, Dimensions, SafeAreaView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { EDUCATION_TOPICS } from '../../src/data/educationData';
 import CardEducation from '@/src/component/Card/CardEducation';
 import CardFAQ from '@/src/component/Card/CardFAQ';
-import BackgroundWrapper from '@/src/component/Layout/BackgroundWrapper';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 const spacing = 12;
 const numColumns = 2;
@@ -13,6 +12,8 @@ const cardWidth = (Dimensions.get('window').width - spacing * (numColumns + 1)) 
 
 export default function EducationIndex() {
   const router = useRouter();
+  // REFINED: Get the 't' function from the hook
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -24,7 +25,7 @@ export default function EducationIndex() {
         numColumns={numColumns}
         renderItem={({ item }) => (
           <CardEducation
-            title={t(item.title)}
+            title={t(item.titleKey)} 
             icon={item.heroIcon}
             onPress={() => router.push({ pathname: '/education/[slug]', params: { slug: item.slug } })}
             style={{ width: cardWidth }}
@@ -34,7 +35,7 @@ export default function EducationIndex() {
         ListFooterComponent={
           <View style ={{paddingTop: 30,}}>
           <CardFAQ
-            title="FAQs From Farmers"
+            title={t('faqs.title')} 
             onPress={() => router.push('/education/faqs')}
           />
           </View>

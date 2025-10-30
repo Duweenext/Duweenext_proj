@@ -1,3 +1,5 @@
+import { BoardRole } from "../component/Card/CardBoardPrimary/CardBoardExpand/CardboardExpandSetting";
+
 export interface Board {
   board_id: number;
   sensor_id: number;
@@ -20,6 +22,8 @@ export interface BoardRelationship {
   sensor_frequency: number;
   id: number;
   board_status: 'active' | 'inactive'
+  role: BoardRole;
+  mac_address: string;
 }
 
 export interface BoardStatus {

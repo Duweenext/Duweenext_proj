@@ -21,7 +21,7 @@ This repository contains the frontend code for the Duweenext project. It include
 - Expo CLI (optional, if you use the Expo workflow): `npm install -g expo-cli` or run with `npx`.
 - EAS CLI if you use EAS build: `npm install -g eas-cli` or use `npx eas`.
 
-## Project installation — install dependencies
+## Project installation — install dependencies & running application inside the emulator
 
 1. Clone the project and change into the repository root:
 
@@ -37,6 +37,36 @@ This repository contains the frontend code for the Duweenext project. It include
    # or
    yarn
    ```
+3. Fix dependencies vulnerability
+  
+  ```powershell
+   npm audit fix
+   ```
+4. Put the secret to the root of project 
+<img width="866" height="597" alt="image" src="https://github.com/user-attachments/assets/ac9c75bd-d3cf-407e-9424-735c82adfed3" />
+<img width="866" height="607" alt="image" src="https://github.com/user-attachments/assets/4c08dfce-8b55-4a08-879f-11175a4e25be" />
+
+5. Start the local project
+  
+  ```powershell
+   npm run start
+   # or
+   yarn run start
+   ```
+6. Open Android Studio and click open
+<img width="1919" height="500" alt="image" src="https://github.com/user-attachments/assets/2cef2358-9bcf-426c-aab8-6e286124bd12" />
+
+7. Go to /Duweenext_proj/android
+<img width="1919" height="830" alt="image" src="https://github.com/user-attachments/assets/4062da56-38aa-4980-a30e-49a7a434d36b" />
+
+8. Run the project
+<img width="1402" height="363" alt="image" src="https://github.com/user-attachments/assets/07509919-bc89-41e4-a947-7f03ca37de84" />
+
+9. In terminal press a to load dependency modules into Andriod Studio emulator
+<img width="1093" height="548" alt="image" src="https://github.com/user-attachments/assets/b05ff823-834d-486c-902f-490981bbcdb6" />
+
+10. Change the url in apiManager.ts to connect to localhost backend
+<img width="797" height="639" alt="image" src="https://github.com/user-attachments/assets/40fcafcd-f75e-4e5c-b9e4-276a0ba5778d" />
 
 ## Running locally
 
@@ -44,7 +74,7 @@ There are several ways to run, depending on what you want to work on.
 
 ### Mobile (Expo / React Native)
 
-For a native development run (React Native CLI / local Android/iOS builds):
+For a native development run (React Native CLI / local Android/iOS builds/ build on real device):
 
 ```powershell
 # Android (from repo root)
@@ -52,26 +82,18 @@ npm run android
 # or
 yarn android
 
-# iOS (macOS only)
-npm run ios
-# or
-yarn ios
-```
-
 for production build you can build using EAS Build:
 
 ```powershell
 npx eas build -p android
-npx eas build -p ios
 ```
 
 ## Project structure (high level)
 
 - `app/` — Web front-end (layout files like `_layout.tsx` indicate a Next-style structure).
-- `frontend/` / `ios/` / `android/` / `Duweenext/` — Native mobile and platform-specific code.
 - `src/` — Main TypeScript source: components, hooks, services, interfaces, utils, styles, etc.
   - `src/component/` — UI components
-  - `src/services/` — API and auth services
+  - `src/api/` — API and auth services
   - `src/interfaces/` — shared TypeScript types
   - `src/utils/` and `lib/` — utilities and helper functions
 - `assets/` — images, fonts, icons used by the app
@@ -89,30 +111,11 @@ In order to run the project you need
 
 to access all of this file you need to be one of the member of DuWeeNext firebase console
 
-## Type checking and linting
-
-TypeScript is used in the codebase. Run the TypeScript compiler to type-check (project may use `tsc --noEmit` or a script):
-
-```powershell
-npx tsc --noEmit
-# or
-npm run typecheck
-```
-
-Run linter (if configured):
-
-```powershell
-npm run lint
-# or
-yarn lint
-```
-
 ## Troubleshooting
 
 - If a module cannot be found after pulling the repo, delete `node_modules` and reinstall.
 - If Metro bundler loads stale cache, run: `npx expo start -c` or `npx react-native start --reset-cache`.
 - Android build errors often require updating Android SDK versions or Java JDK; check `android/build.gradle` for expected versions.
-- iOS build errors (macOS) may require `cd ios && pod install`.
 
 ## Contributing
 

@@ -43,8 +43,9 @@ This repository contains the frontend code for the Duweenext project. It include
    npm audit fix
    ```
 4. Put the secret to the root of project 
-<img width="866" height="400" alt="image" src="https://github.com/user-attachments/assets/ac9c75bd-d3cf-407e-9424-735c82adfed3" />
-<img width="866" height="400" alt="image" src="https://github.com/user-attachments/assets/4c08dfce-8b55-4a08-879f-11175a4e25be" />
+- google-service.json
+- GoogleService-Info.plist
+- firebase-admin-sdk.json
 
 5. Start the local project
   

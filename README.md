@@ -43,8 +43,8 @@ This repository contains the frontend code for the Duweenext project. It include
    npm audit fix
    ```
 4. Put the secret to the root of project 
-<img width="866" height="597" alt="image" src="https://github.com/user-attachments/assets/ac9c75bd-d3cf-407e-9424-735c82adfed3" />
-<img width="866" height="607" alt="image" src="https://github.com/user-attachments/assets/4c08dfce-8b55-4a08-879f-11175a4e25be" />
+<img width="866" height="400" alt="image" src="https://github.com/user-attachments/assets/ac9c75bd-d3cf-407e-9424-735c82adfed3" />
+<img width="866" height="400" alt="image" src="https://github.com/user-attachments/assets/4c08dfce-8b55-4a08-879f-11175a4e25be" />
 
 5. Start the local project
   
@@ -54,7 +54,7 @@ This repository contains the frontend code for the Duweenext project. It include
    yarn run start
    ```
 6. Open Android Studio and click open
-<img width="1919" height="500" alt="image" src="https://github.com/user-attachments/assets/2cef2358-9bcf-426c-aab8-6e286124bd12" />
+<img width="1919" height="400" alt="image" src="https://github.com/user-attachments/assets/2cef2358-9bcf-426c-aab8-6e286124bd12" />
 
 7. Go to /Duweenext_proj/android
 <img width="1919" height="830" alt="image" src="https://github.com/user-attachments/assets/4062da56-38aa-4980-a30e-49a7a434d36b" />
